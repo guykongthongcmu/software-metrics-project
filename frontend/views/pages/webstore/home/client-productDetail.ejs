@@ -1,0 +1,331 @@
+<% layout = 'layouts/webstore' %>
+<%
+const colorMap = {
+    'White':    '#FFFFFF',
+    'Black':    '#222222',
+    'Grey':     '#888888',
+    'Gray':     '#888888',
+    'Navy':     '#1B2A4A',
+    'Blue':     '#4A6FA5',
+    'Red':      '#C0392B',
+    'Green':    '#2E7D32',
+    'Beige':    '#E8DCC8',
+    'Khaki':    '#C3B091',
+    'Brown':    '#795548',
+    'Pink':     '#F06292',
+    'Purple':   '#7B1FA2',
+    'Yellow':   '#F9A825',
+    'Orange':   '#E65100',
+    'Cream':    '#FFFDD0',
+    'Ivory':    '#FFFFF0',
+    'Natural':  '#E8DCC8',
+};
+%>
+
+<link rel="stylesheet" href="/css/client-productDetailStyle.css" />
+
+<%
+const productVariants = (product.variants || [])
+    .map(function (variant) {
+        return {
+            color: variant.color || variant.colour || '',
+            size: variant.size || '',
+        };
+    })
+    .filter(function (variant) {
+        return variant.color && variant.size;
+    });
+const variantColors = Array.from(new Set(productVariants.map(function (variant) { return variant.color; })));
+const displayColors = variantColors.length ? variantColors : (product.color || []);
+const initialColor = displayColors[0] || '';
+const initialSizes = productVariants.length
+    ? Array.from(new Set(
+        productVariants
+            .filter(function (variant) { return variant.color === initialColor; })
+            .map(function (variant) { return variant.size; })
+      ))
+    : Array.from(new Set(product.size || []));
+const initialSize = initialSizes[0] || '';
+%>
+
+<div class="pd-page">
+  <div class="container-fluid px-3 px-md-4 px-lg-5">
+
+    <nav class="pd-breadcrumb">
+      <a href="/">Home</a><span class="sep">/</span>
+      <a href="/search?cat=<%= product.category %>"><%= product.category.charAt(0).toUpperCase() + product.category.slice(1) %></a>
+      <span class="sep">/</span>
+      <a href="#">Outerwear</a>
+      <span class="sep">/</span>
+      <span><%= product.name %></span>
+    </nav>
+
+    <% var _imgs = (product.images && product.images.length) ? product.images : [product.image, product.image, product.image]; %>
+
+    <div class="row g-0 g-lg-3 mb-2">
+
+      <div class="col-12 col-md-6 mb-3 mb-md-0">
+        <div class="pd-gallery">
+          <div class="pd-thumbs">
+            <% _imgs.forEach(function(img, i) { %>
+              <img
+                src="<%= img %>"
+                alt="<%= product.name %> <%= i+1 %>"
+                class="pd-thumb <%= i===0 ? 'active' : '' %>"
+                onclick="pdSwitchImg(this,'<%= img %>')"
+                loading="lazy"
+              />
+            <% }) %>
+          </div>
+          <div class="pd-main-wrap">
+            <img
+              id="pdMainImg"
+              src="<%= _imgs[0] %>"
+              alt="<%= product.name %>"
+              class="pd-main-img"
+              <% if (product.imageStyle) { %>style="<%= product.imageStyle %>"<% } %>
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6">
+        <div class="pd-info">
+          <h1 class="pd-name"><%= product.name %></h1>
+
+          <div class="pd-price">
+            $<%= product.price.toFixed(2) %>
+            <% if (product.originalPrice) { %>
+              <span class="pd-price-original">$<%= product.originalPrice.toFixed(2) %></span>
+            <% } %>
+          </div>
+
+          <p class="pd-desc">
+            <%= product.description %>
+          </p>
+          <p class="pd-label">COLOR: <strong id="pdColorLabel"><%= initialColor %></strong></p>
+          <div class="pd-colors">
+            <% displayColors.forEach(function(c) { %>
+                      <div
+                      class="pd-swatch <%= c === initialColor ? 'active' : '' %>"
+                      style="background-color: <%= colorMap[c] || '#ccc' %>;
+                      <%= c === 'White' || c === 'Ivory' || c === 'Cream' ? 'box-shadow:inset 0 0 0 1px #bbb;' : '' %>"
+                      title="<%= c %>"
+                      onclick='pdSelectColor(this, <%- JSON.stringify(c) %>)'
+                      ></div>
+                      <% }) %>
+                    </div>
+
+          <p class="pd-label">SIZE: <strong id="pdSizeLabel"><%= initialSize %></strong>
+            <span style="float:right; font-size:0.65rem; color:var(--pd-muted); text-decoration:underline; cursor:pointer; text-transform:none; letter-spacing:0;">Size guide</span>
+          </p>
+          <div class="pd-sizes">
+            <% initialSizes.forEach(function(s) { %>
+              <button class="pd-size-btn <%= s === initialSize ? 'active' : '' %>" onclick='pdSelectSize(this, <%- JSON.stringify(s) %>)'><%= s %></button>
+            <% }) %>
+          </div>
+
+          <%# Actions %>
+          <div class="pd-actions mt-3">
+            <div class="pd-qty">
+              <button class="pd-qty-btn" onclick="pdQty(-1)">−</button>
+              <input class="pd-qty-input" id="pdQtyMain" type="number" value="1" min="1" max="10" readonly />
+              <button class="pd-qty-btn" onclick="pdQty(1)">+</button>
+            </div>
+            <button class="pd-add-btn" id="pdAddToCart" <%= !product.inStock ? 'disabled' : '' %>>
+              <%= product.inStock ? 'Add to Cart' : 'Out of Stock' %>
+            </button>
+            <button type="button" class="pd-wish-btn favorite-toggle" aria-label="Wishlist" data-id="<%= product.id %>">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+              </svg>
+            </button>
+          </div>
+
+          <%# Accordion %>
+          <div class="pd-accordion mt-2">
+            <div class="pd-accordion-item">
+              <button class="pd-acc-btn" onclick="pdAcc(this)">
+                Details and Care
+                <svg class="pd-acc-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+              </button>
+              <div class="pd-acc-body"><%= product.details %></div>
+            </div>
+            <div class="pd-accordion-item">
+              <button class="pd-acc-btn" onclick="pdAcc(this)">
+                Delivery and Returns
+                <svg class="pd-acc-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="13" height="13">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+              </button>
+              <div class="pd-acc-body">Free standard delivery on orders over $100. Returns accepted within 30 days.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <% if (recommendations && recommendations.length) { %>
+      <section class="pd-rec-section">
+        <h2 class="pd-rec-title">You May Also Like</h2>
+        <div class="row g-2 g-md-3">
+          <% recommendations.forEach(function(item) { %>
+            <div class="col-6 col-md-3">
+              <a href="/products/<%= item.id %>" class="pd-rec-card">
+                <img src="<%= item.image %>" alt="<%= item.name %>" class="pd-rec-img" loading="lazy" />
+                <div class="pd-rec-name"><%= item.name %></div>
+                <div class="pd-rec-price">$<%= item.price.toFixed(2) %></div>
+              </a>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+
+  </div>
+</div>
+
+<script src="/js/client-cart.js"></script>
+<script>
+  var imgs = <%- JSON.stringify(product.images && product.images.length ? product.images : [product.image, product.image, product.image]) %>;
+
+  var _productData = {
+    id:    '<%= product.id %>',
+    name:  '<%= product.name %>',
+    price: <%= product.price %>,
+    image: '<%= product.image %>'
+  };
+
+  function pdSwitchImg(thumb, src) {
+    var el = document.getElementById('pdMainImg');
+    el.classList.add('fading');
+    setTimeout(function() { el.src = src; el.classList.remove('fading'); }, 180);
+    document.querySelectorAll('.pd-thumb').forEach(function(t) { t.classList.remove('active'); });
+    thumb.classList.add('active');
+  }
+
+var _variants = (<%- JSON.stringify(product.variants || []) %>)
+  .map(function (variant) {
+    return {
+      color: variant.color || variant.colour || '',
+      size: variant.size || ''
+    };
+  })
+  .filter(function (variant) {
+    return variant.color && variant.size;
+  });
+
+function pdGetSizesForColor(name) {
+  if (!_variants.length) {
+    return Array.from(
+      document.querySelectorAll('.pd-sizes .pd-size-btn'),
+      function (button) { return button.textContent.trim(); }
+    );
+  }
+
+  return Array.from(
+    new Set(
+      _variants
+        .filter(function (variant) { return variant.color === name; })
+        .map(function (variant) { return variant.size; })
+    )
+  );
+}
+
+function pdRenderSizesForColor(name) {
+  var matchedSizes = pdGetSizesForColor(name);
+  var sizesEl = document.querySelector('.pd-sizes');
+
+  if (!sizesEl) {
+    return;
+  }
+
+  sizesEl.innerHTML = matchedSizes.map(function (size, index) {
+    return '<button class="pd-size-btn' + (index === 0 ? ' active' : '') + '" onclick=\'pdSelectSize(this, ' + JSON.stringify(size) + ')\'>' + size + '</button>';
+  }).join('');
+
+  document.getElementById('pdSizeLabel').textContent = matchedSizes[0] || '';
+}
+
+function pdSelectColor(el, name) {
+    el.closest('.pd-colors').querySelectorAll('.pd-swatch').forEach(function(s) { s.classList.remove('active'); });
+    el.classList.add('active');
+    document.getElementById('pdColorLabel').textContent = name;
+    pdRenderSizesForColor(name);
+}
+
+  function pdSelectSize(el, size) {
+    el.closest('.pd-sizes').querySelectorAll('.pd-size-btn').forEach(function(b) { b.classList.remove('active'); });
+    el.classList.add('active');
+    var lbl = document.getElementById('pdSizeLabel');
+    if (lbl) lbl.textContent = size;
+  }
+
+  function pdQty(d) {
+    var inp = document.getElementById('pdQtyMain');
+    inp.value = Math.min(Math.max(parseInt(inp.value) + d, 1), 10);
+  }
+
+  function pdSbQty(d) {
+    var inp = document.getElementById('pdQtySb');
+    inp.value = Math.min(Math.max(parseInt(inp.value) + d, 1), 10);
+  }
+
+  function pdAcc(btn) {
+    var body = btn.nextElementSibling;
+    var open = body.classList.toggle('open');
+    btn.classList.toggle('open', open);
+  }
+
+  function pdSbAcc(btn) {
+    var body = btn.nextElementSibling;
+    var open = body.classList.toggle('open');
+    btn.classList.toggle('open', open);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('pdAddToCart');
+    if (!btn) return;
+
+    btn.addEventListener('click', async function () {
+      var size  = (document.getElementById('pdSizeLabel')  || {}).textContent || '';
+      var color = (document.getElementById('pdColorLabel') || {}).textContent || '';
+      var qty   = parseInt(document.getElementById('pdQtyMain').value) || 1;
+
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/cart/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productId: _productData.id,
+            color:     color,
+            size:      size,
+            quantityCartItem: qty
+          })
+        });
+
+        const json = await res.json().catch(function () { return null; });
+
+        if (res.ok) {
+          Cart.updateBadge(Number(json && json.data && json.data.cartSummary && json.data.cartSummary.totalItems) || 0);
+          Cart.flyToCart(document.getElementById('pdMainImg'), function () {
+            Cart.showToast(_productData.name + ' added to cart');
+          });
+        } else if (res.status === 401 || (json && json.code === 'UNAUTHORIZED')) {
+          location.href = '/login';
+        } else {
+          Cart.showToast((json && json.message) || 'Could not add to cart');
+        }
+      } catch (err) {
+        Cart.showToast('Could not connect to server');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  });
+</script>

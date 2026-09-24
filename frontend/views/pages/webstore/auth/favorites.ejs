@@ -1,0 +1,563 @@
+<main class="favorites-main">
+    <div class="favorites-container">
+
+        <div class="favorites-header">
+            <!-- New Title per images -->
+            <h1>Favorites</h1>
+        </div>
+<% 
+const colorMap = {
+    'White':      '#FFFFFF',
+    'Black':      '#222222',
+    'Grey':       '#888888',
+    'Gray':       '#888888',
+    'Navy':       '#1B2A4A',
+    'Blue':       '#4A6FA5',
+    'Red':        '#C0392B',
+    'Green':      '#2E7D32',
+    'Beige':      '#E8DCC8',
+    'Khaki':      '#C3B091',
+    'Brown':      '#795548',
+    'Pink':       '#F06292',
+    'Purple':     '#7B1FA2',
+    'Yellow':     '#F9A825',
+    'Orange':     '#E65100',
+    'Cream':      '#FFFDD0',
+    'Ivory':      '#FFFFF0',
+    'Natural':    '#E8DCC8',
+    'One Size':   '#cccccc',
+};
+%>
+        <% if (locals.favoriteItems && favoriteItems.length> 0) { %>
+            <!-- Filled State (Grid Layout) -->
+            <div class="favorites-grid filled-grid">
+                <% favoriteItems.forEach(item=> { %>
+                    <div class="product-card" onclick="location.href='/products/<%= item.id %>'" style="cursor:pointer;" data-product-id="<%= item.id %>">
+                        <div class="product-image-container">
+                            <img src="<%= item.image %>" alt="<%= item.name %>" class="product-image"
+                                style="<%= item.imageStyle || '' %>">
+                            <!-- Favorite Toggle Button (Filled State) -->
+                            <button type="button" class="favorite-toggle active" aria-label="Remove from favorites"
+                                data-id="<%= item.id %>" onclick="event.preventDefault(); event.stopPropagation();">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
+                                    fill="currentColor">
+                                    <path
+                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                    </path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="product-info-row">
+                            <h3 class="product-name">
+                                <%= item.name %>
+                            </h3>
+                            <p class="product-price">
+                                <%= item.priceFormatted %>
+                            </p>
+                        </div>
+
+                        <div class="product-action-container">
+                            <div class="selectors-row"
+                                style="display: flex; gap: 10px; margin-bottom: 10px; width: 100%;">
+                                <div class="size-dropdown-wrapper" style="flex: 1;">
+                                    <select class="size-select-full" onclick="event.stopPropagation()">
+                                        <option value="" disabled selected>Select size</option>
+                                        <% (item.size || []).forEach(size => { %>
+                                            <option value="<%= size %>"><%= size %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
+                                <div class="color-dropdown-wrapper" style="flex: 1;">
+                                    <select class="size-select-full" onclick="event.stopPropagation()">
+                                        <option value="" disabled selected>Select color</option>
+                                        <% if(item.colors && item.colors.length) { item.colors.forEach(c => { %>
+                                            <option value="<%= c %>"><%= c %></option>
+                                            <% }) } %>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn-add-cart-full" 
+                                onclick="event.stopPropagation(); favAddToCart(this, '<%= item.id %>', '<%= item.name %>', <%= item.price %>, '<%= item.image %>')">
+                                ADD TO CART
+                            </button>
+                        </div>
+
+                    </div>
+                    <% }) %>
+            </div>
+
+            <% } else { %>
+                <!-- Empty State -->
+                <div class="empty-state-card">
+                    <div class="empty-icon-wrapper">
+                        <svg viewBox="0 0 24 24" width="28" height="28" stroke="#1C1B1F" stroke-width="1.5" fill="none">
+                            <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                            </path>
+                        </svg>
+                    </div>
+                    <h2 class="empty-title">SAVE YOUR FAVOURITE ITEMS NOW !</h2>
+                    <div class="empty-message-container">
+                        <p class="empty-message">You are absolutely able to explore your favourite items today.<br>We
+                            believe that you will experience with the good things in here.</p>
+                    </div>
+
+                    <a href="/" class="btn-start-shopping">START SHOPPING FROM MORE</a>
+                </div>
+                <% } %>
+
+                    <!-- Recommendations Grid (Always shown below) -->
+                    <section class="recommendations-section">
+                        <h3 class="section-subtitle">RECOMMENDATION</h3>
+                        <div class="product-grid">
+                            <% locals.recommendations.forEach((item, index)=> { %>
+                                <a href="/products/<%= item.id %>" class="product-card">
+                                    <div class="product-image-container">
+                                        <img src="<%= item.image %>" alt="<%= item.name %>" class="product-image"
+                                            style="<%= item.imageStyle || '' %>">
+                                        <!-- Toggle favorite logic -->
+                                        <% const isFav=locals.userFavorites && locals.userFavorites.includes(item.id);
+                                            const heartFill=isFav ? "currentColor" : "none" ; const activeClass=isFav
+                                            ? "active" : "" ; %>
+                                            <button type="button" class="favorite-toggle <%= activeClass %>"
+                                                aria-label="Toggle favorite" data-id="<%= item.id %>" onclick="event.preventDefault(); event.stopPropagation();">
+                                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor"
+                                                    stroke-width="1.5" fill="<%= heartFill %>">
+                                                    <path
+                                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                    </div>
+                                    <div class="product-info-block">
+                                        <h3 class="product-name">
+                                            <%= item.name %>
+                                        </h3>
+                                        <p class="product-price">
+                                            <%= item.priceFormatted %>
+                                        </p>
+                                        <div class="color-dots-mini">
+                                            <% (item.colors || []).forEach(c => { %>
+                                                <span class="dot-mini" 
+                                                      style="background-color: <%= colorMap[c] || '#cccccc' %>; border: <%= c === 'White' || c === 'Ivory' || c === 'Cream' ? '1px solid #ddd' : 'none' %>;">
+                                                    </span>
+                                                    <% }) %>
+                                        </div>
+                                    </div>
+                                </a>
+                                <% }) %>
+                        </div>
+
+                        <div class="view-more-container">
+                            <button class="btn-view-more">VIEW MORE</button>
+                        </div>
+                    </section>
+
+    </div>
+</main>
+
+<style>
+    /* Reset and base styles inherited from layout 
+       We add custom styles specific to favorites page */
+
+    .favorites-page {
+        background-color: #F8F5F0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .favorites-main {
+        flex: 1;
+        padding: 40px 20px 80px;
+    }
+
+    .favorites-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding-top: 20px;
+    }
+
+    /* Header */
+    .favorites-header {
+        margin-bottom: 25px;
+        padding-bottom: 10px;
+    }
+
+    .favorites-header h1 {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 500;
+        color: #1C1B1F;
+        margin-bottom: 8px;
+    }
+
+    /* Favorite Filled Grid (3 items across) */
+    .favorites-grid.filled-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        margin-bottom: 80px;
+    }
+
+    .favorites-grid .product-card {
+        display: flex;
+        flex-direction: column;
+        color: inherit;
+    }
+
+    .favorites-grid .product-image-container {
+        position: relative;
+        aspect-ratio: 10/13;
+        /* slightly taller */
+        background-color: #EFECE6;
+        width: 100%;
+        overflow: hidden;
+        margin-bottom: 15px;
+    }
+
+    .favorites-grid .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .favorites-grid .favorite-toggle {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        color: #1C1B1F;
+        z-index: 2;
+        transition: color 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .favorites-grid .favorite-toggle.active {
+        color: #D34B4B;
+        /* Red filled */
+    }
+
+    .favorites-grid .favorite-toggle svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .favorites-grid .product-info-row {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 15px;
+    }
+
+    .favorites-grid .product-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.05rem;
+        font-weight: 400;
+        color: #1C1B1F;
+        margin: 0;
+    }
+
+    .favorites-grid .product-price {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #1C1B1F;
+        margin: 0;
+    }
+
+    .product-action-container {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .size-dropdown-wrapper {
+        width: 100%;
+    }
+
+    .size-select-full {
+        width: 100%;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 400;
+        color: #1C1B1F;
+        border: 1px solid #EAE5DF;
+        background-color: white;
+        padding: 12px 15px;
+        cursor: pointer;
+        -webkit-appearance: none;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 12px;
+    }
+
+    .btn-add-cart-full {
+        width: 100%;
+        background-color: #1C1B1F;
+        color: white;
+        border: none;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 1px;
+        padding: 14px 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-transform: uppercase;
+    }
+
+    /* Empty State New layout */
+    .empty-state-card {
+        background-color: #FFF;
+        padding: 60px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        border-radius: 4px;
+        /* Slight rounding if any */
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        margin-bottom: 60px;
+    }
+
+    .empty-icon-wrapper {
+        margin-bottom: 20px;
+    }
+
+    .empty-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1C1B1F;
+        margin-bottom: 15px;
+        letter-spacing: 0.5px;
+    }
+
+    .empty-message-container {
+        margin-bottom: 40px;
+    }
+
+    .empty-message {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 400;
+        color: #8C7E73;
+        line-height: 1.6;
+    }
+
+    .btn-start-shopping {
+        background-color: #C3A37C;
+        color: white;
+        text-decoration: none;
+        border: none;
+        padding: 14px 40px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        min-width: 250px;
+    }
+
+    .btn-start-shopping:hover {
+        background-color: #b5946c;
+    }
+
+    /* Recommendations */
+    .recommendations-section {
+        margin-top: 40px;
+    }
+
+    .section-subtitle {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        color: #8C7E73;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+    }
+
+    .product-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+    }
+
+    .product-grid .product-card {
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-grid .product-image-container {
+        position: relative;
+        aspect-ratio: 3/4;
+        background-color: #f4f4f4;
+        margin-bottom: 12px;
+        overflow: hidden;
+    }
+
+    .product-grid .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .product-grid .product-card:hover .product-image {
+        transform: scale(1.05);
+    }
+
+    .product-grid .favorite-toggle {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        border-radius: 50%;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        color: #A69B91;
+        z-index: 2;
+        transition: color 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .product-grid .favorite-toggle svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .product-grid .favorite-toggle.active {
+        color: #D34B4B;
+        /* Red filled color */
+    }
+
+    .product-grid .product-info-block {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .product-grid .product-name {
+        font-family: 'Playfair Display', serif;
+        font-size: 0.9rem;
+        font-weight: 400;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-grid .product-price {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #C3A37C;
+        margin: 0;
+    }
+
+    .color-dots-mini {
+        display: flex;
+        gap: 4px;
+    }
+
+    .dot-mini {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    .view-more-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 40px;
+    }
+
+    .btn-view-more {
+        background: transparent;
+        border: 1px solid #EAE5DF;
+        color: #8C7E73;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 1px;
+        padding: 10px 40px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+        .favorites-grid.filled-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .product-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 600px) {
+        .favorites-grid.filled-grid {
+            grid-template-columns: repeat(2, 1fr);
+            /* Image keeps 2 per row even on mobile based on design */
+            gap: 15px;
+        }
+
+        .empty-state-card {
+            padding: 40px 15px;
+        }
+
+        .empty-title {
+            font-size: 1rem;
+        }
+
+        .btn-start-shopping {
+            width: 100%;
+            min-width: auto;
+        }
+
+        .empty-message {
+            font-size: 0.75rem;
+        }
+    }
+
+    @keyframes popBounce {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.5);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .cart-count.bounce {
+        animation: popBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+</style>

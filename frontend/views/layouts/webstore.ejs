@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="<%= typeof language !== 'undefined' ? language : 'en' %>">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= typeof pageTitle !=='undefined' ? pageTitle : (typeof title !=='undefined' ? title : 'Core & Co' ) %>
+    </title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/png" href="/images/Picture2.png">
+</head>
+
+<body class="<%= typeof bodyClass !== 'undefined' ? bodyClass : '' %>">
+    <% if (typeof showNavbar==='undefined' || showNavbar !==false) { %>
+        <%- include('../partials/webstore/navbar') %>
+            <% } %>
+
+                <%- body %>
+
+                    <% if (typeof showFooter==='undefined' || showFooter !==false) { %>
+                        <%- include('../partials/webstore/footer') %>
+                            <% } %>
+                                <% if (typeof alertError !=='undefined' && alertError) { %>
+                                    <script>
+                                        alert('Error: <%= alertError %>');
+                                    </script>
+                                    <% } %>
+                                        <script
+                                            src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+                                        <script src="/js/client-cart.js"></script>
+                                        <script src="/js/favorites.js"></script>
+
+</body>
+
+</html>

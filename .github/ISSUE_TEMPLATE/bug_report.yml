@@ -1,0 +1,94 @@
+name: Bug
+description: Something is broken or not behaving as expected
+title: "bug: "
+labels: ["type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when something is wrong in frontend, backend, or deployment.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - "area: frontend"
+        - "area: backend"
+        - "area: devops"
+        - "area: general"
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the bug clearly and briefly.
+      placeholder: "When I click 'Login', I get a blank screen and the console shows..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Be specific so someone else can reproduce it.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: "I expected..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: "Instead..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste console logs, server logs, error messages, screenshots.
+      render: shell
+    validations:
+      required: false
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Browser/OS/Device or server environment
+      placeholder: "Chrome 122 on macOS, API running in Docker on EC2 Ubuntu 22.04"
+    validations:
+      required: false
+
+  - type: input
+    id: commit
+    attributes:
+      label: Branch / commit (if known)
+      placeholder: "main @ abc1234"
+    validations:
+      required: false
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact / severity
+      description: How bad is it? Blocks deploy? Minor UI glitch?
+      placeholder: "Blocks login for all users / only affects one page / etc."
+    validations:
+      required: false

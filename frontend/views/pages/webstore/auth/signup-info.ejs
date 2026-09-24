@@ -1,0 +1,650 @@
+<main class="signup-main">
+  <div class="signup-container signup-info-container">
+    <div class="signup-header">
+      <h1>Become our member</h1>
+      <p>SIGN UP NOW!</p>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="progress-container">
+      <div class="progress-track">
+        <div class="progress-track-fill"></div>
+      </div>
+      <div class="progress-step completed">
+        <div class="step-circle">1</div>
+        <div class="step-label">EMAIL</div>
+      </div>
+      <div class="progress-step active">
+        <div class="step-circle">2</div>
+        <div class="step-label">INFO</div>
+      </div>
+      <div class="progress-step">
+        <div class="step-circle">3</div>
+        <div class="step-label">CONFIRM</div>
+      </div>
+    </div>
+
+    <form class="signup-form info-form" action="/auth/signup" method="POST">
+      <input type="hidden" name="email"
+        value="<%= (formData && formData.email) ? formData.email : (query && query.email ? query.email : '') %>" />
+      <% if (typeof error !=='undefined' && error) { %>
+        <p style="color: red; font-size: 0.85rem; text-align: center; margin-bottom: 1rem;">
+          <%= error %>
+        </p>
+        <% } %>
+          <div class="form-row">
+            <div class="form-group">
+              <label>NAME*</label>
+              <input type="text" name="name" placeholder="Enter your first name" required />
+            </div>
+            <div class="form-group">
+              <label>SURNAME*</label>
+              <input type="text" name="surname" placeholder="Enter your last name" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>DATE OF BIRTH*</label>
+            <div class="input-with-icon" id="dob-picker">
+              <input type="text" name="dob" id="dob" placeholder="DD/MM/YYYY" data-input required />
+              <svg class="icon icon-clickable" data-toggle viewBox="0 0 24 24" width="16" height="16" stroke="#A69B91"
+                stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>PASSWORD*</label>
+              <div class="input-with-icon">
+                <input type="password" id="password" name="password" placeholder="••••••••" required />
+                <button type="button" class="icon icon-clickable password-toggle" data-password-toggle="password"
+                  aria-label="Show password">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="#A69B91" stroke-width="2" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                    </path>
+                    <line data-eye-slash x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>PASSWORD CONFIRMATION*</label>
+              <div class="input-with-icon">
+                <input type="password" id="password_confirm" name="password_confirm" placeholder="••••••••" required />
+                <button type="button" class="icon icon-clickable password-toggle" data-password-toggle="password_confirm"
+                  aria-label="Show password confirmation">
+                  <svg viewBox="0 0 24 24" width="16" height="16" stroke="#A69B91" stroke-width="2" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                    </path>
+                    <line data-eye-slash x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                </button>
+              </div>
+              <span class="error-text">Passwords do not match</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>MOBILE NUMBER*</label>
+            <div class="mobile-input-group">
+              <div class="mobile-inputs">
+                <div class="select-wrapper country-code-wrapper">
+                  <select name="country_code">
+                    <option value="+66">+66</option>
+                  </select>
+                </div>
+                <input type="tel" id="mobile" name="mobile" placeholder="XXX - XXX - XXXX" required />
+              </div>
+              <span class="error-text">Please enter only numbers</span>
+            </div>
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="terms" name="terms" required />
+            <label for="terms" class="custom-checkbox">
+              <span class="checkmark"></span>
+              <span class="terms-text">I agree to the <a href="#">Membership Terms</a> and
+                <a href="#">Privacy Policy</a>, including the collection and use of
+                my data.</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn-next" id="continue-btn" disabled>
+            CONTINUE
+          </button>
+    </form>
+
+    <div class="signup-footer-link">
+      <p>Already a member? <a href="/login">Log in</a></p>
+    </div>
+
+    <!-- Flatpickr JS -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Initialize Flatpickr
+        flatpickr("#dob-picker", {
+          wrap: true,
+          dateFormat: "d/m/Y",
+          allowInput: true,
+          maxDate: "today",
+          disableMobile: "true" // Use custom picker on mobile
+        });
+
+        const termsCheckbox = document.getElementById("terms");
+        const continueBtn = document.getElementById("continue-btn");
+        const passwordInput = document.getElementById("password");
+        const confirmInput = document.getElementById("password_confirm");
+        const mobileInput = document.getElementById("mobile");
+        const passwordToggleButtons = document.querySelectorAll("[data-password-toggle]");
+
+        function setPasswordVisibility(button, visible) {
+          const slash = button.querySelector("[data-eye-slash]");
+          if (slash) {
+            slash.style.display = visible ? "none" : "block";
+          }
+
+          button.setAttribute(
+            "aria-label",
+            visible ? "Hide password" : "Show password"
+          );
+        }
+
+        passwordToggleButtons.forEach((button) => {
+          const input = document.getElementById(button.dataset.passwordToggle);
+          if (!input) return;
+
+          setPasswordVisibility(button, input.type === "text");
+          button.addEventListener("click", () => {
+            const shouldShow = input.type === "password";
+            input.type = shouldShow ? "text" : "password";
+            setPasswordVisibility(button, shouldShow);
+            input.focus();
+          });
+        });
+
+        function validateForm() {
+          const isTermsChecked = termsCheckbox.checked;
+          const isPasswordMatch = passwordInput.value === confirmInput.value;
+          const hasPasswordValue = passwordInput.value.length > 0;
+
+          // Mobile validation: Allow empty (if required handles empty state) or only digits/spaces/dashes
+          const mobileValue = mobileInput.value.replace(/[\s-]/g, "");
+          const isMobileValid =
+            mobileValue.length === 0 || /^\d+$/.test(mobileValue);
+
+          // Show error state only if there's some input in confirm and they don't match
+          if (confirmInput.value.length > 0 && !isPasswordMatch) {
+            confirmInput.classList.add("error");
+          } else {
+            confirmInput.classList.remove("error");
+          }
+
+          if (!isMobileValid) {
+            mobileInput.classList.add("error");
+          } else {
+            mobileInput.classList.remove("error");
+          }
+
+          // Button is enabled ONLY if terms checked AND passwords match AND mobile is valid (and not empty since it's required)
+          const isMobileNotEmpty = mobileValue.length > 0;
+          continueBtn.disabled = !(
+            isTermsChecked &&
+            isPasswordMatch &&
+            hasPasswordValue &&
+            isMobileValid &&
+            isMobileNotEmpty
+          );
+        }
+
+        termsCheckbox.addEventListener("change", validateForm);
+        passwordInput.addEventListener("input", validateForm);
+        confirmInput.addEventListener("input", validateForm);
+        mobileInput.addEventListener("input", validateForm);
+      });
+    </script>
+
+    <div class="signup-footer-link">
+      <p>Already a member? <a href="/login">Log in</a></p>
+    </div>
+  </div>
+</main>
+
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+  /* Signup Info Page Styles */
+  .signup-page {
+    background-color: #f8f5f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: "Inter", sans-serif;
+  }
+
+  .signup-main {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 50px 20px;
+    background-color: #f8f5f0;
+  }
+
+  .signup-container {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .signup-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .signup-header h1 {
+    font-family: "Playfair Display", serif;
+    font-size: 2.8rem;
+    font-weight: 400;
+    color: #a69b91;
+    margin-bottom: 15px;
+    letter-spacing: 0.5px;
+  }
+
+  .signup-header p {
+    color: #b5ac9f;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Progress Tracker */
+  .progress-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    margin-bottom: 45px;
+    padding: 0 10px;
+  }
+
+  .progress-track {
+    position: absolute;
+    top: 15px;
+    left: 40px;
+    right: 40px;
+    height: 1px;
+    background-color: #dcd4cc;
+    z-index: 1;
+  }
+
+  .progress-track-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 50%;
+    background-color: #c3a37c;
+    z-index: 1;
+  }
+
+  .progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 2;
+    background-color: transparent;
+    width: 60px;
+  }
+
+  .step-circle {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #f8f5f0;
+    border: 1px solid #dcd4cc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: #a3978f;
+    margin-bottom: 12px;
+    font-family: "Inter", sans-serif;
+  }
+
+  .step-label {
+    font-size: 0.65rem;
+    color: #b5ac9f;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  .progress-step.active .step-circle,
+  .progress-step.completed .step-circle {
+    background-color: #c3a37c;
+    border-color: #c3a37c;
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .progress-step.active .step-label,
+  .progress-step.completed .step-label {
+    color: #a69b91;
+    font-weight: 600;
+  }
+
+  /* Form Styles */
+  .signup-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 20px;
+  }
+
+  .form-row .form-group {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .form-group {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .signup-form label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #8c7e73;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .signup-form input,
+  .signup-form select {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #dcd4cc;
+    border-radius: 2px;
+    background-color: transparent;
+    font-family: "Inter", sans-serif;
+    font-size: 0.95rem;
+    color: #8c7e73;
+    transition: border-color 0.3s;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .signup-form input::placeholder {
+    color: #d1cbc5;
+  }
+
+  .signup-form input:focus,
+  .signup-form select:focus {
+    outline: none;
+    border-color: #a69b91;
+  }
+
+  .signup-form input.error {
+    border-color: #d34b4b;
+    color: #d34b4b;
+  }
+
+  .signup-form input.error:focus {
+    border-color: #d34b4b;
+  }
+
+  .form-group .error-text,
+  .mobile-input-group .error-text {
+    color: #d34b4b;
+    font-size: 0.7rem;
+    margin-top: 5px;
+    display: none;
+  }
+
+  .signup-form input.error~.error-text,
+  .form-group:has(input.error) .error-text,
+  .mobile-inputs:has(input.error)+.error-text {
+    display: block;
+  }
+
+  .signup-form input.readonly-input {
+    color: #d1cbc5;
+    background-color: transparent;
+    /* according to image it looks like regular border */
+  }
+
+  /* Input with icons */
+  .input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-with-icon input {
+    padding-right: 40px;
+  }
+
+  .input-with-icon .icon {
+    position: absolute;
+    right: 15px;
+    pointer-events: none;
+  }
+
+  .input-with-icon .password-toggle {
+    border: none;
+    background: transparent;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .input-with-icon .icon-clickable {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  /* Select Wrapper for custom arrow */
+  .select-wrapper {
+    position: relative;
+  }
+
+  .select-wrapper::after {
+    content: "\25BC";
+    font-size: 0.6rem;
+    color: #a69b91;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  /* Mobile group */
+  .mobile-input-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-inputs {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+  }
+
+  .country-code-wrapper {
+    width: 100px;
+    flex-shrink: 0;
+  }
+
+  /* Checkbox */
+  .checkbox-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 10px;
+    margin-bottom: 25px;
+    flex-direction: row;
+  }
+
+  .checkbox-group input[type="checkbox"] {
+    display: none;
+  }
+
+  .checkbox-group label.custom-checkbox {
+    display: flex;
+    align-items: flex-start;
+    cursor: pointer;
+    gap: 12px;
+  }
+
+  .custom-checkbox .checkmark {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    flex-shrink: 0;
+    border: 1px solid #dcd4cc;
+    border-radius: 2px;
+    background-color: transparent;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  .checkbox-group input[type="checkbox"]:checked+label .checkmark {
+    background-color: #c3a37c;
+    border-color: #c3a37c;
+  }
+
+  .custom-checkbox .checkmark::after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 4px;
+    top: 0px;
+    width: 4px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .checkbox-group input[type="checkbox"]:checked+label .checkmark::after {
+    display: block;
+  }
+
+  .custom-checkbox .terms-text {
+    text-transform: none;
+    font-weight: 400;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: #a69b91;
+    letter-spacing: 0;
+    margin-bottom: 0;
+  }
+
+  .checkbox-group a {
+    color: #8c7e73;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.3s;
+  }
+
+  .checkbox-group a:hover {
+    color: #c3a37c;
+  }
+
+  /* Button */
+  .btn-next {
+    width: 100%;
+    background-color: #c3a37c;
+    border: none;
+    border-radius: 2px;
+    padding: 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #ffffff;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: "Inter", sans-serif;
+  }
+
+  .btn-next:hover:not(:disabled) {
+    background-color: #b5946c;
+  }
+
+  .btn-next:disabled {
+    background-color: #e2dbd4;
+    cursor: not-allowed;
+  }
+
+  /* Footer Link */
+  .signup-footer-link {
+    margin-top: 35px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #a69b91;
+  }
+
+  .signup-footer-link a {
+    color: #a69b91;
+    text-decoration: underline;
+    font-weight: 500;
+    margin-left: 5px;
+    transition: color 0.3s;
+  }
+
+  .signup-footer-link a:hover {
+    color: #8c7e73;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .signup-header h1 {
+      font-size: 2.2rem;
+    }
+
+    .progress-track {
+      left: 30px;
+      right: 30px;
+    }
+
+    .form-row {
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .mobile-input-group {
+      gap: 15px;
+    }
+
+    .country-code-wrapper {
+      width: 80px;
+    }
+  }
+</style>

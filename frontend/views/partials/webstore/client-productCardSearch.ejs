@@ -1,0 +1,73 @@
+<%
+const colorMap = {
+    'White':    '#FFFFFF',
+    'Black':    '#222222',
+    'Grey':     '#888888',
+    'Gray':     '#888888',
+    'Navy':     '#1B2A4A',
+    'Blue':     '#4A6FA5',
+    'Red':      '#C0392B',
+    'Green':    '#2E7D32',
+    'Beige':    '#E8DCC8',
+    'Khaki':    '#C3B091',
+    'Brown':    '#795548',
+    'Pink':     '#F06292',
+    'Purple':   '#7B1FA2',
+    'Yellow':   '#F9A825',
+    'Orange':   '#E65100',
+    'Cream':    '#FFFDD0',
+    'Ivory':    '#FFFFF0',
+    'Natural':  '#E8DCC8',
+};
+%>
+<a href="/products/<%= p.id %>" class="product-card" style="text-decoration:none; color:inherit; display:block;">
+    <div class="product-image-container">
+        <img src="<%= p.image %>" alt="<%= p.name %>" class="product-image"
+            <% if (p.imageStyle) { %>style="<%= p.imageStyle %>"<% } %> />
+
+        <%
+        const isFav       = false;
+        const heartFill   = isFav ? "currentColor" : "none";
+        const activeClass = isFav ? "active" : "";
+        %>
+        <button type="button" class="wishlist-btn favorite-toggle <%= activeClass %>"
+            aria-label="Toggle favorite"
+            data-id="<%= p.id %>" onclick="event.preventDefault(); event.stopPropagation();">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
+                fill="<%= heartFill %>">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+        </button>
+
+        <% if (!p.inStock) { %>
+            <span class="out-of-stock-badge">Out of Stock</span>
+        <% } else if (p.discount) { %>
+            <span class="discount-badge">-<%= p.discount %>%</span>
+        <% } %>
+    </div>
+
+    <div class="product-info">
+        <% if (p.category) { %>
+            <span class="product-category-tag"><%= p.category %></span>
+        <% } %>
+        <h3 class="product-name"><%= p.name %></h3>
+
+        <div class="product-colors">
+            <% (p.colors || []).forEach(function(c) { %>
+                <span class="color-swatch"
+                    style="background-color: <%= colorMap[c] || '#ccc' %>;
+                    <%= c === 'White' || c === 'Ivory' || c === 'Cream' ? 'border: 1px solid #ddd;' : '' %>">
+                </span>
+            <% }) %>
+        </div>
+
+        <p class="product-price">
+            <% if (p.originalFormatted) { %>
+                <span class="original-price" style="text-decoration: line-through; color: #999; margin-right: 8px;">
+                    <%= p.originalFormatted %>
+                </span>
+            <% } %>
+            <%= p.priceFormatted %>
+        </p>
+    </div>
+</a>

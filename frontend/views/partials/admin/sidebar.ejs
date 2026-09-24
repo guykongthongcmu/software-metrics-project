@@ -1,0 +1,62 @@
+<aside class="sidebar liquidGL-sidebar" id="sidebar">
+    <div class="sidebar-inner" style="position:relative;z-index:3;display:flex;flex-direction:column;height:100%;">
+        <div class="sidebar-brand">
+            <div class="sidebar-brand-avatar">
+                <%= typeof user !=='undefined' && user ? user.avatar : 'A' %>
+            </div>
+            <div class="sidebar-brand-info">
+                <h6>
+                    <%= typeof user !=='undefined' && user ? user.name : 'Admin' %>
+                </h6>
+                <small>
+                    <%= typeof user !=='undefined' && user ? user.role : '' %>
+                </small>
+            </div>
+        </div>
+
+        <ul class="sidebar-nav">
+            <li class="sidebar-nav-item">
+                <a href="/admin/dashboard"
+                    class="sidebar-nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/admin/dashboard' ? 'active' : '' %>">
+                    <i class="bi bi-grid-1x2"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="/admin/orders"
+                    class="sidebar-nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin/orders') ? 'active' : '' %>">
+                    <i class="bi bi-cart"></i>
+                    <span>Orders</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="/admin/products"
+                    class="sidebar-nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin/products') ? 'active' : '' %>">
+                    <i class="bi bi-bag"></i>
+                    <span>Products</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="/admin/categories"
+                    class="sidebar-nav-link <%= typeof currentPath !== 'undefined' && currentPath.startsWith('/admin/categories') ? 'active' : '' %>">
+                    <i class="bi bi-tags"></i>
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li class="sidebar-nav-item">
+                <a href="/admin/campaigns/builder"
+                    class="sidebar-nav-link <%= typeof currentPath !== 'undefined' && currentPath === '/admin/campaigns/builder' ? 'active' : '' %>">
+                    <i class="bi bi-megaphone"></i>
+                    <span>Campaign Builder</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-footer">
+            <a href="/admin/logout" class="sidebar-nav-link" onclick="handleAdminLogout(event)">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Log Out</span>
+            </a>
+        </div>
+    </div>
+</aside>

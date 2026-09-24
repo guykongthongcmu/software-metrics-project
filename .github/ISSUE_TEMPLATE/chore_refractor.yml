@@ -1,0 +1,48 @@
+name: Chore / Refactor
+description: Cleanup, docs, tests, refactor, dependency upgrades
+title: "chore: "
+labels: ["type: chore"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - "area: frontend"
+        - "area: backend"
+        - "area: devops"
+        - "area: general"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reason
+    attributes:
+      label: Why is this needed?
+      description: What problem does this solve? (maintainability, readability, performance, grading requirements)
+      placeholder: "Our folder structure is messy; refactor into modules to make it easier to test."
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks
+      description: Checklist of what needs to be done.
+      value: |
+        - [ ] Refactor/cleanup implementation
+        - [ ] Update tests (if needed)
+        - [ ] Update docs/README (if needed)
+        - [ ] Ensure lint/build/test passes
+        "Change according to your requirements"
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / links
+      description: Anything relevant (related issues, files, references).
+    validations:
+      required: false

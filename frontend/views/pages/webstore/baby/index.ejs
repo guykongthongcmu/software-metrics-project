@@ -1,0 +1,29 @@
+<main>
+    <%- include('../../../partials/webstore/banner', { bannerImage: '/images/baby_banner.png' ,
+        bannerTitle: "BABY & NEWBORN" , bannerSubtitle: 'BABY COLLECTION 2026' ,
+        exploreUrl: '/search?q=baby'}) %>
+
+        <section class="new-arrivals">
+            <div class="section-header">
+                <h2>New Arrivals</h2>
+                <a href="#" class="view-all">View All</a>
+            </div>
+            <div class="product-grid">
+                <% newArrivals.forEach(function(product) { %>
+                    <%- include('../../../partials/webstore/productCard', { product: product }) %>
+                        <% }); %>
+            </div>
+        </section>
+
+        <section class="new-arrivals" style="margin-top: 40px; margin-bottom: 60px;">
+            <div class="section-header">
+                <h2>Sale</h2>
+                <a href="#" class="view-all">View All</a>
+            </div>
+            <div class="product-grid">
+                <% bestSellers.forEach(function(product) { %>
+                    <%- include('../../../partials/webstore/productCard', { product: product }) %>
+                        <% }); %>
+            </div>
+        </section>
+</main>

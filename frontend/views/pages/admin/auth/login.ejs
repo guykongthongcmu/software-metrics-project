@@ -1,0 +1,58 @@
+<div class="login-page">
+    <div class="login-card fade-in">
+        <!-- Branding -->
+        <div style="text-align: center; margin-bottom: 16px;">
+            <img src="/images/coreandco.png" alt="Core & Co"
+                style="width: 80px; height: auto; border-radius: 50%; box-shadow: 0 4px 16px rgba(200, 167, 125, 0.35);">
+        </div>
+        <h2>Admin Panel</h2>
+        <p class="login-subtitle">Sign in to your account</p>
+
+        <!-- Flash Error Messages (from server-side redirect) -->
+        <% if (typeof error !=='undefined' && error && error.length> 0) { %>
+            <% error.forEach(function(msg) { %>
+                <div class="flash-alert error">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <%= msg %>
+                </div>
+                <% }); %>
+                    <% } %>
+
+                        <!-- Client-side Error Alert (hidden by default, shown via JS) -->
+                        <div id="loginAlert" class="flash-alert error" style="display:none;">
+                            <i class="bi bi-exclamation-circle"></i>
+                            <span id="loginAlertText"></span>
+                        </div>
+
+                        <!-- Login Form -->
+                        <form id="loginForm" novalidate>
+                            <!-- Email -->
+                            <div class="form-group">
+                                <label class="glass-label" for="loginEmail">Email Address</label>
+                                <input type="email" id="loginEmail" name="email" class="glass-input"
+                                    placeholder="admin@example.com" required autocomplete="email">
+                                <div class="input-error" id="emailError">Please enter a valid email address</div>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="form-group">
+                                <label class="glass-label" for="loginPassword">Password</label>
+                                <div class="password-wrapper">
+                                    <input type="password" id="loginPassword" name="password" class="glass-input"
+                                        placeholder="••••••••" required autocomplete="current-password">
+                                    <button type="button" class="password-toggle" id="passwordToggle"
+                                        aria-label="Toggle password visibility">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="input-error" id="passwordError">Password is required</div>
+                            </div>
+
+                            <!-- Sign In Button -->
+                            <button type="submit" id="loginBtn" class="btn-golden btn-login">
+                                <span class="btn-spinner"></span>
+                                <span class="btn-text">Sign In</span>
+                            </button>
+                        </form>
+    </div>
+</div>

@@ -1,0 +1,49 @@
+<% 
+  // Prefer variables passed from category templates, fall back to defaults (home page/campaign)
+  const image = locals.bannerImage || '/images/hero_image.jpg';
+  const title = locals.bannerTitle || 'NEW COLLECTION';
+  const subtitle = locals.bannerSubtitle || 'SPRING/SUMMER COLLECTION 2026';
+  const ctaUrl = locals.exploreUrl || '/search?campaign=active';
+%>
+<!-- DYNAMICALLY PATCHED BY CAMPAIGN BUILDER -->
+<section class="hero-section" id="hero-section">
+  <div class="hero-bg" id="hero-bg" style="background-image: url('<%= image %>'); background-size: cover; background-position: center;">
+    <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); z-index: 1;"></div>
+  </div>
+  <div class="hero-content" style="position: relative; z-index: 2; color: white;">
+    <h1 id="hero-title"><%= title %></h1>
+    <p id="hero-subtitle"><%= subtitle %></p>
+    <a href="<%= ctaUrl %>" class="btn btn-primary hero-btn" id="hero-cta">Explore Collection</a>
+  </div>
+</section>
+
+<style>
+  .hero-section {
+    position: relative;
+    height: 90vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+  .hero-content h1 {
+    font-size: 5rem;
+    font-weight: 700;
+    letter-spacing: -2px;
+    margin-bottom: 1rem;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+  .hero-content p {
+    font-size: 1.2rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+    opacity: 0.9;
+  }
+</style>

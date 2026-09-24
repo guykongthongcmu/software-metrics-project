@@ -1,0 +1,360 @@
+<% layout = 'layouts/webstore' %>
+<%
+const colorMap = {
+    'White':    '#FFFFFF',
+    'Black':    '#222222',
+    'Grey':     '#888888',
+    'Gray':     '#888888',
+    'Navy':     '#1B2A4A',
+    'Blue':     '#4A6FA5',
+    'Red':      '#C0392B',
+    'Green':    '#2E7D32',
+    'Beige':    '#E8DCC8',
+    'Khaki':    '#C3B091',
+    'Brown':    '#795548',
+    'Pink':     '#F06292',
+    'Purple':   '#7B1FA2',
+    'Yellow':   '#F9A825',
+    'Orange':   '#E65100',
+    'Cream':    '#FFFDD0',
+    'Ivory':    '#FFFFF0',
+    'Natural':  '#E8DCC8',
+};
+%>
+<link rel="stylesheet" href="/css/client-checkoutStyle.css" />
+
+<div class="ck-page">
+  <div class="container-fluid px-0">
+    <div class="row g-0">
+      <div class="col-12 d-lg-none" style="background: var(--ck-panel)">
+        <div class="px-3 py-4">
+          <%- include('../../../partials/webstore/client-checkoutSummary.ejs')
+          %>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6 px-3 px-md-5">
+        <div class="ck-left">
+          <h1 class="ck-title">Checkout</h1>
+
+          <div class="ck-step-header">
+            <div class="ck-step-num">1</div>
+            <span class="ck-step-title">Shipping Address</span>
+          </div>
+
+          <div class="ck-section mb-4">
+            <div class="row g-3">
+              <div class="col-6">
+                <label class="ck-field-label">First Name</label>
+                <input type="text" class="ck-input" id="ckFirstName" placeholder="John" />
+              </div>
+              <div class="col-6">
+                <label class="ck-field-label">Last Name</label>
+                <input type="text" class="ck-input" id="ckLastName" placeholder="Doe" />
+              </div>
+              <div class="col-12">
+                <label class="ck-field-label">Phone Number</label>
+                <input type="text" class="ck-input" id="ckPhoneNumber" placeholder="0812345678" />
+              </div>
+              <div class="col-12">
+                <label class="ck-field-label">Address</label>
+                <input
+                  type="text"
+                  class="ck-input"
+                  id="ckAddressLine1"
+                  placeholder="Street name and house number"
+                />
+              </div>
+              <div class="col-12">
+                <label class="ck-field-label">Address Line 2</label>
+                <input
+                  type="text"
+                  class="ck-input"
+                  id="ckAddressLine2"
+                  placeholder="Apartment, building, floor (optional)"
+                />
+              </div>
+              <div class="col-6">
+                <label class="ck-field-label">District</label>
+                <input type="text" class="ck-input" id="ckDistrict" placeholder="Watthana" />
+              </div>
+              <div class="col-6">
+                <label class="ck-field-label">Province</label>
+                <input type="text" class="ck-input" id="ckProvince" placeholder="Bangkok" />
+              </div>
+              <div class="col-6">
+                <label class="ck-field-label">Postal Code</label>
+                <input type="text" class="ck-input" id="ckPostalCode" placeholder="10110" />
+              </div>
+              <div class="col-6">
+                <label class="ck-field-label">Country</label>
+                <input type="text" class="ck-input" id="ckCountry" placeholder="Thailand" value="Thailand" />
+              </div>
+            </div>
+          </div>
+
+          <div class="ck-status" id="ckStatus" style="display:none;"></div>
+          <button class="ck-submit-btn" id="ckSubmitBtn" onclick="ckSubmit()">Complete</button>
+          <p class="ck-terms">
+            Cash on Delivery (COD) By placing your order, you agree to our
+            <a href="#">Terms and Conditions</a>.
+          </p>
+        </div>
+      </div>
+
+      <div
+        class="col-lg-6 d-none d-lg-block"
+        style="background: var(--ck-panel)"
+      >
+        <div class="ck-right">
+          <%- include('../../../partials/webstore/client-checkoutSummary.ejs')
+          %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/client-cart.js"></script>
+<script>
+  var ckState = {
+    items: [],
+    cartSummary: { totalItems: 0, subtotal: 0 },
+  };
+
+  function ckSplitFullName(fullName) {
+    var normalized = typeof fullName === "string" ? fullName.trim() : "";
+    if (!normalized) return { firstName: "", lastName: "" };
+    var parts = normalized.split(/\s+/);
+    return {
+      firstName: parts.shift() || "",
+      lastName: parts.join(" ")
+    };
+  }
+
+  function ckSetStatus(message, type) {
+    var statusEl = document.getElementById("ckStatus");
+    if (!statusEl) return;
+
+    if (!message) {
+      statusEl.style.display = "none";
+      statusEl.textContent = "";
+      statusEl.className = "ck-status";
+      return;
+    }
+
+    statusEl.textContent = message;
+    statusEl.className = "ck-status is-" + (type || "error");
+    statusEl.style.display = "block";
+  }
+
+  function ckSetLoading(isLoading) {
+    var submitBtn = document.getElementById("ckSubmitBtn");
+    if (!submitBtn) return;
+    submitBtn.disabled = isLoading || ckState.items.length === 0;
+    submitBtn.textContent = isLoading ? "Processing..." : "Complete";
+  }
+
+  function ckFillAddressForm(address) {
+    var fullName = ckSplitFullName(address && address.fullName);
+
+    document.getElementById("ckFirstName").value = fullName.firstName;
+    document.getElementById("ckLastName").value = fullName.lastName;
+    document.getElementById("ckPhoneNumber").value = address && address.phoneNumber ? address.phoneNumber : "";
+    document.getElementById("ckAddressLine1").value = address && address.addressLine1 ? address.addressLine1 : "";
+    document.getElementById("ckAddressLine2").value = address && address.addressLine2 ? address.addressLine2 : "";
+    document.getElementById("ckDistrict").value = address && address.district ? address.district : "";
+    document.getElementById("ckProvince").value = address && address.province ? address.province : "";
+    document.getElementById("ckPostalCode").value = address && address.postalCode ? address.postalCode : "";
+    document.getElementById("ckCountry").value = address && address.country ? address.country : "Thailand";
+  }
+
+  function ckReadAddressPayload() {
+    var firstName = document.getElementById("ckFirstName").value.trim();
+    var lastName = document.getElementById("ckLastName").value.trim();
+    var fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+
+    return {
+      fullName: fullName,
+      phoneNumber: document.getElementById("ckPhoneNumber").value.trim(),
+      addressLine1: document.getElementById("ckAddressLine1").value.trim(),
+      addressLine2: document.getElementById("ckAddressLine2").value.trim(),
+      district: document.getElementById("ckDistrict").value.trim(),
+      province: document.getElementById("ckProvince").value.trim(),
+      postalCode: document.getElementById("ckPostalCode").value.trim(),
+      country: document.getElementById("ckCountry").value.trim(),
+    };
+  }
+
+  function ckRenderSummary() {
+    var cart = ckState.items;
+    var submitBtn = document.getElementById("ckSubmitBtn");
+    if (submitBtn) {
+      submitBtn.disabled = cart.length === 0;
+      submitBtn.style.opacity = cart.length === 0 ? "0.4" : "1";
+      submitBtn.style.cursor = cart.length === 0 ? "not-allowed" : "pointer";
+    }
+
+    var subtotal = Number(ckState.cartSummary.subtotal || 0);
+    var vatIncluded = subtotal > 0 ? Number((subtotal * 7 / 107).toFixed(2)) : 0;
+    var total = subtotal;
+    var itemsHtml = cart
+      .map(function (item) {
+        return (
+          '<div class="ck-order-item">' +
+          '<img src="' +
+          item.image +
+          '" alt="' +
+          item.name +
+          '" class="ck-order-img" loading="lazy" />' +
+          '<div class="ck-order-body">' +
+          '<div class="ck-order-name">' +
+          item.name +
+          "</div>" +
+          '<div class="ck-order-meta">' +
+          "Color: " +
+          (item.color || "—") +
+          "<br/>" +
+          "Size: " +
+          (item.size || "—") +
+          "<br/>" +
+          "Qty: " +
+          item.quantityCartItem +
+          "</div></div>" +
+          '<div class="ck-order-price">$' +
+          Number(item.lineTotal || 0).toFixed(2) +
+          "</div>" +
+          "</div>"
+        );
+      })
+      .join("");
+
+    // querySelectorAll แทน getElementById เพราะ id ซ้ำกัน 2 อัน (mobile + desktop)
+    document.querySelectorAll("#ckItems").forEach(function (el) {
+      el.innerHTML = itemsHtml || '<div class="ck-order-empty">Your cart is empty.</div>';
+    });
+    document.querySelectorAll("#ckSubtotal").forEach(function (el) {
+      el.textContent = "$" + subtotal.toFixed(2);
+    });
+    document.querySelectorAll("#ckVat").forEach(function (el) {
+      el.textContent = "$" + vatIncluded.toFixed(2);
+    });
+    document.querySelectorAll("#ckTotal").forEach(function (el) {
+      el.textContent = "$" + total.toFixed(2);
+    });
+  }
+
+  async function ckLoadCheckout() {
+    try {
+      const [cartRes, addressRes] = await Promise.all([
+        fetch("/api/client/cart?lang=EN"),
+        fetch("/api/client/checkout/address")
+      ]);
+
+      if (cartRes.status === 401 || addressRes.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const cartJson = await cartRes.json().catch(function () { return null; });
+      const addressJson = await addressRes.json().catch(function () { return null; });
+
+      if (!cartRes.ok) {
+        ckSetStatus((cartJson && cartJson.message) || "Could not load checkout cart", "error");
+        ckState.items = [];
+        ckState.cartSummary = { totalItems: 0, subtotal: 0 };
+        ckRenderSummary();
+        return;
+      }
+
+      ckState.items = (cartJson && cartJson.data && cartJson.data.items) || [];
+      ckState.cartSummary = (cartJson && cartJson.data && cartJson.data.cartSummary) || {
+        totalItems: 0,
+        subtotal: 0
+      };
+
+      if (addressRes.ok && addressJson && addressJson.data) {
+        ckFillAddressForm(addressJson.data.address);
+      } else {
+        ckFillAddressForm(null);
+      }
+
+      ckRenderSummary();
+    } catch (error) {
+      ckSetStatus("Could not connect to server", "error");
+      ckState.items = [];
+      ckState.cartSummary = { totalItems: 0, subtotal: 0 };
+      ckRenderSummary();
+    }
+  }
+
+  async function ckSubmit() {
+    if (ckState.items.length === 0) {
+      ckSetStatus("Your cart is empty", "error");
+      return;
+    }
+
+    ckSetStatus("", "");
+    ckSetLoading(true);
+
+    try {
+      const addressPayload = ckReadAddressPayload();
+
+      const saveAddressRes = await fetch("/api/client/checkout/address", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(addressPayload)
+      });
+
+      const saveAddressJson = await saveAddressRes.json().catch(function () { return null; });
+
+      if (saveAddressRes.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
+      if (!saveAddressRes.ok) {
+        ckSetStatus(
+          (saveAddressJson && saveAddressJson.message) || "Could not save checkout address",
+          "error"
+        );
+        return;
+      }
+
+      const purchaseRes = await fetch("/api/client/checkout/purchase", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      const purchaseJson = await purchaseRes.json().catch(function () { return null; });
+
+      if (purchaseRes.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
+      if (!purchaseRes.ok) {
+        ckSetStatus(
+          (purchaseJson && purchaseJson.message) || "Could not complete purchase",
+          "error"
+        );
+        return;
+      }
+
+      Cart.clearCart();
+      window.location.href = "/checkout/success";
+    } catch (error) {
+      ckSetStatus("Could not connect to server", "error");
+    } finally {
+      ckSetLoading(false);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    ckLoadCheckout();
+  });
+</script>

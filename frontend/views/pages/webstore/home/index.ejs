@@ -1,0 +1,22 @@
+<main>
+    <%- include('../../../partials/webstore/banner') %>
+        <%- include('../../../partials/webstore/newArrivalsSection', { products: newProducts }) %>
+</main>
+
+
+
+<!-- Scroll to top button -->
+<button id="scrollTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})"
+  style="display:none; position:fixed; bottom:2rem; right:2rem; 
+         background:#8b7355; color:white; border:none; border-radius:50%; 
+         width:48px; height:48px; font-size:1.2rem; cursor:pointer; z-index:999;">
+  ↑
+</button>
+
+<script>
+  window.addEventListener('scroll', function() {
+    const btn = document.getElementById('scrollTopBtn');
+    btn.style.display = window.scrollY > 300 ? 'block' : 'none';
+  });
+</script>
+

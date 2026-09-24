@@ -1,0 +1,125 @@
+<div class="fade-in product-matrix-layout">
+    <!-- Breadcrumbs & Header -->
+
+    <div class="page-header d-flex justify-content-between align-items-end mb-5">
+        <div>
+            <h1 class="page-title main-title mb-1">Product Performance Matrix</h1>
+            <p class="page-subtitle text-muted">Detailed analytics for product engagement and sales conversion</p>
+        </div>
+        <div class="search-container glass-card-solid p-2" style="width: 350px;">
+            <div class="input-group">
+                <span class="input-group-text border-0 bg-transparent text-muted">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="productSearch" class="form-control border-0 bg-transparent"
+                    placeholder="Search products..." autocomplete="off">
+            </div>
+            <div id="searchResults" class="search-results-dropdown glass-card-solid" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Product Summary Header (Visible when product selected) -->
+    <div id="productSummary" class="glass-card-liquid mb-4 p-4 d-flex align-items-center gap-4 transition-all"
+        style="display: none !important;">
+        <div class="product-thumbnail-container">
+            <img id="summaryImage" src="" alt="Product" class="summary-img">
+        </div>
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h2 id="summaryName" class="mb-1" style="font-family: 'DM Serif Display', serif; font-size: 2rem;">
+                        Product Name</h2>
+                    <span id="summaryCategory" class="badge-glass mb-2">Category</span>
+                </div>
+                <div class="text-end">
+                    <div class="summary-price" id="summaryPrice">$0.00</div>
+                    <div class="summary-stock" id="summaryStock">0 in stock</div>
+                </div>
+            </div>
+            <div class="d-flex gap-5 mt-3">
+                <div class="stat-mini">
+                    <span class="stat-mini-label">Product ID</span>
+                    <span class="stat-mini-value" id="summaryID">#ID</span>
+                </div>
+                <div class="stat-mini">
+                    <span class="stat-mini-label">Total Likes</span>
+                    <span class="stat-mini-value" id="summaryLikes">0</span>
+                </div>
+                <div class="stat-mini">
+                    <span class="stat-mini-label">Total Views</span>
+                    <span class="stat-mini-value" id="summaryViews">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 1: Purchase Count & Product Views -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-5">
+            <div class="glass-card-liquid p-4 h-100 chart-card">
+                <div class="mb-4">
+                    <h5 class="chart-card-title mb-1">Purchase Count</h5>
+                    <p class="chart-card-subtitle text-muted small">Top performing items by sales volume</p>
+                </div>
+                <div class="chart-container" style="position: relative; height:320px;">
+                    <canvas id="purchaseChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="glass-card-liquid p-4 h-100 chart-card">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h5 class="chart-card-title mb-1">Product Views</h5>
+                        <p class="chart-card-subtitle text-muted small">Traffic trends over the last 7 days</p>
+                    </div>
+                </div>
+                <div class="chart-container" style="position: relative; height:320px;">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row 2: Total Likes & Recent Comments -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-5">
+            <div class="glass-card-liquid p-4 h-100 chart-card">
+                <div class="mb-4">
+                    <h5 class="chart-card-title mb-1">Total Likes</h5>
+                    <p class="chart-card-subtitle text-muted small">Engagement distribution across categories</p>
+                </div>
+                <div class="d-flex align-items-center justify-content-center" style="height: 250px;">
+                    <div class="donut-wrapper" style="position: relative; height:220px; width:220px;">
+                        <canvas id="engagementChart"></canvas>
+                        <div class="donut-center-text">
+                            <h3 id="centerLikesValue">0</h3>
+                            <span>TOTAL</span>
+                        </div>
+                    </div>
+                    <div id="engagementLegend" class="ms-4 d-flex flex-column gap-3"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="glass-card-liquid p-4 h-100 d-flex flex-column justify-content-center">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-people text-muted"></i>
+                    <h6 class="m-0 fw-bold">Unique Viewers</h6>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h1 class="display-5 fw-bold mb-0">12.5k</h1>
+                    <span class="badge-active bg-success-subtle text-success px-2 py-1 rounded">Active</span>
+                </div>
+                <p class="text-muted small mt-2">Users engaging with catalog this week</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="/css/product-performance.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script id="product-data" type="application/json">
+    <%- JSON.stringify(allProducts) %>
+</script>
+<script src="/js/product-performance.js"></script>

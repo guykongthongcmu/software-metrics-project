@@ -1,0 +1,132 @@
+<main class="all-products-page py-4">
+  <div class="container">
+    <h1 class="mb-1">All Products</h1>
+    <p id="product-count" class="text-muted mb-3"></p>
+
+    <!-- Sort Bar -->
+    <div class="sort-bar mb-4 d-flex gap-2">
+      <button
+        class="btn sort-btn active"
+        onclick="setSort('recommended')"
+        id="sort-recommended"
+      >
+        Recommended
+      </button>
+      <button class="btn sort-btn" onclick="setSort('newest')" id="sort-newest">
+        New Arrivals
+      </button>
+    </div>
+
+    <!-- Product Grid (Bootstrap) -->
+    <div class="row g-3" id="productGrid"></div>
+
+    <!-- Pagination -->
+    <nav class="pagination-wrap" aria-label="All products pagination">
+      <ul class="pagination-list" id="pagination"></ul>
+      <p id="paginationInfo" class="pagination-info"></p>
+    </nav>
+  </div>
+</main>
+
+<script>
+  const ALL_PRODUCTS = <%- JSON.stringify(products) %>;
+  const PER_PAGE = Number(<%= locals.perPage || 8 %>);
+  let currentPage = Number(<%= locals.currentPage || 1 %>);
+  let currentSort = '<%= locals.defaultSort || "recommended" %>';
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('sort') === 'newest') currentSort = 'newest';
+  if (Number.parseInt(urlParams.get('page'), 10) > 0) {
+    currentPage = Number.parseInt(urlParams.get('page'), 10);
+  }
+
+  function syncUrl(page) {
+    const nextUrl = new URL(window.location.href);
+    nextUrl.searchParams.set('page', String(page));
+    nextUrl.searchParams.set('sort', currentSort);
+    window.history.replaceState({}, '', nextUrl);
+  }
+
+  function setSort(sort) {
+    currentSort = sort;
+    currentPage = 1;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('sort-' + sort).classList.add('active');
+    renderPage(1);
+  }
+
+  function getSortedProducts() {
+    const arr = [...ALL_PRODUCTS];
+    if (currentSort === 'newest') {
+      arr.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    } else {
+      arr.sort((a, b) => a.id - b.id);
+    }
+    return arr;
+  }
+
+  function renderPage(page) {
+    const sorted = getSortedProducts();
+    const totalPages = Math.max(1, Math.ceil(sorted.length / PER_PAGE));
+    currentPage = Math.min(Math.max(page, 1), totalPages);
+    const start = (currentPage - 1) * PER_PAGE;
+    const pageItems = sorted.slice(start, start + PER_PAGE);
+    syncUrl(currentPage);
+
+    document.getElementById('product-count').textContent = sorted.length + ' items';
+
+    // col-6 = 2 คอล phone, col-md-4 = 3 คอล tablet, col-lg-3 = 4 คอล desktop
+    document.getElementById('productGrid').innerHTML = pageItems.map(p => `
+      <div class="col-6 col-md-4 col-lg-3">
+        <a href="/products/${p.id}" class="product-card text-decoration-none d-block h-100">
+          <div class="product-image-wrapper position-relative">
+            <img src="${p.image}" alt="${p.name}" loading="lazy" class="w-100" style="aspect-ratio:3/4; object-fit:cover;"/>
+            ${p.badge ? `<span class="badge bg-danger position-absolute top-0 start-0 m-2">${p.badge}</span>` : ''}
+          </div>
+          <div class="product-info p-2">
+            <p class="product-name mb-1 fw-medium">${p.name}</p>
+            <p class="product-price mb-0">
+              ${p.originalFormatted ? `<span class="text-muted text-decoration-line-through me-1" style="font-size:0.85rem">${p.originalFormatted}</span>` : ''}
+              ${p.priceFormatted}
+            </p>
+          </div>
+        </a>
+      </div>
+    `).join('');
+
+    // Branded pagination
+    let paginationHTML = '';
+    paginationHTML += `<li>
+      <button type="button" class="page-btn page-btn--arrow ${currentPage === 1 ? 'page-btn--disabled' : ''}" ${currentPage === 1 ? 'disabled' : ''} onclick="renderPage(${currentPage - 1})">Prev</button>
+    </li>`;
+
+    for (let i = 1; i <= totalPages; i++) {
+      const shouldRender = i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1);
+      const shouldShowEllipsis = i === currentPage - 2 || i === currentPage + 2;
+
+      if (shouldRender) {
+        paginationHTML += `<li>
+          <button type="button" class="page-btn ${i === currentPage ? 'page-btn--active' : ''}" onclick="renderPage(${i})" ${i === currentPage ? 'aria-current="page"' : ''}>${i}</button>
+        </li>`;
+      } else if (shouldShowEllipsis) {
+        paginationHTML += `<li><span class="page-ellipsis">…</span></li>`;
+      }
+    }
+
+    paginationHTML += `<li>
+      <button type="button" class="page-btn page-btn--arrow ${currentPage === totalPages ? 'page-btn--disabled' : ''}" ${currentPage === totalPages ? 'disabled' : ''} onclick="renderPage(${currentPage + 1})">Next</button>
+    </li>`;
+
+    document.getElementById('pagination').innerHTML = paginationHTML;
+    document.getElementById('paginationInfo').textContent = `Showing ${start + 1}–${Math.min(start + PER_PAGE, sorted.length)} of ${sorted.length} products`;
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  if (currentSort === 'newest') {
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('sort-newest').classList.add('active');
+  }
+
+  renderPage(currentPage);
+</script>

@@ -1,0 +1,74 @@
+name: Design Spec
+description: UI/UX, architecture, database, API, or business rules design work
+title: "design: "
+labels: ["type: task", "area: project"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - "area: frontend"
+        - "area: backend"
+        - "area: devops"
+        - "area: general"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: spec_type
+    attributes:
+      label: Spec type
+      options:
+        - UI/UX
+        - Architecture
+        - API
+        - Database
+        - Business rules
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What decision/artifact should come out of this?
+      placeholder: "Example: Finalize ERD + business rules so backend can implement schema."
+    validations:
+      required: true
+
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Artifacts / links (what you will produce)
+      description: List files/links (Figma, docs/, diagrams) that will be created/updated.
+      placeholder: |
+        - Figma: <link>
+        - ERD: docs/erd.png
+        - API: docs/api.md
+        - Business rules: docs/business-rules.md
+    validations:
+      required: true
+
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tasks
+      description: Checklist of what needs to be done.
+      value: |
+        - [ ] Create/update the spec artifact(s)
+        - [ ] Review with team (agree on decisions)
+        - [ ] Add follow-up implementation issues
+        - [ ] Update docs/README if needed
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / links
+      description: Related issues, constraints, screenshots, references.
+    validations:
+      required: false

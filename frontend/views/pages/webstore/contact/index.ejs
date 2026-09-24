@@ -1,0 +1,110 @@
+<!-- /views/pages/webstore/contact/index.ejs -->
+<div class="contact-page-container" style="max-width: 1200px; margin: 40px auto; padding: 20px;">
+    <h1
+        style="text-align: center; margin-bottom: 40px; font-weight: 400; font-size: 3rem; font-family: var(--font-heading), serif; letter-spacing: 2px; color: var(--text-primary);">
+        Contact Us</h1>
+
+    <div class="contact-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px;">
+
+        <!-- Store Info Section -->
+        <div class="store-info"
+            style="background-color: var(--white); border: 1px solid var(--warm-border); padding: 40px; border-radius: var(--radius-card); box-shadow: var(--shadow-sm);">
+            <h2
+                style="font-size: 1.8rem; margin-bottom: 25px; font-weight: 400; font-family: var(--font-heading), serif; letter-spacing: 1px; color: var(--text-primary);">
+                Store Information</h2>
+
+            <div style="margin-bottom: 25px;">
+                <h3
+                    style="font-size: 1.1rem; margin-bottom: 8px; font-weight: 600; color: var(--accent-color); font-family: var(--font-body); letter-spacing: 0.5px; text-transform: uppercase;">
+                    Address</h3>
+                <p style="color: var(--text-secondary); line-height: 1.6; font-size: 1rem;">
+                    Core &amp; Co Flagship Store<br>
+                    123 Fashion Ave<br>
+                    Bangkok, Thailand 10110
+                </p>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <h3
+                    style="font-size: 1.1rem; margin-bottom: 8px; font-weight: 600; color: var(--accent-color); font-family: var(--font-body); letter-spacing: 0.5px; text-transform: uppercase;">
+                    Email Us</h3>
+                <p style="color: var(--text-secondary); font-size: 1rem;">
+                    <a href="mailto:coreandco2026@gmail.com"
+                        style="color: inherit; text-decoration: none; border-bottom: 1px solid currentColor; transition: color 0.3s ease;">
+                        coreandco2026@gmail.com
+                    </a>
+                </p>
+            </div>
+
+            <div style="margin-bottom: 25px;">
+                <h3
+                    style="font-size: 1.1rem; margin-bottom: 8px; font-weight: 600; color: var(--accent-color); font-family: var(--font-body); letter-spacing: 0.5px; text-transform: uppercase;">
+                    Store Hours</h3>
+                <p style="color: var(--text-secondary); line-height: 1.6; font-size: 1rem;">
+                    Mon - Fri: 10:00 AM - 9:00 PM<br>
+                    Sat - Sun: 10:00 AM - 10:00 PM
+                </p>
+            </div>
+
+            <div style="margin-top: 35px;">
+                <h3
+                    style="font-size: 1.1rem; margin-bottom: 15px; font-weight: 600; color: var(--accent-color); font-family: var(--font-body); letter-spacing: 0.5px; text-transform: uppercase;">
+                    Follow Us</h3>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="#" class="social-link"
+                        style="color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: 500; transition: transform 0.2s ease;">
+                        <span style="font-size: 1.2rem;"></span> Instagram: @coreandco_official
+                    </a>
+                    <a href="#" class="social-link"
+                        style="color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: 500; transition: transform 0.2s ease;">
+                        <span style="font-size: 1.2rem;"></span> Facebook: Core &amp; Co
+                    </a>
+                    <a href="#" class="social-link"
+                        style="color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 10px; font-weight: 500; transition: transform 0.2s ease;">
+                        <span style="font-size: 1.2rem;"></span> Twitter: @coreandco_th
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Google Maps Display -->
+        <div class="store-map"
+            style="border-radius: var(--radius-card); overflow: hidden; min-height: 400px; background-color: #eee; box-shadow: var(--shadow-sm); border: 1px solid var(--warm-border);">
+            <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d124021.08272583808!2d100.4147072554763!3d13.72460049445037!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29b30ec60613f%3A0xcb1bca728956ce24!2sBangkok!5e0!3m2!1sen!2sth!4v1714080131451!5m2!1sen!2sth"
+                width="100%" height="100%" style="border:0; min-height: 400px;" allowfullscreen="" loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .social-link:hover {
+        transform: translateX(5px);
+        color: var(--accent-color) !important;
+    }
+
+    .store-info a[href^="mailto"]:hover {
+        color: var(--accent-color) !important;
+        border-color: var(--accent-color);
+    }
+
+    /* Add a bit of responsive adjustment specifically for smaller screens if needed */
+    @media (max-width: 768px) {
+        .contact-page-container {
+            margin: 20px auto;
+            padding: 15px;
+        }
+
+        .contact-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .store-info {
+            padding: 25px !important;
+        }
+    }
+</style>

@@ -1,0 +1,249 @@
+<% 
+const colorMap = {
+    'White':    '#FFFFFF',
+    'Black':    '#222222',
+    'Grey':     '#888888',
+    'Gray':     '#888888',
+    'Navy':     '#1B2A4A',
+    'Blue':     '#4A6FA5',
+    'Red':      '#C0392B',
+    'Green':    '#2E7D32',
+    'Beige':    '#E8DCC8',
+    'Khaki':    '#C3B091',
+    'Brown':    '#795548',
+    'Pink':     '#F06292',
+    'Purple':   '#7B1FA2',
+    'Yellow':   '#F9A825',
+    'Orange':   '#E65100',
+    'Cream':    '#FFFDD0',
+    'Ivory':    '#FFFFF0',
+    'Natural':  '#E8DCC8',
+};
+%>
+<% layout = 'layouts/webstore' %>
+<link rel="stylesheet" href="/css/client-cartStyle.css" />
+
+<div class="ct-page">
+  <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
+
+    <div class="row g-4">
+
+      <%# ── LEFT: Cart items ── %>
+      <div class="col-12">
+
+        <h1 class="ct-heading">Your cart</h1>
+        <p class="ct-subheading" id="ctSubheading">— IN YOUR SELECTION</p>
+
+        <%# empty state %>
+        <div id="ctEmpty" class="ct-empty" style="display:none;">
+          Your cart is now empty, save the items in your cart now!
+        </div>
+
+        <%# items list %>
+        <div id="ctItems"></div>
+
+        <%# total + checkout %>
+        <div class="ct-summary">
+          <div class="ct-total-row">
+            <span class="ct-total-label">Total</span>
+            <span class="ct-total-amount" id="ctTotal">$0.00</span>
+          </div>
+          <div class="d-flex justify-content-end">
+            <div style="width:100%; max-width:500px;">
+              <button class="ct-checkout-btn" onclick="location.href='/checkout'">Check Out</button>
+              <div class="ct-secure">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="11" height="11">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                Secure encrypted checkout
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <%# you may also like %>
+        <section class="ct-rec-section">
+          <p class="ct-rec-title">You may also like</p>
+          <div class="row g-2 g-md-3" id="ctRec">
+            <% recommendations.forEach(function(item) { %>
+              <div class="col-6 col-md-3">
+                <a href="/products/<%= item.id %>" class="ct-rec-card">
+                  <img src="<%= item.image %>" alt="<%= item.name %>" class="ct-rec-img" loading="lazy" />
+                  <button type="button" class="ct-rec-wish favorite-toggle" aria-label="Wishlist" data-id="<%= item.id %>">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                  </button>
+                  <div class="ct-rec-name"><%= item.name %></div>
+                  <div class="ct-rec-price">$<%= item.price.toFixed(2) %></div>
+                  <div class="ct-rec-colors">
+                    <% item.colors.forEach(function(c) { %>
+                      <span class="ct-rec-swatch" style="background-color: <%= colorMap[c] || '#ccc' %>"></span>
+                    <% }) %>
+                    </div>
+                </a>
+              </div>
+            <% }) %>
+          </div>
+        </section>
+
+      </div><%# end left %>
+
+    </div><%# end row %>
+  </div><%# end container %>
+</div>
+
+<script src="/js/client-cart.js"></script>
+<script id="cart-data" type="application/json"><%- JSON.stringify(cart || []) %></script>
+<script id="cart-summary-data" type="application/json"><%- JSON.stringify(cartSummary || {totalItems: 0, subtotal: 0}) %></script>
+<script>
+  var serverCart = JSON.parse(document.getElementById('cart-data').textContent);
+  var serverCartSummary = JSON.parse(document.getElementById('cart-summary-data').textContent);
+
+  function fmt(n) { return '$' + n.toFixed(2); }
+  var colorMap = {
+  'White':'#FFFFFF','Black':'#222222','Grey':'#888888','Gray':'#888888',
+  'Navy':'#1B2A4A','Blue':'#4A6FA5','Red':'#C0392B','Green':'#2E7D32',
+  'Beige':'#E8DCC8','Khaki':'#C3B091','Brown':'#795548','Pink':'#F06292',
+  'Purple':'#7B1FA2','Yellow':'#F9A825','Orange':'#E65100','Cream':'#FFFDD0',
+  'Ivory':'#FFFFF0','Natural':'#E8DCC8'
+};
+  function renderCart() {
+    var cart = serverCart;
+    var empty = document.getElementById('ctEmpty');
+    var itemsEl = document.getElementById('ctItems');
+    var totalEl = document.getElementById('ctTotal');
+    var subEl = document.getElementById('ctSubheading');
+
+    totalEl.textContent = fmt(serverCartSummary.subtotal || 0);
+    subEl.textContent = serverCartSummary.totalItems + ' ITEM' + (serverCartSummary.totalItems !== 1 ? 'S' : '') + ' IN YOUR SELECTION';
+    var checkoutBtn = document.querySelector('.ct-checkout-btn');
+    if (checkoutBtn) {
+      checkoutBtn.disabled = cart.length === 0;
+      checkoutBtn.style.opacity = cart.length === 0 ? '0.4' : '1';
+      checkoutBtn.style.cursor  = cart.length === 0 ? 'not-allowed' : 'pointer';
+      checkoutBtn.onclick = cart.length === 0 ? null : function() { location.href = '/checkout'; };
+    }
+    if (cart.length === 0) {
+      empty.style.display = 'block';
+      itemsEl.innerHTML = '';
+      return;
+    }
+
+    empty.style.display = 'none';
+    itemsEl.innerHTML = cart.map(function(item, idx) {
+      return '<div class="ct-item" id="ctItem-' + idx + '">'
+        + '<a href="/products/' + item.id + '">'
+        +   '<img src="' + item.image + '" alt="' + item.name + '" class="ct-item-img" loading="lazy" />'
+        + '</a>'
+        + '<div class="ct-item-body">'
+        +   '<a href="/products/' + item.id + '" class="ct-item-name">' + item.name + '</a>'
+        +   '<div class="ct-item-meta">'
+        +     '<span class="ct-item-swatch" style="background-color:' + (colorMap[item.color] || '#ccc') + '"></span>'
+        +     'Color: ' + (item.color || '—') + ' &nbsp;|&nbsp; Size: ' + (item.size || '—')
+        +   '</div>'
+        +   '<div class="ct-qty">'
+        +     '<button class="ct-qty-btn" onclick="ctChangeQty(' + idx + ',-1)">−</button>'
+        +     '<span class="ct-qty-val" id="ctQty-' + idx + '">' + item.qty + '</span>'
+        +     '<button class="ct-qty-btn" onclick="ctChangeQty(' + idx + ',1)">+</button>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="ct-item-actions">'
+        +   '<button type="button" class="ct-icon-btn favorite-toggle" aria-label="Wishlist" data-id="' + item.id + '">'
+        +     '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>'
+        +   '</button>'
+        +   '<button class="ct-icon-btn delete" aria-label="Remove" onclick="ctRemove(' + idx + ')">'
+        +     '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>'
+        +   '</button>'
+        + '</div>'
+        + '<div class="ct-item-price">'
+        +   (item.originalPrice ? '<span class="ct-item-price-was">' + fmt(item.originalPrice) + '</span>' : '')
+        +   '<span class="ct-item-price-now">' + fmt(item.price * item.qty) + '</span>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+    if (typeof window.refreshFavoriteToggles === 'function') {
+      window.refreshFavoriteToggles();
+    }
+  }
+
+   async function ctChangeQty(idx, delta) {
+    var cart = serverCart;
+    if (!cart[idx]) return;
+    
+    var item = cart[idx];
+    var newQty = Math.max(1, Math.min(10, item.qty + delta));
+    
+    try {
+      const response = await fetch(`/api/cart/items/${item.itemId}?lang=EN`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          quantityCartItem: newQty
+        })
+      });
+
+      const json = await response.json().catch(() => null);
+      
+      if (response.ok) {
+        location.reload();
+      } else if (response.status === 401 || (json && json.code === 'UNAUTHORIZED')) {
+        location.href = '/login';
+      } else {
+        alert((json && json.message) || 'Could not update quantity');
+      }
+    } catch (error) {
+      alert('Error updating quantity');
+    }
+  }
+
+  async function ctRemove(idx) {
+    var cart = serverCart;
+    if (!cart[idx]) return;
+    
+    var item = cart[idx];
+    
+    try {
+      const response = await fetch(`/api/cart/items/${item.itemId}`, {
+        method: 'DELETE'
+      });
+
+      const json = await response.json().catch(() => null);
+      
+      if (response.ok) {
+        location.reload();
+      } else if (response.status === 401 || (json && json.code === 'UNAUTHORIZED')) {
+        location.href = '/login';
+      } else {
+        alert((json && json.message) || 'Could not remove item');
+      }
+    } catch (error) {
+      alert('Error removing item');
+    }
+  }
+
+
+  // function ctChangeQty(idx, delta) {
+  //   var cart = Cart.getCart();
+  //   if (!cart[idx]) return;
+  //   var newQty = Math.max(1, Math.min(10, cart[idx].qty + delta));
+  //   Cart.updateQty(cart[idx].id, cart[idx].size, newQty);
+  //   renderCart();
+  // }
+
+  // function ctRemove(idx) {
+  //   var cart = Cart.getCart();
+  //   if (!cart[idx]) return;
+  //   Cart.removeFromCart(cart[idx].id, cart[idx].size);
+  //   renderCart();
+  // }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    renderCart();
+  });
+
+</script>

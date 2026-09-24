@@ -1,0 +1,242 @@
+<main class="signup-main">
+    <div class="signup-container">
+        <div class="signup-header">
+            <h1>Become our member</h1>
+            <p>SIGN UP NOW!</p>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="progress-container">
+            <div class="progress-track"></div>
+            <div class="progress-step active">
+                <div class="step-circle">1</div>
+                <div class="step-label">EMAIL</div>
+            </div>
+            <div class="progress-step">
+                <div class="step-circle">2</div>
+                <div class="step-label">INFO</div>
+            </div>
+            <div class="progress-step">
+                <div class="step-circle">3</div>
+                <div class="step-label">CONFIRM</div>
+            </div>
+        </div>
+
+        <form class="signup-form" action="/auth/signup-info" method="GET">
+            <div class="form-group">
+                <input type="email" id="email" name="email" placeholder="email" required>
+            </div>
+
+            <button type="submit" class="btn-next">NEXT</button>
+        </form>
+
+        <div class="signup-footer-link">
+            <p>Already a member? <a href="/login">Log in</a></p>
+        </div>
+    </div>
+</main>
+
+<style>
+    /* Signup Step 1 Page Styles */
+    .signup-page {
+        background-color: #F8F5F0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .signup-main {
+        flex: 1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 50px 20px;
+    }
+
+    .signup-container {
+        width: 100%;
+        max-width: 480px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .signup-header {
+        text-align: center;
+        margin-bottom: 45px;
+    }
+
+    .signup-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.8rem;
+        font-weight: 400;
+        color: #A69B91;
+        margin-bottom: 15px;
+        letter-spacing: 0.5px;
+    }
+
+    .signup-header p {
+        color: #B5AC9F;
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    /* Progress Tracker */
+    .progress-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        margin-bottom: 50px;
+        padding: 0 10px;
+    }
+
+    .progress-track {
+        position: absolute;
+        top: 15px;
+        left: 40px;
+        right: 40px;
+        height: 1px;
+        background-color: #DCD4CC;
+        z-index: 1;
+    }
+
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 2;
+        background-color: transparent;
+        width: 60px;
+    }
+
+    .step-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #F8F5F0;
+        border: 1px solid #DCD4CC;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        color: #A3978F;
+        margin-bottom: 12px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .step-label {
+        font-size: 0.65rem;
+        color: #B5AC9F;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-align: center;
+    }
+
+    .progress-step.active .step-circle {
+        background-color: #C3A37C;
+        border-color: #C3A37C;
+        color: #FFFFFF;
+        font-weight: 600;
+    }
+
+    .progress-step.active .step-label {
+        color: #A69B91;
+        font-weight: 600;
+    }
+
+    /* Form Styles */
+    .signup-form {
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .signup-form .form-group {
+        width: 100%;
+    }
+
+    .signup-form input {
+        width: 100%;
+        padding: 16px 20px;
+        border: 1px solid #DCD4CC;
+        border-radius: 2px;
+        background-color: transparent;
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+        color: #8C7E73;
+        transition: border-color 0.3s;
+    }
+
+    .signup-form input::placeholder {
+        color: #D1CBC5;
+        font-family: 'Playfair Display', serif;
+        font-style: italic;
+    }
+
+    .signup-form input:focus {
+        outline: none;
+        border-color: #A69B91;
+    }
+
+    .btn-next {
+        width: 100%;
+        background-color: #C3A37C;
+        border: none;
+        border-radius: 2px;
+        padding: 18px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 2px;
+        color: #FFFFFF;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        font-family: 'Inter', sans-serif;
+        margin-top: 10px;
+    }
+
+    .btn-next:hover {
+        background-color: #b5946c;
+    }
+
+    /* Footer Link */
+    .signup-footer-link {
+        margin-top: 35px;
+        text-align: center;
+        font-size: 0.8rem;
+        color: #A69B91;
+    }
+
+    .signup-footer-link a {
+        color: #A69B91;
+        text-decoration: underline;
+        font-weight: 500;
+        margin-left: 5px;
+        transition: color 0.3s;
+    }
+
+    .signup-footer-link a:hover {
+        color: #8c7e73;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .signup-header h1 {
+            font-size: 2.2rem;
+        }
+
+        .progress-track {
+            left: 30px;
+            right: 30px;
+        }
+    }
+</style>

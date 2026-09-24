@@ -1,0 +1,116 @@
+<div class="fade-in">
+    <div class="chat-main-container glass-card-solid">
+        <!-- Conversations Sidebar -->
+        <div class="chat-sidebar">
+            <div class="chat-sidebar-header">
+                <h5 class="m-0">Messages</h5>
+                <div class="chat-search mt-3">
+                    <i class="bi bi-search"></i>
+                    <input type="text" placeholder="Search conversations..." class="glass-input-sm" id="conversationSearch">
+                </div>
+            </div>
+            <div class="chat-list" id="conversationList">
+                <% conversations.forEach(function(conv) { %>
+                    <div class="chat-item <%= conv.id === 'user-001' ? 'active' : '' %>" data-user-id="<%= conv.id %>" onclick="selectConversation('<%= conv.id %>')">
+                        <div class="chat-item-avatar">
+                            <% if (conv.img) { %>
+                                <img src="<%= conv.img %>" alt="<%= conv.name %>">
+                            <% } else { %>
+                                <div class="avatar-placeholder"><%= conv.avatar %></div>
+                            <% } %>
+                            <span class="status-indicator <%= conv.status %>"></span>
+                        </div>
+                        <div class="chat-item-info">
+                            <div class="chat-item-header">
+                                <span class="chat-item-name"><%= conv.name %></span>
+                                <span class="chat-item-time"><%= conv.timestamp %></span>
+                            </div>
+                            <div class="chat-item-footer">
+                                <span class="chat-item-msg"><%= conv.lastMessage %></span>
+                                <% if (conv.unread > 0) { %>
+                                    <span class="unread-badge"><%= conv.unread %></span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        </div>
+
+        <!-- Chat Window -->
+        <div class="chat-window">
+            <div id="noChatSelected" style="display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">
+                <i class="bi bi-chat-dots" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
+                <p>Select a conversation to start chatting</p>
+            </div>
+
+            <div id="chatContent" style="display: flex; flex-direction: column; height: 100%;">
+                <div class="chat-header">
+                    <% if (conversations.length > 0) { %>
+                        <div class="chat-header-user">
+                            <div class="chat-header-avatar">
+                                <img id="activeUserImg" src="<%= conversations[0].img || '' %>" alt="">
+                                <span class="status-indicator <%= conversations[0].status %>" id="activeUserStatus"></span>
+                            </div>
+                            <div class="chat-header-info">
+                                <h6 class="m-0" id="activeUserName"><%= conversations[0].name %></h6>
+                                <small class="text-uppercase" id="activeUserStatusText" 
+                                       data-status="<%= conversations[0].status %>"
+                                       style="font-size: 10px; letter-spacing: 0.5px; font-weight: 700;">
+                                    <%= conversations[0].status %>
+                                </small>
+                            </div>
+                        </div>
+                    <% } %>
+                    <div class="chat-header-actions">
+                        <button class="chat-icon-btn"><i class="bi bi-three-dots-vertical"></i></button>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="messageContainer">
+                    <% if (conversations.length > 0 && conversations[0].history) { %>
+                        <div class="chat-date-separator">
+                            <span>TODAY, 10:45 AM</span>
+                        </div>
+                        <% conversations[0].history.forEach(function(msg) { %>
+                            <div class="message-row <%= msg.sender === 'admin' ? 'admin' : 'customer' %>">
+                                <div class="message-bubble">
+                                    <%= msg.text %>
+                                </div>
+                                <span class="message-time"><%= msg.time %></span>
+                            </div>
+                        <% }); %>
+                    <% } %>
+                    <div id="typingIndicator" class="message-row customer" style="display: none;">
+                        <div class="message-bubble typing">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <button class="chat-input-btn"><i class="bi bi-paperclip"></i></button>
+                    <button class="chat-input-btn"><i class="bi bi-emoji-smile"></i></button>
+                    <div class="chat-input-wrapper">
+                        <input type="text" placeholder="Type your message..." id="messageInput" autocomplete="off">
+                    </div>
+                    <button class="btn-golden" id="sendBtn" style="border-radius: var(--radius-full); padding: 8px 18px; height: 40px;">
+                        Send <i class="bi bi-send-fill ms-1" style="font-size: 12px;"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="/css/admin-chats.css">
+<script src="/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script id="conversations-data" type="application/json">
+    <%- JSON.stringify(conversations) %>
+</script>
+<script>
+    // Pass conversations to JS safely
+    const conversationsData = JSON.parse(document.getElementById('conversations-data').textContent);
+</script>
+<script src="/js/admin-chats.js"></script>

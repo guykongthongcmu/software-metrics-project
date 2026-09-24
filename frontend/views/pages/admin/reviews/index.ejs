@@ -1,0 +1,391 @@
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Customer Reviews</h1>
+            <p class="page-subtitle">Moderate and manage customer feedback</p>
+        </div>
+        <div class="page-header-actions">
+            <span class="badge-glass badge-active" style="font-size: 13px;">
+                <i class="bi bi-star-fill" style="color: var(--golden-straw);"></i>
+                <%= reviews.length %> Reviews
+            </span>
+        </div>
+    </div>
+
+    <!-- Star Rating Filter Bar -->
+    <div class="glass-card-solid" style="padding: 16px 24px; margin-bottom: 24px;">
+        <div class="reviews-filter-bar" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span style="font-size: 13px; font-weight: 600; color: var(--text-primary); margin-right: 4px;">
+                <i class="bi bi-funnel"></i> Filters:
+            </span>
+            <a href="/admin/reviews"
+                class="btn-glass btn-sm <%= !query.rating && !query.media ? 'active-filter' : '' %>"
+                style="font-size: 12px; padding: 6px 14px; border-radius: 20px;">
+                All Reviews
+            </a>
+            <a href="/admin/reviews?rating=5<%= query.media ? '&media=1' : '' %>"
+                class="btn-glass btn-sm <%= query.rating === '5' ? 'active-filter' : '' %>"
+                style="font-size: 12px; padding: 6px 14px; border-radius: 20px;">
+                <i class="bi bi-star-fill" style="color: #f5c518; font-size: 10px;"></i> 5-Star
+            </a>
+            <a href="/admin/reviews?rating=4<%= query.media ? '&media=1' : '' %>"
+                class="btn-glass btn-sm <%= query.rating === '4' ? 'active-filter' : '' %>"
+                style="font-size: 12px; padding: 6px 14px; border-radius: 20px;">
+                <i class="bi bi-star-fill" style="color: #f5c518; font-size: 10px;"></i> 4-Star
+            </a>
+            <a href="/admin/reviews?rating=3<%= query.media ? '&media=1' : '' %>"
+                class="btn-glass btn-sm <%= query.rating === '3' ? 'active-filter' : '' %>"
+                style="font-size: 12px; padding: 6px 14px; border-radius: 20px;">
+                <i class="bi bi-star-fill" style="color: #f5c518; font-size: 10px;"></i> 3-Star
+            </a>
+            <div class="reviews-filter-divider" style="border-left: 1px solid rgba(215,205,190,0.4); height: 24px; margin: 0 4px;"></div>
+            <a href="/admin/reviews?media=1<%= query.rating ? '&rating=' + query.rating : '' %>"
+                class="btn-glass btn-sm <%= query.media ? 'active-filter' : '' %>"
+                style="font-size: 12px; padding: 6px 14px; border-radius: 20px;">
+                <i class="bi bi-image"></i> With Images
+            </a>
+        </div>
+    </div>
+
+    <!-- Reviews Feed -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+        <% if (reviews.length===0) { %>
+            <div class="glass-card-solid" style="padding: 40px; text-align: center;">
+                <i class="bi bi-chat-square-text" style="font-size: 48px; color: var(--text-muted); opacity: 0.5;"></i>
+                <p style="margin-top: 12px; color: var(--text-muted);">No reviews match your filters.</p>
+                <a href="/admin/reviews" class="btn-golden" style="margin-top: 8px;">View All Reviews</a>
+            </div>
+            <% } else { %>
+                <% reviews.forEach(function(r) { %>
+                    <div class="glass-card-solid review-card" id="review-<%= r.id %>"
+                        style="padding: 24px; transition: all 0.3s;">
+                        <!-- Review Header -->
+                        <div class="review-card-header"
+                            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <div class="review-card-author" style="display: flex; align-items: center; gap: 12px;">
+                                <div
+                                    style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--golden-straw), var(--warm-linen)); display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; font-size: 16px;">
+                                    <%= r.customer_name.charAt(0).toUpperCase() %>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; font-size: 14px; color: var(--text-primary);">
+                                        <%= r.customer_name %>
+                                    </div>
+                                    <div style="font-size: 11px; color: var(--text-muted);">
+                                        <%= r.product_name %>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="review-card-meta" style="text-align: right;">
+                                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">
+                                    <%= r.created_at %>
+                                </div>
+                                <div>
+                                    <% for (let i = 1; i <= 5; i++) { %>
+                                        <i class="bi bi-star<%= i <= r.rating ? '-fill star-active' : ' star-muted' %>"
+                                            style="font-size: 12px;"></i>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Review Text -->
+                        <p
+                            style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px;">
+                            <%= r.comment %>
+                        </p>
+
+                        <!-- Review Image (if any) -->
+                        <% if (r.image_url) { %>
+                            <div style="margin-bottom: 12px;">
+                                <img src="<%= r.image_url %>" alt="Review image"
+                                    style="max-width: 200px; border-radius: 8px; border: 1px solid rgba(215,205,190,0.3);">
+                            </div>
+                            <% } %>
+
+                                <!-- Admin Response (if exists) -->
+                                <% if (r.admin_reply) { %>
+                                    <div
+                                        style="background: rgba(215, 205, 190, 0.15); border-left: 3px solid var(--golden-straw); padding: 12px 16px; border-radius: 8px; margin-bottom: 12px;">
+                                        <div
+                                            style="font-size: 11px; font-weight: 600; color: var(--golden-straw); margin-bottom: 4px;">
+                                            <i class="bi bi-shield-check"></i> Admin Response
+                                        </div>
+                                        <p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.5;"
+                                            id="reply-text-<%= r.id %>">
+                                            <%= r.admin_reply %>
+                                        </p>
+                                    </div>
+                                    <% } %>
+
+                                        <!-- Reply Form (hidden by default) -->
+                                        <div id="reply-form-<%= r.id %>" style="display: none; margin-bottom: 12px;">
+                                            <textarea id="reply-input-<%= r.id %>" class="glass-textarea"
+                                                placeholder="Write your reply..."><%= r.admin_reply || '' %></textarea>
+                                            <div class="review-reply-actions" style="display: flex; gap: 8px; justify-content: flex-end;">
+                                                <button type="button" class="btn-glass btn-sm"
+                                                    onclick="toggleReplyForm('<%= r.id %>')">Cancel</button>
+                                                <button type="button" class="btn-golden btn-sm"
+                                                    onclick="submitReply('<%= r.id %>')">
+                                                    <i class="bi bi-send"></i> Send Reply
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Action Bar -->
+                                        <div class="review-card-actions"
+                                            style="display: flex; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid rgba(215,205,190,0.2);">
+                                            <button type="button" class="btn-glass btn-sm <%= r.is_liked ? 'is-liked' : '' %>" id="like-btn-<%= r.id %>"
+                                                onclick="toggleLike('<%= r.id %>')"
+                                                style="font-size: 12px; padding: 5px 12px; border-radius: 20px;">
+                                                <i class="bi bi-heart<%= r.is_liked ? '-fill' : '' %>"
+                                                    id="like-icon-<%= r.id %>"></i>
+                                                <span id="like-label-<%= r.id %>">
+                                                    <%= r.is_liked ? 'Liked' : 'Like' %>
+                                                </span>
+                                            </button>
+                                            <button type="button" class="btn-glass btn-sm"
+                                                onclick="toggleReplyForm('<%= r.id %>')"
+                                                style="font-size: 12px; padding: 5px 12px; border-radius: 20px;">
+                                                <i class="bi bi-reply"></i> Reply
+                                            </button>
+                                            <button type="button" class="btn-glass btn-sm btn-delete-review"
+                                                data-id="<%= r.id %>" data-name="<%= r.customer_name %>"
+                                                onclick="initDelete(this)"
+                                                style="font-size: 12px; padding: 5px 12px; border-radius: 20px; color: #ff4757;">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                        </div>
+                    </div>
+                    <% }); %>
+                        <% } %>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteReviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content glass-card-solid"
+            style="border: 1px solid rgba(255,255,255,0.8); background: rgba(255,255,255,0.92);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(215, 205, 190, 0.4);">
+                <h5 class="modal-title" style="font-size: 15px; color: var(--text-primary);">
+                    <i class="bi bi-exclamation-triangle" style="color: var(--status-danger);"></i> Delete Review
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 24px;">
+                <p style="font-size: 14px; color: var(--text-secondary);">
+                    Are you sure you want to permanently delete the review by <strong id="deleteReviewAuthor"></strong>?
+                </p>
+                <p style="font-size: 12px; color: var(--text-muted);">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer"
+                style="border-top: 1px solid rgba(215, 205, 190, 0.4); justify-content: center; gap: 8px;">
+                <button type="button" class="btn-glass" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn-golden" id="confirmDeleteBtn"
+                    style="background: var(--status-danger); border-color: var(--status-danger);">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .active-filter {
+        background: rgba(215, 205, 190, 0.35) !important;
+        border-color: var(--golden-straw) !important;
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+    }
+
+    .review-card:hover {
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        transform: translateY(-1px);
+    }
+
+    .btn-sm {
+        font-size: 12px !important;
+        padding: 5px 12px !important;
+    }
+
+    .star-active {
+        color: #f5c518 !important;
+    }
+
+    .star-muted {
+        color: rgba(215, 205, 190, 0.4) !important;
+    }
+
+    .is-liked {
+        color: #ff6b6b !important;
+        border-color: rgba(255, 107, 107, 0.3) !important;
+        background: rgba(255, 107, 107, 0.08) !important;
+    }
+
+    @media (max-width: 767.98px) {
+        .reviews-filter-divider {
+            display: none;
+        }
+
+        .review-card-header {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .review-card-meta {
+            width: 100%;
+            text-align: left !important;
+        }
+
+        .review-card img {
+            max-width: 100% !important;
+        }
+
+        .review-card-actions,
+        .review-reply-actions {
+            flex-wrap: wrap;
+        }
+
+        .review-card-actions .btn-glass,
+        .review-reply-actions .btn-glass,
+        .review-reply-actions .btn-golden {
+            flex: 1 1 140px;
+            justify-content: center;
+        }
+    }
+</style>
+
+<script>
+    // --- Like Toggle ---
+    function toggleLike(reviewId) {
+        const btn = document.getElementById('like-btn-' + reviewId);
+        const icon = document.getElementById('like-icon-' + reviewId);
+        const label = document.getElementById('like-label-' + reviewId);
+        const isLiked = icon.classList.contains('bi-heart-fill');
+
+        if (isLiked) {
+            icon.className = 'bi bi-heart';
+            label.textContent = 'Like';
+            btn.classList.remove('is-liked');
+        } else {
+            icon.className = 'bi bi-heart-fill';
+            label.textContent = 'Liked';
+            btn.classList.add('is-liked');
+        }
+
+        // In production, this would call: POST /api/admin/reviews/:id/like
+        console.log('Toggled like for review', reviewId, '- is_liked:', !isLiked);
+    }
+
+    // --- Reply System ---
+    function toggleReplyForm(reviewId) {
+        const form = document.getElementById('reply-form-' + reviewId);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        if (form.style.display === 'block') {
+            document.getElementById('reply-input-' + reviewId).focus();
+        }
+    }
+
+    function submitReply(reviewId) {
+        const input = document.getElementById('reply-input-' + reviewId);
+        const replyText = input.value.trim();
+
+        if (!replyText) {
+            alert('Please enter a reply before sending.');
+            return;
+        }
+
+        // Check if an existing admin reply block already exists
+        const existingReply = document.getElementById('reply-text-' + reviewId);
+        if (existingReply) {
+            existingReply.textContent = replyText;
+        } else {
+            // Create the admin response block
+            const replyBlock = document.createElement('div');
+            replyBlock.style.cssText = 'background: rgba(215, 205, 190, 0.15); border-left: 3px solid var(--golden-straw); padding: 12px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin-bottom: 12px;';
+            replyBlock.innerHTML = '<div style="font-size: 11px; font-weight: 600; color: var(--golden-straw); margin-bottom: 4px;"><i class="bi bi-shield-check"></i> Admin Response</div><p style="font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.5;" id="reply-text-' + reviewId + '">' + replyText.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p>';
+
+            // Insert before the reply form
+            const form = document.getElementById('reply-form-' + reviewId);
+            form.parentNode.insertBefore(replyBlock, form);
+        }
+
+        // Hide the form
+        document.getElementById('reply-form-' + reviewId).style.display = 'none';
+
+        showToast('Reply Sent', 'Your response has been posted.', 'success');
+
+        // In production, this would call: POST /api/admin/reviews/:id/reply
+        console.log('Reply submitted for review', reviewId, ':', replyText);
+    }
+
+    // --- Delete with Confirmation ---
+    let deleteTargetId = null;
+    let deleteModal = null;
+
+    function initDelete(btn) {
+        deleteTargetId = btn.getAttribute('data-id');
+        const customerName = btn.getAttribute('data-name');
+
+        document.getElementById('deleteReviewAuthor').textContent = customerName;
+
+        if (!deleteModal) {
+            deleteModal = new bootstrap.Modal(document.getElementById('deleteReviewModal'));
+        }
+        deleteModal.show();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+            if (deleteTargetId) {
+                const card = document.getElementById('review-' + deleteTargetId);
+                if (card) {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateX(40px)';
+                    setTimeout(function () {
+                        card.remove();
+                    }, 300);
+                }
+
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteReviewModal'));
+                if (modal) modal.hide();
+
+                showToast('Deleted', 'Review has been permanently removed.', 'danger');
+
+                // In production, this would call: DELETE /api/admin/reviews/:id
+                console.log('Deleted review', deleteTargetId);
+                deleteTargetId = null;
+            }
+        });
+    });
+
+    // --- Toast Helper ---
+    function showToast(title, message, type) {
+        let container = document.getElementById('toastContainer');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'position-fixed bottom-0 end-0 p-3';
+            container.style.zIndex = '1100';
+            document.body.appendChild(container);
+        }
+
+        const id = 'toast-' + Date.now();
+        const bg = type === 'success' ? 'bg-success text-white' : 'bg-danger text-white';
+        const icon = type === 'success' ? 'bi-check-circle' : 'bi-trash';
+
+        container.insertAdjacentHTML('beforeend',
+            '<div id="' + id + '" class="toast align-items-center ' + bg + ' border-0 show" role="alert" style="padding: 12px 16px; border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); margin-bottom: 10px;">' +
+            '<div class="d-flex" style="justify-content:space-between;">' +
+            '<div class="toast-body"><i class="bi ' + icon + ' me-2"></i> ' + message + '</div>' +
+            '<button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.closest(\'.toast\').remove()" style="background:none;border:none;font-size:16px;cursor:pointer;">&times;</button>' +
+            '</div></div>'
+        );
+
+        setTimeout(function () {
+            var el = document.getElementById(id);
+            if (el) el.remove();
+        }, 3000);
+    }
+</script>

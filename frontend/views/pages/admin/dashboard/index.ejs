@@ -1,0 +1,573 @@
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Welcome back! Here's what's happening with your store.</p>
+        </div>
+        <div class="page-header-actions">
+            <div class="dashboard-range-input" style="position: relative; display: inline-block;">
+                <input type="text" class="glass-input" id="dashboardRangePicker" placeholder="Select Date Range"
+                    style="width: 240px; padding-left: 36px;">
+                <i class="bi bi-calendar3"
+                    style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none; font-size: 14px;"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-card-icon golden"><i class="bi bi-cart-check"></i></div>
+                <span class="stat-card-change" id="revenueGrowth">--%</span>
+                <div class="stat-card-label">Total Revenue</div>
+                <div class="stat-card-value" id="revenueTotal">$0</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card fade-in-delay-1">
+                <div class="stat-card-icon blue"><i class="bi bi-bag"></i></div>
+                <span class="stat-card-change" id="ordersGrowth">--%</span>
+                <div class="stat-card-label">Total Orders</div>
+                <div class="stat-card-value" id="ordersTotal">0</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card fade-in-delay-2">
+                <div class="stat-card-icon green"><i class="bi bi-box-seam"></i></div>
+                <span class="stat-card-change" id="productsGrowth">--%</span>
+                <div class="stat-card-label">Products Sold</div>
+                <div class="stat-card-value" id="productsTotal">0</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card fade-in-delay-3">
+                <div class="stat-card-icon purple"><i class="bi bi-graph-up-arrow"></i></div>
+                <span class="stat-card-change positive" id="overallGrowth">--%</span>
+                <div class="stat-card-label">Overall Growth</div>
+                <div class="stat-card-value" id="overallGrowthVal">--%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Top Section -->
+    <div class="row g-3 mb-4">
+        <!-- Left Column (Revenue Overview) -->
+        <div class="col-lg-8">
+            <div class="glass-card-solid" style="padding:24px; height: 100%;">
+                <div class="dashboard-section-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                    <div>
+                        <h5 style="font-size:18px;margin:0;">Revenue Overview</h5>
+                        <p class="page-subtitle" id="chartSubtitle" style="margin-top:2px;">Trend for selected period
+                        </p>
+                    </div>
+                    <div class="glass-tabs">
+                        <button class="glass-tab active" onclick="setPeriod('weekly')">Weekly</button>
+                        <button class="glass-tab" onclick="setPeriod('monthly')">Monthly</button>
+                    </div>
+                </div>
+                <div style="position:relative; width:100%; height:340px;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column (Sales by Category) -->
+        <div class="col-lg-4">
+            <div class="glass-card-solid d-flex flex-column" style="padding:24px; height: 100%;">
+                <h5 style="font-size:18px;margin-bottom:20px;">Sales by Category</h5>
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center"
+                    style="position:relative; width:100%; height:340px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extended Analytics Row -->
+    <div class="row g-3 mb-4">
+        <!-- Top Sellers -->
+        <div class="col-lg-8">
+            <div class="glass-card-solid" style="padding:24px; height: 100%;">
+                <div class="dashboard-section-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h5 style="font-size:18px;margin:0;"><i class="bi bi-trophy me-2"></i>Top Sellers</h5>
+                    <a href="/admin/products" class="glass-button-small">All Products <i
+                            class="bi bi-arrow-right"></i></a>
+                </div>
+                <div id="topSellersList" class="top-sellers-list">
+                    <!-- Top sellers will be injected here -->
+                    <div class="text-center py-4 text-muted">Loading top sellers...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unique Viewers (Moved here) -->
+        <div class="col-lg-4">
+            <div class="stat-card"
+                style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 24px;">
+                <div class="stat-card-icon blue"
+                    style="background: rgba(52, 152, 219, 0.1); color: #3498db; width: 64px; height: 64px; font-size: 28px; margin-bottom: 20px;">
+                    <i class="bi bi-eye-fill"></i>
+                </div>
+                <div class="stat-card-label" style="font-size: 16px;">Unique Viewers</div>
+                <div class="stat-card-value" id="uniqueViewersValue" style="font-size: 36px;">0</div>
+                <p class="text-muted mt-2" style="font-size: 13px;">Total audience reach</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .dashboard-range-input {
+        width: 240px;
+        max-width: 100%;
+    }
+
+    .dashboard-range-input .glass-input {
+        width: 100% !important;
+    }
+
+    .dashboard-section-header {
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .top-seller-item {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) 120px 100px 80px;
+        grid-template-areas: "rank name category likes sales";
+        align-items: center;
+        padding: 12px;
+        border-bottom: 1px solid rgba(215, 205, 190, 0.1);
+        gap: 12px;
+        transition: background 0.2s;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .top-seller-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .top-seller-item:last-child {
+        border-bottom: none;
+    }
+
+    .top-seller-rank {
+        grid-area: rank;
+        font-weight: bold;
+        color: #C8A77D;
+        font-size: 18px;
+    }
+
+    .top-seller-name {
+        grid-area: name;
+        font-weight: 500;
+        min-width: 0;
+    }
+
+    .top-seller-cat {
+        grid-area: category;
+        font-size: 12px;
+        padding: 2px 8px;
+        background: rgba(143, 130, 114, 0.1);
+        border-radius: 4px;
+        color: #8F8272;
+        text-align: center;
+    }
+
+    .top-seller-likes {
+        grid-area: likes;
+        font-size: 14px;
+        color: #e74c3c;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .top-seller-sales {
+        grid-area: sales;
+        font-size: 14px;
+        color: var(--text-secondary);
+        text-align: right;
+    }
+
+    .glass-button-small {
+        padding: 6px 12px;
+        background: rgba(200, 167, 125, 0.1);
+        border: 1px solid rgba(200, 167, 125, 0.2);
+        border-radius: 6px;
+        color: #C8A77D;
+        text-decoration: none;
+        font-size: 12px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .glass-button-small:hover {
+        background: rgba(200, 167, 125, 0.2);
+        transform: translateX(2px);
+    }
+
+    @media (max-width: 767.98px) {
+        .dashboard-section-header {
+            align-items: stretch !important;
+        }
+
+        .dashboard-section-header .glass-tabs {
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        .dashboard-section-header .glass-button-small {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .dashboard-range-input {
+            width: 100%;
+        }
+
+        .top-seller-item {
+            grid-template-columns: 32px minmax(0, 1fr);
+            grid-template-areas:
+                "rank name"
+                "rank category"
+                "rank likes"
+                "sales sales";
+            gap: 6px 12px;
+            align-items: start;
+        }
+
+        .top-seller-sales {
+            text-align: left;
+            padding-left: 44px;
+        }
+    }
+</style>
+
+<script>
+    let revenueChart, categoryChart;
+    let currentPeriod = '7d';
+
+    function getNiceStep(rawStep) {
+        if (!Number.isFinite(rawStep) || rawStep <= 0) {
+            return 1;
+        }
+
+        const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+        const normalized = rawStep / magnitude;
+
+        if (normalized <= 1) return magnitude;
+        if (normalized <= 2) return 2 * magnitude;
+        if (normalized <= 5) return 5 * magnitude;
+        return 10 * magnitude;
+    }
+
+    function buildRevenueYAxis(values) {
+        const numericValues = (values || [])
+            .map((value) => Number(value))
+            .filter((value) => Number.isFinite(value));
+
+        if (numericValues.length === 0) {
+            return {
+                min: 0,
+                max: 10,
+                stepSize: 2
+            };
+        }
+
+        const rawMin = Math.min(...numericValues);
+        const rawMax = Math.max(...numericValues);
+
+        if (rawMax <= 0) {
+            return {
+                min: 0,
+                max: 10,
+                stepSize: 2
+            };
+        }
+
+        if (rawMin === rawMax) {
+            const padding = Math.max(rawMax * 0.15, 1);
+            const stepSize = getNiceStep((padding * 2) / 5);
+            return {
+                min: Math.max(0, rawMin - padding),
+                max: rawMax + padding,
+                stepSize
+            };
+        }
+
+        const range = rawMax - rawMin;
+        const padding = Math.max(range * 0.18, rawMax * 0.03, 1);
+        const roughMin = Math.max(0, rawMin - padding);
+        const roughMax = rawMax + padding;
+        const stepSize = getNiceStep((roughMax - roughMin) / 5);
+
+        return {
+            min: Math.floor(roughMin / stepSize) * stepSize,
+            max: Math.ceil(roughMax / stepSize) * stepSize,
+            stepSize
+        };
+    }
+
+    // Global update function
+    window.updateDashboardData = async function (period, from, to) {
+        try {
+            let validPeriod = period;
+            if (period === 'weekly' || period === '7d') validPeriod = '7d';
+            else if (period === 'monthly' || period === '30d') validPeriod = '30d';
+
+            let endpoint = `/api/admin/dashboard/summary?period=${validPeriod}`;
+            if (validPeriod === 'custom' && from && to) {
+                endpoint += `&from=${from}&to=${to}`;
+            }
+
+            const response = await window.adminFetch(endpoint);
+            
+            if (!response || !response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Backend Error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            if (result.status !== 'success') throw new Error(result.message || 'API reported failure');
+            const data = result.data;
+
+            // 1. Calculate Custom Growth Rates
+            const calculateCustomGrowth = (series) => {
+                if (!series || series.length < 2) return 0;
+                const todayVal = series[series.length - 1];
+                const otherDays = series.slice(0, series.length - 1);
+                const avgOther = otherDays.reduce((a, b) => a + b, 0) / otherDays.length;
+
+                if (avgOther === 0) return todayVal > 0 ? 100 : 0;
+                return ((todayVal - avgOther) / avgOther) * 100;
+            };
+
+            const revGrowth = calculateCustomGrowth(data.charts.revenue);
+            const ordGrowth = calculateCustomGrowth(data.charts.orders);
+            const prodGrowth = calculateCustomGrowth(data.charts.productsSold);
+            const overallGrowth = prodGrowth;
+
+            // 2. Update KPI UI
+            updateKPI('revenueTotal', 'revenueGrowth', data.revenue.total, revGrowth, '$');
+            updateKPI('ordersTotal', 'ordersGrowth', data.orders.total, ordGrowth);
+            updateKPI('productsTotal', 'productsGrowth', data.productsSold.total, prodGrowth);
+
+            const overallEl = document.getElementById('overallGrowth');
+            const overallValEl = document.getElementById('overallGrowthVal');
+            const ogFmt = (overallGrowth >= 0 ? '+' : '') + overallGrowth.toFixed(1) + '%';
+            overallEl.innerText = ogFmt;
+            overallEl.className = 'stat-card-change ' + (overallGrowth >= 0 ? 'positive' : 'negative');
+            overallValEl.innerText = ogFmt;
+
+            // 3. Update Line Chart
+            const labelFormatter = (lbl) => {
+                if (!lbl) return '';
+                if (data.period.granularity === 'month') {
+                    const [year, month] = lbl.split('-');
+                    const d = new Date(Date.UTC(year, month - 1, 1));
+                    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                }
+                const date = new Date(lbl);
+                if (isNaN(date.getTime())) return lbl;
+
+                if (period === 'weekly') {
+                    return date.toLocaleDateString('en-US', { weekday: 'short' });
+                } else {
+                    return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                }
+            };
+
+            revenueChart.data.labels = data.charts.labels.map(labelFormatter);
+            revenueChart.data.datasets[0].data = data.charts.revenue;
+
+            // Adjust Y-axis to actual data range so the line does not flatten.
+            const revenueAxis = buildRevenueYAxis(data.charts.revenue);
+            revenueChart.options.scales.y.min = revenueAxis.min;
+            revenueChart.options.scales.y.max = revenueAxis.max;
+            revenueChart.options.scales.y.ticks.stepSize = revenueAxis.stepSize;
+
+            revenueChart.update();
+            document.getElementById('chartSubtitle').innerText = `Trend from ${data.period.from} to ${data.period.to}`;
+
+            // 4. Update Donut Chart
+            if (data.salesByCategory && data.salesByCategory.length > 0) {
+                categoryChart.data.labels = data.salesByCategory.map(c => c.label);
+                categoryChart.data.datasets[0].data = data.salesByCategory.map(c => c.value);
+            } else {
+                categoryChart.data.labels = ['Men', 'Women', 'Kids', 'Baby', 'Unisex'];
+                categoryChart.data.datasets[0].data = [0, 0, 0, 0, 0];
+            }
+            categoryChart.update();
+
+            // 5. Update Top Sellers List
+            const sellersContainer = document.getElementById('topSellersList');
+            sellersContainer.innerHTML = '';
+            if (data.topSellers && data.topSellers.length > 0) {
+                data.topSellers.forEach((seller, index) => {
+                    const item = document.createElement('a');
+                    item.href = `/admin/products/edit/${seller.productId}`;
+                    item.className = 'top-seller-item';
+                    item.innerHTML = `
+                        <div class="top-seller-rank">#${index + 1}</div>
+                        <div class="top-seller-name">${seller.label}</div>
+                        <div class="top-seller-cat">${seller.category}</div>
+                        <div class="top-seller-likes"><i class="bi bi-heart-fill"></i> ${seller.likesCount}</div>
+                        <div class="top-seller-sales">${seller.salesValue} sold</div>
+                    `;
+                    sellersContainer.appendChild(item);
+                });
+            } else {
+                sellersContainer.innerHTML = '<div class="text-center py-4 text-muted">No sales data found</div>';
+            }
+
+            // 6. Update Viewers
+            document.getElementById('uniqueViewersValue').innerText = data.uniqueViewers?.toLocaleString() || '0';
+
+        } catch (error) {
+            console.error('Dashboard Update Error:', error);
+            const errorMsg = error.message || 'Unknown error occurred';
+            if (typeof parent.showToast === 'function') {
+                parent.showToast('Dashboard Error', errorMsg, 'danger');
+            } else {
+                alert('Dashboard Error: ' + errorMsg);
+            }
+            ['revenueTotal', 'ordersTotal', 'productsTotal', 'overallGrowthVal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = '--';
+            });
+        }
+    };
+
+
+    function updateKPI(valId, growthId, total, growth, prefix = '') {
+        const valEl = document.getElementById(valId);
+        const growthEl = document.getElementById(growthId);
+
+        valEl.innerText = prefix + total.toLocaleString();
+        const growthFmt = (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%';
+        growthEl.innerText = growthFmt;
+        growthEl.className = 'stat-card-change ' + (growth >= 0 ? 'positive' : 'negative');
+    }
+
+    function setPeriod(p) {
+        currentPeriod = p;
+        const tabs = document.querySelectorAll('.glass-tab');
+        tabs.forEach(t => {
+            const label = t.innerText.trim().toLowerCase();
+            t.classList.toggle('active', label === p.toLowerCase() || (p === 'custom' && label === 'custom'));
+        });
+
+        if (p === 'weekly' || p === 'monthly' || p === '7d' || p === '30d') {
+            updateDashboardData(p);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize Flatpickr
+        const fp = flatpickr("#dashboardRangePicker", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            onClose: function (selectedDates, dateStr, instance) {
+                if (selectedDates.length === 2) {
+                    const from = instance.formatDate(selectedDates[0], "Y-m-d");
+                    const to = instance.formatDate(selectedDates[1], "Y-m-d");
+                    setPeriod('custom');
+                    updateDashboardData('custom', from, to);
+                }
+            }
+        });
+
+        // Register Chart.js Plugins
+        if (typeof ChartDataLabels !== 'undefined') {
+            Chart.register(ChartDataLabels);
+        }
+
+        // Initialize Charts
+        const ctxRev = document.getElementById('revenueChart').getContext('2d');
+        revenueChart = new Chart(ctxRev, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [],
+                    borderColor: '#C8A77D',
+                    backgroundColor: 'rgba(200, 167, 125, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#C8A77D'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(215,205,190,0.1)' },
+                        ticks: {
+                            color: '#8F8272',
+                            maxTicksLimit: 6,
+                            callback: function (value) {
+                                if (value >= 1000) return '$' + (value / 1000).toFixed(1).replace('.0', '') + 'k';
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: { grid: { display: false }, ticks: { color: '#8F8272' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                return 'Revenue: $' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const ctxCat = document.getElementById('categoryChart').getContext('2d');
+        categoryChart = new Chart(ctxCat, {
+            type: 'doughnut',
+            data: {
+                labels: [],
+                datasets: [{
+                    data: [],
+                    backgroundColor: ['#C8A77D', '#D7CDBE', '#8F8272', '#E9DEC1', '#B89468'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#8F8272', padding: 20 } },
+                    datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold', size: 12 },
+                        formatter: (value) => value + '%'
+                    }
+                }
+            },
+            plugins: [] // Already registered globally
+        });
+
+        // Initial Load
+        setPeriod('weekly');
+    });
+</script>
+
+<!-- Chart.js Plugin Datalabels -->
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0" crossorigin="anonymous"></script>

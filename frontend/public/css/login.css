@@ -1,0 +1,282 @@
+/* ============================================
+   LOGIN PAGE
+   ============================================ */
+
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    position: relative;
+    z-index: 1;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-glass);
+    padding: 40px 36px;
+    text-align: center;
+}
+
+.login-card:hover {
+    box-shadow: var(--shadow-glass-hover);
+}
+
+.login-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-lg);
+    background: var(--golden-straw);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin: 0 auto 16px;
+    box-shadow: 0 4px 16px rgba(200, 167, 125, 0.35);
+}
+
+.login-card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.login-card .login-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+}
+
+.login-card .form-group {
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.login-card .form-group .glass-label {
+    margin-bottom: 6px;
+}
+
+.login-card .form-group .glass-input {
+    width: 100%;
+    display: block;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(215, 205, 190, 0.5);
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+    outline: none;
+    transition: all 0.25s ease;
+}
+
+.login-card .form-group .glass-input::placeholder {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.login-card .form-group .glass-input:focus {
+    border-color: var(--golden-straw);
+    box-shadow: 0 0 0 3px rgba(200, 167, 125, 0.15);
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.login-card .form-group .glass-input:hover:not(:focus) {
+    border-color: rgba(200, 167, 125, 0.5);
+}
+
+/* Hide native browser password reveal icons */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none !important;
+}
+
+/* Password field wrapper for show/hide toggle */
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper .glass-input {
+    padding-right: 42px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+    transition: var(--transition);
+}
+
+.password-toggle:hover {
+    color: var(--golden-straw);
+}
+
+/* Login button */
+.login-card .btn-login {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    justify-content: center;
+    font-size: 14px;
+    gap: 8px;
+}
+
+/* Error flash alert */
+.flash-alert {
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.flash-alert.error {
+    background: var(--status-danger-bg);
+    color: var(--status-danger);
+    border: 1px solid rgba(244, 67, 54, 0.15);
+}
+
+.flash-alert.success {
+    background: var(--status-success-bg);
+    color: var(--status-success);
+    border: 1px solid rgba(76, 175, 80, 0.15);
+}
+
+/* Validation error text */
+.input-error {
+    font-size: 11px;
+    color: var(--status-danger);
+    margin-top: 4px;
+    display: none;
+}
+
+.input-error.visible {
+    display: block;
+}
+
+.glass-input.invalid {
+    border-color: var(--status-danger);
+}
+
+.glass-input.invalid:focus {
+    box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.1);
+}
+
+/* Loading spinner for button */
+.btn-spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+.btn-golden.loading .btn-spinner {
+    display: inline-block;
+}
+
+.btn-golden.loading .btn-text {
+    opacity: 0.7;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Fade-in animation */
+.fade-in {
+    animation: fadeInUp 0.5s ease-out both;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.shake {
+    animation: shake 0.4s cubic-bezier(.36, .07, .19, .97) both;
+}
+
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* ============================================
+   LOGIN PAGE — RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .login-page {
+        padding: 16px;
+    }
+
+    .login-card {
+        padding: 32px 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-card {
+        max-width: 100%;
+        padding: 28px 20px;
+        border-radius: var(--radius-lg);
+    }
+
+    .login-logo {
+        width: 52px;
+        height: 52px;
+        font-size: 24px;
+    }
+
+    .login-card h2 {
+        font-size: 20px;
+    }
+
+    .login-card .login-subtitle {
+        font-size: 12px;
+        margin-bottom: 20px;
+    }
+
+    .login-card .form-group {
+        margin-bottom: 14px;
+    }
+
+    .login-card .btn-login {
+        padding: 10px;
+        font-size: 13px;
+    }
+}

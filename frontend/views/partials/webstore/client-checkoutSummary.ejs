@@ -1,0 +1,52 @@
+<%# views/partials/webstore/client-checkoutSummary.ejs %> <%# Shared between
+desktop sidebar and mobile top section %>
+
+<p class="ck-summary-title">Order Summary</p>
+
+<%# items injected by JS %>
+<div id="ckItems"></div>
+
+<div class="ck-totals">
+  <div class="ck-totals-row">
+    <span class="ck-totals-label">Subtotal</span>
+    <span class="ck-totals-val" id="ckSubtotal">$0.00</span>
+  </div>
+  <div class="ck-totals-row">
+    <span class="ck-totals-label">Shipping</span>
+    <span class="ck-totals-val free">Free</span>
+  </div>
+  <div class="ck-totals-row">
+    <span class="ck-totals-label">VAT Included (7%)</span>
+    <span class="ck-totals-val" id="ckVat">$ 0.00</span>
+  </div>
+
+  <div class="ck-total-row">
+    <span class="ck-total-label">Total</span>
+    <span class="ck-total-amount" id="ckTotal">$0.00</span>
+  </div>
+</div>
+
+<div class="ck-secure">
+  <div class="ck-secure-icon">
+    <svg
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.5"
+        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+      />
+    </svg>
+  </div>
+  <div>
+    <div class="ck-secure-title">Secure Checkout</div>
+    <div class="ck-secure-text">
+      Your transaction is secured with industry-standard 256-bit SSL encryption.
+    </div>
+  </div>
+</div>

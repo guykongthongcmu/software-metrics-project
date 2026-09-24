@@ -1,0 +1,269 @@
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Notification Center</h1>
+            <p class="page-subtitle">Stay updated with customer inquiries and project alerts</p>
+        </div>
+        <div class="page-header-actions">
+            <button type="button" class="btn-glass btn-sm" onclick="markAllAsRead()">
+                <i class="bi bi-check2-all"></i> Mark All as Read
+            </button>
+            <button type="button" class="btn-glass btn-sm" style="color: var(--status-danger);"
+                onclick="clearAllNotifications()">
+                <i class="bi bi-trash"></i> Clear All
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Alerts Feed -->
+        <div class="col-lg-12">
+            <div class="section-title mb-3" style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
+                <i class="bi bi-bell" style="color: var(--golden-straw);"></i> System & Stock Alerts
+            </div>
+
+            <div class="notification-feed" id="notificationFeed">
+                <% if (notifications && notifications.length> 0) { %>
+                    <% notifications.forEach(function(notif) { %>
+                        <div class="glass-card-solid notification-card <%= notif.is_read ? 'is-read' : '' %>"
+                            id="notif-<%= notif.id %>" style="padding: 20px; margin-bottom: 16px; position: relative;">
+
+                            <div class="notification-card-body" style="display: flex; gap: 16px; align-items: flex-start;">
+                                <div class="notif-icon-wrapper" style="width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                                    <i class="bi <%= notif.icon %>" style="font-size: 22px; color: <%= notif.priority === 'high' ? 'var(--status-danger)' : 'var(--golden-straw)' %>;"></i>
+                                </div>
+
+                                <div style="flex: 1;">
+                                    <div class="notification-card-header"
+                                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                        <h5
+                                            style="font-size: 16px; font-weight: 600; margin: 0; color: var(--text-primary);">
+                                            <%= notif.title %>
+                                        </h5>
+                                        <div style="text-align: right;">
+                                            <span style="font-size: 11px; color: var(--text-muted); display: block;">
+                                                <%= notif.created_at %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <p
+                                        style="font-size: 14px; color: var(--text-secondary); margin: 0 0 16px 0; line-height: 1.5;">
+                                        <%= notif.message %>
+                                    </p>
+
+                                    <div class="notification-card-actions" style="display: flex; gap: 16px;">
+                                        <% if (!notif.is_read) { %>
+                                            <button class="btn-notif-action" onclick="markAsRead('<%= notif.id %>')">
+                                                <i class="bi bi-check2"></i> Mark as Read
+                                            </button>
+                                            <% } %>
+                                                <button class="btn-notif-action dismiss"
+                                                    onclick="deleteNotification('<%= notif.id %>')">
+                                                    <i class="bi bi-x-lg"></i> Dismiss
+                                                </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <% if (!notif.is_read) { %>
+                                <div class="unread-dot-indicator"></div>
+                                <% } %>
+                        </div>
+                        <% }); %>
+                            <% } else { %>
+                                <div class="glass-card-solid"
+                                    style="padding: 80px 40px; text-align: center; border-style: dashed;">
+                                    <i class="bi bi-bell-slash"
+                                        style="font-size: 48px; color: var(--text-muted); opacity: 0.3;"></i>
+                                    <h5 style="margin-top: 20px; color: var(--text-primary); font-weight: 500;">No
+                                        Notifications</h5>
+                                    <p style="color: var(--text-muted); font-size: 14px;">You're all caught up for now!
+                                    </p>
+                                </div>
+                                <% } %>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+<style>
+    /* Priority Glow Styles */
+    .notification-card.priority-high {
+        border-color: rgba(255, 71, 87, 0.3) !important;
+        box-shadow: 0 0 15px rgba(255, 71, 87, 0.1);
+    }
+
+    .notification-card.priority-high:hover {
+        box-shadow: 0 0 25px rgba(255, 71, 87, 0.2);
+    }
+
+    .notification-card.priority-medium {
+        border-color: rgba(76, 209, 55, 0.3) !important;
+    }
+    
+    .notification-card.priority-neutral {
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .notification-card.is-read {
+        opacity: 0.7;
+        filter: grayscale(0.2);
+    }
+
+    .notification-card.is-read {
+        opacity: 0.75;
+    }
+
+    .unread-dot-indicator {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+        width: 10px;
+        height: 10px;
+        background: var(--golden-straw);
+        border-radius: 50%;
+        box-shadow: 0 0 10px var(--golden-straw);
+    }
+
+    .btn-notif-action {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-notif-action:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .btn-notif-action.dismiss {
+        color: var(--status-danger);
+    }
+
+    .btn-notif-action.dismiss:hover {
+        background: rgba(244, 67, 54, 0.1);
+        border-color: rgba(244, 67, 54, 0.2);
+    }
+
+
+
+    .notification-card:hover {
+        transform: scale(1.01) translateX(4px);
+    }
+
+    /* Icon Priority Colors */
+    .notif-priority-high { color: var(--status-danger) !important; }
+    .notif-priority-normal { color: var(--golden-straw) !important; }
+
+    @media (max-width: 767.98px) {
+        .notification-card-body,
+        .notification-card-header,
+        .notification-card-actions {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+
+        .notification-card-actions {
+            width: 100%;
+        }
+
+        .notification-card-actions .btn-notif-action {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .unread-dot-indicator {
+            top: 18px;
+            right: 18px;
+        }
+    }
+</style>
+
+<script>
+    function markAsRead(id) {
+        fetch('/admin/api/notifications/read/' + id, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const card = document.getElementById('notif-' + id);
+                    if (card) {
+                        card.classList.add('is-read');
+                        const dot = card.querySelector('.unread-dot');
+                        if (dot) dot.remove();
+                        const readBtn = card.querySelector('button[onclick*="markAsRead"]');
+                        if (readBtn) readBtn.remove();
+                        showToast('Success', 'Notification marked as read', 'success');
+                    }
+                }
+            });
+    }
+
+    function deleteNotification(id) {
+        fetch('/admin/api/notifications/delete/' + id, { method: 'POST' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const card = document.getElementById('notif-' + id);
+                    if (card) {
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.9) translateX(20px)';
+                        setTimeout(() => {
+                            card.remove();
+                            checkEmptyFeed();
+                        }, 300);
+                    }
+                }
+            });
+    }
+
+    function markAllAsRead() {
+        const unreadCards = document.querySelectorAll('.notification-card:not(.is-read)');
+        unreadCards.forEach(card => {
+            const id = card.id.split('-')[1];
+            markAsRead(id);
+        });
+    }
+
+    function clearAllNotifications() {
+        const feed = document.getElementById('notificationFeed');
+        feed.style.opacity = '0';
+        setTimeout(() => {
+            feed.innerHTML = `
+                <div class="glass-card-solid" style="padding: 60px 40px; text-align: center;">
+                    <i class="bi bi-bell-slash" style="font-size: 48px; color: var(--text-muted); opacity: 0.3;"></i>
+                    <h5 style="margin-top: 20px; color: var(--text-muted);">All caught up!</h5>
+                    <p style="color: var(--text-muted); font-size: 14px;">No new notifications at this time.</p>
+                </div>
+            `;
+            feed.style.opacity = '1';
+            showToast('Cleared', 'All notifications have been removed', 'success');
+        }, 300);
+    }
+
+    function checkEmptyFeed() {
+        const feed = document.getElementById('notificationFeed');
+        if (feed.querySelectorAll('.notification-card').length === 0) {
+            clearAllNotifications();
+        }
+    }
+
+    function showToast(title, message, type) {
+        // Shared toast logic from reviews page
+        if (typeof parent.showToast === 'function') {
+            parent.showToast(title, message, type);
+        } else {
+            console.log('Toast:', title, message, type);
+        }
+    }
+</script>

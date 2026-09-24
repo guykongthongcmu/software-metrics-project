@@ -1,0 +1,703 @@
+<nav class="navbar" id="main-navbar">
+    <% const categoryVisibility=locals.storefrontCategoryVisibility || { men: true, women: true, kids: true, baby: true,
+        unisex: true }; %>
+        <div class="navbar-left">
+            <!-- Logo (Visible on both desktop and mobile) -->
+            <a href="/" class="logo-link">
+                <img src="/images/Picture2.png" alt="logo" class="logo-image" id="navbar-logo" />
+            </a>
+        </div>
+
+        <div class="navbar-center" id="nav-menu">
+            <!-- Navigation Links (Centered) -->
+            <ul class="nav-links">
+                <li><a href="/"
+                        class="nav-link <%= (!locals.activeNav || locals.activeNav === 'home') ? 'active rounded-pill' : '' %>"
+                        id="nav-home">Home</a>
+                </li>
+                <li><a href="/products"
+                        class="nav-link <%= locals.activeNav === 'products' ? 'active rounded-pill' : '' %>"
+                        id="nav-products">Products</a></li>
+
+                <% if (categoryVisibility.men) { %>
+                    <!-- Men mega-dropdown -->
+                    <li class="mega-nav-item" id="mega-men-trigger">
+                        <a href="/men" class="nav-link <%= locals.activeNav === 'men' ? 'active rounded-pill' : '' %>"
+                            id="nav-men">Men</a>
+                        <div class="mega-dropdown" id="mega-men-panel">
+                            <button class="mega-close-btn" id="mega-men-close" aria-label="Close">&#x2715;</button>
+                            <div class="mega-grid">
+                                <a href="/search?q=t-shirt&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-tshirt.jpg" alt="เสื้อยืด"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>T-Shirts &amp; Sweatshirts</span>
+                                </a>
+                                <a href="/search?q=shirt&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-polo.jpg" alt="เสื้อเชิ้ต"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>Shirts &amp; Polo Shirts</span>
+                                </a>
+                                <a href="/search?q=knit&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-knit.jpg" alt="เสื้อผ้าถัก"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>Knitwear &amp; Sweaters</span>
+                                </a>
+                                <a href="/search?q=outer&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-outer.jpg" alt="เสื้อด้านนอก"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>Outerwear</span>
+                                </a>
+                                <a href="/search?q=pant&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-pants.jpg" alt="กางเกง"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>Pants</span>
+                                </a>
+                                <a href="/search?q=inner&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-suit.jpg" alt="ชุดชั้นใน"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>Innerwear &amp; Socks</span>
+                                </a>
+                                <a href="/search?q=lounge&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-trial.jpg" alt="ชุดลำลอง"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>Loungewear</span>
+                                </a>
+                                <a href="/search?q=linen&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-linen.jpg" alt="สินค้าลินิน"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>Linen</span>
+                                </a>
+                                <a href="/search?q=sport&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-sport.jpg" alt="Sport Utility Wear"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>Sport Utility Wear</span>
+                                </a>
+                                <a href="/search?q=uv&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-uv.jpg" alt="UV Protection"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>UV Protection Collection</span>
+                                </a>
+                                <a href="/search?q=air&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-airism.jpg" alt="AIRism"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>AIRism</span>
+                                </a>
+                                <a href="/search?q=heat&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-heattech.jpg" alt="HEATTECH"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>HEATTECH</span>
+                                </a>
+                                <a href="/search?q=accessory&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-acc.jpg" alt="เครื่องแต่งกายอื่นๆ"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>Accessories</span>
+                                </a>
+                                <a href="/search?q=collab&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-collab.jpg"
+                                            alt="Special Collaborations" onerror="this.src='/images/Picture2.png'">
+                                    </div>
+                                    <span>Special Collaborations</span>
+                                </a>
+                                <a href="/search?q=new&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-new.jpg" alt="New Arrivals"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>New Arrivals</span>
+                                </a>
+                                <a href="/search?q=sale&cat=men&sort=relevance" class="mega-item">
+                                    <div class="mega-img-wrap"><img src="/images/men-sale.jpg" alt="Sale"
+                                            onerror="this.src='/images/Picture2.png'"></div>
+                                    <span>Price Down</span>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                    <% } %>
+
+                        <% if (categoryVisibility.women) { %>
+                            <!-- Women mega-dropdown -->
+                            <li class="mega-nav-item" id="mega-women-trigger">
+                                <a href="/women"
+                                    class="nav-link <%= locals.activeNav === 'women' ? 'active rounded-pill' : '' %>"
+                                    id="nav-women">Women</a>
+                                <div class="mega-dropdown" id="mega-women-panel">
+                                    <button class="mega-close-btn" id="mega-women-close"
+                                        aria-label="Close">&#x2715;</button>
+                                    <div class="mega-grid">
+                                        <a href="/search?q=t-shirt&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-tshirt.jpg"
+                                                    alt="T-Shirts"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fce4ec>👕</div>'">
+                                            </div>
+                                            <span>T-Shirts &amp; Sweats &amp; Bra Tops</span>
+                                        </a>
+                                        <a href="/search?q=shirt&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-polo.jpg" alt="Shirts"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e3f2fd>👔</div>'">
+                                            </div>
+                                            <span>Shirts &amp; Polo Shirts</span>
+                                        </a>
+                                        <a href="/search?q=knit&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-knit.jpg" alt="Knitwear"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fff3e0>🧶</div>'">
+                                            </div>
+                                            <span>Knitwear &amp; Cardigans</span>
+                                        </a>
+                                        <a href="/search?q=outer&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-outer.jpg"
+                                                    alt="Outerwear"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#ede7f6>🧥</div>'">
+                                            </div>
+                                            <span>Outerwear</span>
+                                        </a>
+                                        <a href="/search?q=pant&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-bottoms.jpg"
+                                                    alt="Bottoms"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e8f5e9>👖</div>'">
+                                            </div>
+                                            <span>Bottoms</span>
+                                        </a>
+                                        <a href="/search?q=dress&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-dress.jpg" alt="Dresses"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fce4ec>👗</div>'">
+                                            </div>
+                                            <span>Dresses &amp; Skirts</span>
+                                        </a>
+                                        <a href="/search?q=inner&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-inner.jpg"
+                                                    alt="Innerwear"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#f3e5f5>🩱</div>'">
+                                            </div>
+                                            <span>Innerwear &amp; Socks</span>
+                                        </a>
+                                        <a href="/search?q=lounge&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-lounge.jpg"
+                                                    alt="Loungewear"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e8eaf6>🛋️</div>'">
+                                            </div>
+                                            <span>Loungewear</span>
+                                        </a>
+                                        <a href="/search?q=linen&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-linen.jpg" alt="Linen"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#f9f6f0>🌿</div>'">
+                                            </div>
+                                            <span>Linen</span>
+                                        </a>
+                                        <a href="/search?q=accessory&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-acc.jpg"
+                                                    alt="Accessories"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fafafa>👜</div>'">
+                                            </div>
+                                            <span>Accessories</span>
+                                        </a>
+                                        <a href="/search?q=sport&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-sport.jpg" alt="Sport"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e0f7fa>🏃‍♀️</div>'">
+                                            </div>
+                                            <span>Sport Utility Wear</span>
+                                        </a>
+                                        <a href="/search?q=uv&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-uv.jpg" alt="UV"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e3f2fd>☀️</div>'">
+                                            </div>
+                                            <span>UV Protection Collection</span>
+                                        </a>
+                                        <a href="/search?q=air&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-airism.jpg" alt="AIRism"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e0f7fa>💨</div>'">
+                                            </div>
+                                            <span>AIRism</span>
+                                        </a>
+                                        <a href="/search?q=heat&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-heattech.jpg"
+                                                    alt="HEATTECH"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#263238;color:#fff>🔥</div>'">
+                                            </div>
+                                            <span>HEATTECH</span>
+                                        </a>
+                                        <a href="/search?q=inner&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-maternity.jpg"
+                                                    alt="Maternity"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fce4ec>🤰</div>'">
+                                            </div>
+                                            <span>Maternity</span>
+                                        </a>
+                                        <a href="/search?q=new&cat=women&sort=relevance" class="mega-item">
+                                            <div class="mega-img-wrap"><img src="/images/women-new.jpg"
+                                                    alt="New Arrivals"
+                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#f1f8e9>✨</div>'">
+                                            </div>
+                                            <span>New Arrivals</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </li>
+                            <% } %>
+                                <% if (categoryVisibility.kids) { %>
+                                    <!-- Kids mega-dropdown -->
+                                    <li class="mega-nav-item" id="mega-kids-trigger">
+                                        <a href="/kids"
+                                            class="nav-link <%= locals.activeNav === 'kids' ? 'active rounded-pill' : '' %>"
+                                            id="nav-kids">Kids</a>
+                                        <div class="mega-dropdown" id="mega-kids-panel">
+                                            <button class="mega-close-btn" id="mega-kids-close"
+                                                aria-label="Close">&#x2715;</button>
+                                            <div class="mega-grid">
+                                                <a href="/search?q=t-shirt&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-tshirt.jpg"
+                                                            alt="T-Shirts"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fff9c4>👕</div>'">
+                                                    </div>
+                                                    <span>T-Shirts &amp; Sweatshirts</span>
+                                                </a>
+                                                <a href="/search?q=shirt&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-shirts.jpg"
+                                                            alt="Shirts"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e1f5fe>👔</div>'">
+                                                    </div>
+                                                    <span>Shirts &amp; Blouses</span>
+                                                </a>
+                                                <a href="/search?q=out&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-outer.jpg"
+                                                            alt="Outerwear"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fff3e0>🧥</div>'">
+                                                    </div>
+                                                    <span>Outerwear</span>
+                                                </a>
+                                                <a href="/search?q=pant&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-bottoms.jpg"
+                                                            alt="Bottoms"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e8f5e9>👖</div>'">
+                                                    </div>
+                                                    <span>Bottoms</span>
+                                                </a>
+                                                <a href="/search?q=dress&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-dresses.jpg"
+                                                            alt="Dresses"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fce4ec>👗</div>'">
+                                                    </div>
+                                                    <span>Dresses &amp; Skirts</span>
+                                                </a>
+                                                <a href="/search?q=active&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-active.jpg"
+                                                            alt="Activewear"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e8eaf6>🏃</div>'">
+                                                    </div>
+                                                    <span>Activewear</span>
+                                                </a>
+                                                <a href="/search?q=inner&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-inner.jpg"
+                                                            alt="Innerwear"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#f3e5f5>🧦</div>'">
+                                                    </div>
+                                                    <span>Innerwear &amp; Socks</span>
+                                                </a>
+                                                <a href="/search?q=pajamas&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-pajamas.jpg"
+                                                            alt="Pajamas"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fafafa>🛏️</div>'">
+                                                    </div>
+                                                    <span>Pajamas</span>
+                                                </a>
+                                                <a href="/search?q=accessory&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-acc.jpg"
+                                                            alt="Accessories"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fce4ec>🎒</div>'">
+                                                    </div>
+                                                    <span>Accessories</span>
+                                                </a>
+                                                <a href="/search?q=air&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-airism.jpg"
+                                                            alt="AIRism"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e0f7fa>💨</div>'">
+                                                    </div>
+                                                    <span>AIRism</span>
+                                                </a>
+                                                <a href="/search?q=heat&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-heattech.jpg"
+                                                            alt="HEATTECH"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#263238;color:#fff>🔥</div>'">
+                                                    </div>
+                                                    <span>HEATTECH</span>
+                                                </a>
+                                                <a href="/search?q=col&cat=kids&sort=relevance" class="mega-item">
+                                                    <div class="mega-img-wrap"><img src="/images/kids-collab.jpg"
+                                                            alt="Collaborations"
+                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#f1f8e9>✨</div>'">
+                                                    </div>
+                                                    <span>Special Collaborations</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <% } %>
+                                        <% if (categoryVisibility.baby) { %>
+                                            <!-- Baby mega-dropdown -->
+                                            <li class="mega-nav-item" id="mega-baby-trigger">
+                                                <a href="/baby"
+                                                    class="nav-link <%= locals.activeNav === 'baby' ? 'active rounded-pill' : '' %>"
+                                                    id="nav-baby">Baby</a>
+                                                <div class="mega-dropdown" id="mega-baby-panel">
+                                                    <button class="mega-close-btn" id="mega-baby-close"
+                                                        aria-label="Close">&#x2715;</button>
+                                                    <div class="mega-grid">
+                                                        <a href="/search?q=bodysuit&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img
+                                                                    src="/images/baby-bodysuit.jpg" alt="Bodysuits"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fff9c4>🚼</div>'">
+                                                            </div>
+                                                            <span>Bodysuits &amp; Rompers</span>
+                                                        </a>
+                                                        <a href="/search?q=top&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img src="/images/baby-tops.jpg"
+                                                                    alt="Tops"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e1f5fe>👕</div>'">
+                                                            </div>
+                                                            <span>Tops &amp; T-Shirts</span>
+                                                        </a>
+                                                        <a href="/search?q=pant&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img
+                                                                    src="/images/baby-bottoms.jpg" alt="Bottoms"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e8f5e9>👖</div>'">
+                                                            </div>
+                                                            <span>Bottoms &amp; Leggings</span>
+                                                        </a>
+                                                        <a href="/search?q=dress&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img
+                                                                    src="/images/baby-dresses.jpg" alt="Dresses"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fce4ec>👗</div>'">
+                                                            </div>
+                                                            <span>Dresses &amp; Skirts</span>
+                                                        </a>
+                                                        <a href="/search?q=outer&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img src="/images/baby-outer.jpg"
+                                                                    alt="Outerwear"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fff3e0>🧥</div>'">
+                                                            </div>
+                                                            <span>Outerwear</span>
+                                                        </a>
+                                                        <a href="/search?q=inner&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img src="/images/baby-inner.jpg"
+                                                                    alt="Innerwear"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#f3e5f5>🧦</div>'">
+                                                            </div>
+                                                            <span>Innerwear &amp; Socks</span>
+                                                        </a>
+                                                        <a href="/search?q=pajamas&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img
+                                                                    src="/images/baby-pajamas.jpg" alt="Pajamas"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e8eaf6>🛏️</div>'">
+                                                            </div>
+                                                            <span>Pajamas &amp; Sleepwear</span>
+                                                        </a>
+                                                        <a href="/search?q=accessory&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img src="/images/baby-acc.jpg"
+                                                                    alt="Accessories"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fafafa>🧢</div>'">
+                                                            </div>
+                                                            <span>Accessories</span>
+                                                        </a>
+                                                        <a href="/search?q=maternity&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img
+                                                                    src="/images/baby-newborn.jpg" alt="Newborn"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fce4ec>🍼</div>'">
+                                                            </div>
+                                                            <span>Maternity &amp; Newborn</span>
+                                                        </a>
+                                                        <a href="/search?q=air&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img
+                                                                    src="/images/baby-airism.jpg" alt="AIRism"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e0f7fa>💨</div>'">
+                                                            </div>
+                                                            <span>AIRism</span>
+                                                        </a>
+                                                        <a href="/search?q=heat&cat=baby&sort=relevance"
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img
+                                                                    src="/images/baby-heattech.jpg" alt="HEATTECH"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#263238;color:#fff>🔥</div>'">
+                                                            </div>
+                                                            <span>HEATTECH</span>
+                                                        </a>
+                                                        <a href="/search?q=collab&cat=baby&sort=relevance   "
+                                                            class="mega-item">
+                                                            <div class="mega-img-wrap"><img
+                                                                    src="/images/baby-collab.jpg" alt="Collaborations"
+                                                                    onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#f1f8e9>✨</div>'">
+                                                            </div>
+                                                            <span>Special Collaborations</span>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <% } %>
+                                                <% if (categoryVisibility.unisex) { %>
+                                                    <!-- Unisex mega-dropdown -->
+                                                    <li class="mega-nav-item" id="mega-unisex-trigger">
+                                                        <a href="/unisex"
+                                                            class="nav-link <%= locals.activeNav === 'unisex' ? 'active rounded-pill' : '' %>"
+                                                            id="nav-unisex">Unisex</a>
+                                                        <div class="mega-dropdown" id="mega-unisex-panel">
+                                                            <button class="mega-close-btn" id="mega-unisex-close"
+                                                                aria-label="Close">&#x2715;</button>
+                                                            <div class="mega-grid">
+                                                                <a href="/search?q=tops&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-tshirt.jpg"
+                                                                            alt="T-Shirts"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fff9c4>👕</div>'">
+                                                                    </div>
+                                                                    <span>T-Shirts</span>
+                                                                </a>
+                                                                <a href="/search?q=shirt&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-sweatshirts.jpg"
+                                                                            alt="Sweatshirts"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e1f5fe>🧥</div>'">
+                                                                    </div>
+                                                                    <span>Sweatshirts &amp; Hoodies</span>
+                                                                </a>
+                                                                <a href="/search?q=outer&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-outer.jpg"
+                                                                            alt="Outerwear"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fff3e0>🧥</div>'">
+                                                                    </div>
+                                                                    <span>Outerwear</span>
+                                                                </a>
+                                                                <a href="/search?q=pant&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-bottoms.jpg"
+                                                                            alt="Bottoms"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e8f5e9>👖</div>'">
+                                                                    </div>
+                                                                    <span>Bottoms</span>
+                                                                </a>
+                                                                <a href="/search?q=active&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-active.jpg"
+                                                                            alt="Activewear"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e8eaf6>🏃</div>'">
+                                                                    </div>
+                                                                    <span>Activewear</span>
+                                                                </a>
+                                                                <a href="/search?q=lounge&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-lounge.jpg"
+                                                                            alt="Loungewear"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fce4ec>🛋️</div>'">
+                                                                    </div>
+                                                                    <span>Loungewear</span>
+                                                                </a>
+                                                                <a href="/search?q=accessory&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-acc.jpg"
+                                                                            alt="Accessories"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#f3e5f5>🧢</div>'">
+                                                                    </div>
+                                                                    <span>Accessories</span>
+                                                                </a>
+                                                                <a href="/search?q=bag&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-bags.jpg" alt="Bags"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#fafafa>🎒</div>'">
+                                                                    </div>
+                                                                    <span>Bags</span>
+                                                                </a>
+                                                                <a href="/search?q=shoe&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-shoes.jpg" alt="Shoes"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#ffebee>👟</div>'">
+                                                                    </div>
+                                                                    <span>Shoes</span>
+                                                                </a>
+                                                                <a href="/search?q=sunglass&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-sunglasses.jpg"
+                                                                            alt="Sunglasses"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#e0f7fa>🕶️</div>'">
+                                                                    </div>
+                                                                    <span>Sunglasses</span>
+                                                                </a>
+                                                                <a href="/search?q=air&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-airism.jpg" alt="AIRism"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#bbdefb>💨</div>'">
+                                                                    </div>
+                                                                    <span>AIRism</span>
+                                                                </a>
+                                                                <a href="/search?q=collab&cat=unisex&sort=relevance"
+                                                                    class="mega-item">
+                                                                    <div class="mega-img-wrap"><img
+                                                                            src="/images/unisex-collab.jpg"
+                                                                            alt="Collaborations"
+                                                                            onerror="this.parentElement.innerHTML='<div class=mega-img-placeholder style=background:#f1f8e9>✨</div>'">
+                                                                    </div>
+                                                                    <span>Special Collaborations</span>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </li>
+                                                    <% } %>
+            </ul>
+        </div>
+
+        <!-- Mega menu overlay -->
+        <div class="mega-overlay" id="mega-overlay"></div>
+
+        <div class="navbar-right">
+            <a href="/search" class="icon-link" id="nav-search-btn">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </a>
+            <a href="<%= (user ? '/account/profile' : '/login') %>" class="icon-link" id="nav-user-btn">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+            </a>
+            <a href="/favorites" class="icon-link" id="nav-heart-btn">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                    </path>
+                </svg>
+                <span class="cart-count favorites-count-badge" id="nav-favorites-count">
+                    <%= Number(locals.favoritesCount || 0) %>
+                </span>
+            </a>
+            <a href="/cart" class="icon-link cart-link" id="nav-cart-btn">
+                <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                </svg>
+                <span class="cart-count cart-count-badge" id="nav-cart-count">
+                    <%= Number(locals.cartCount || 0) %>
+                </span>
+            </a>
+            <div class="lang-dropdown" id="nav-lang-selector">
+                <button class="lang-trigger" id="lang-trigger-btn" aria-haspopup="true" aria-expanded="false">
+                    <span class="lang-current">EN</span>
+                    <svg class="nav-icon-small lang-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7">
+                        </path>
+                    </svg>
+                </button>
+                <ul class="lang-menu" role="menu">
+                    <li role="menuitem"><button class="lang-option" data-lang="en">EN</button></li>
+                    <li role="menuitem"><button class="lang-option" data-lang="th">TH</button></li>
+                </ul>
+            </div>
+            <script>
+                (function () {
+                    /* ── Language selector ── */
+                    const dropdown = document.getElementById('nav-lang-selector');
+                    const trigger = document.getElementById('lang-trigger-btn');
+                    const current = dropdown.querySelector('.lang-current');
+                    const options = dropdown.querySelectorAll('.lang-option');
+
+                    trigger.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        const isOpen = dropdown.classList.toggle('open');
+                        trigger.setAttribute('aria-expanded', isOpen);
+                    });
+
+                    options.forEach(function (btn) {
+                        btn.addEventListener('click', function () {
+                            current.textContent = btn.dataset.lang.toUpperCase();
+                            dropdown.classList.remove('open');
+                            trigger.setAttribute('aria-expanded', 'false');
+                        });
+                    });
+
+                    document.addEventListener('click', function () {
+                        dropdown.classList.remove('open');
+                        trigger.setAttribute('aria-expanded', 'false');
+                    });
+
+                    /* ── Mega dropdowns ── */
+                    const navbar = document.getElementById('main-navbar');
+
+                    function getNavbarHeight() {
+                        return navbar ? navbar.getBoundingClientRect().height : 90;
+                    }
+
+                    function makeMegaDropdown(triggerId, panelId, closeId) {
+                        const trigger = document.getElementById(triggerId);
+                        const panel = document.getElementById(panelId);
+                        const closeBtn = document.getElementById(closeId);
+                        const overlay = document.getElementById('mega-overlay');
+                        if (!trigger || !panel) return;
+
+                        /* Set panel top to sit flush under navbar */
+                        function positionPanel() {
+                            panel.style.top = getNavbarHeight() + 'px';
+                        }
+                        positionPanel();
+                        window.addEventListener('resize', positionPanel);
+
+                        let timer = null;
+
+                        function show() {
+                            clearTimeout(timer);
+                            panel.style.display = 'block';
+                            if (overlay) overlay.style.display = 'block';
+                        }
+
+                        function scheduleHide() {
+                            timer = setTimeout(function () {
+                                panel.style.display = 'none';
+                                if (overlay) overlay.style.display = 'none';
+                            }, 100);
+                        }
+
+                        trigger.addEventListener('mouseenter', show);
+                        trigger.addEventListener('mouseleave', scheduleHide);
+                        panel.addEventListener('mouseenter', show);
+                        panel.addEventListener('mouseleave', scheduleHide);
+
+                        if (closeBtn) {
+                            closeBtn.addEventListener('click', function () {
+                                clearTimeout(timer);
+                                panel.style.display = 'none';
+                                if (overlay) overlay.style.display = 'none';
+                            });
+                        }
+                    }
+
+                    makeMegaDropdown('mega-men-trigger', 'mega-men-panel', 'mega-men-close');
+                    makeMegaDropdown('mega-women-trigger', 'mega-women-panel', 'mega-women-close');
+                    makeMegaDropdown('mega-kids-trigger', 'mega-kids-panel', 'mega-kids-close');
+                    makeMegaDropdown('mega-baby-trigger', 'mega-baby-panel', 'mega-baby-close');
+                    makeMegaDropdown('mega-unisex-trigger', 'mega-unisex-panel', 'mega-unisex-close');
+                })();
+            </script>
+        </div>
+</nav>

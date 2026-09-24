@@ -1,0 +1,78 @@
+name: DevOps task
+description: Docker, AWS/EC2, CI/CD, Nginx, networking, deployment, monitoring
+title: "devops: "
+labels: ["type: chore", "area: devops"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for infrastructure and deployment work (EC2, Docker Compose, CI, reverse proxy, HTTPS, etc.).
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: What are we trying to achieve?
+      placeholder: "Deploy the Docker Compose stack to EC2 and expose it via Nginx on port 80."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Target environment
+      options:
+        - dev
+        - staging
+        - prod
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / components
+      description: What services or files are involved?
+      placeholder: "- docker-compose.prod.yml\n- nginx.conf\n- GitHub Actions workflow\n- EC2 security group rules"
+    validations:
+      required: false
+
+  - type: textarea
+    id: checklist
+    attributes:
+      label: Implementation checklist
+      description: Edit the checklist to match your task.
+      value: |
+        - [ ] Confirm ports and security group rules (80/443, etc.)
+        - [ ] Add/update Dockerfiles as needed
+        - [ ] Add/update docker-compose.prod.yml
+        - [ ] Configure reverse proxy routing (/ -> frontend, /api -> backend)
+        - [ ] Add health checks (container-level and/or endpoint)
+        - [ ] Ensure environment variables are not committed (.env on server)
+        - [ ] Document deploy steps in README
+        - [ ] Smoke test on EC2 (curl + browser)
+    validations:
+      required: true
+
+  - type: textarea
+    id: testplan
+    attributes:
+      label: Test plan
+      description: How will we verify it works?
+      placeholder: |
+        - curl http://<server>/health returns 200
+        - curl http://<server>/api/... returns expected JSON
+        - Frontend loads in browser
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollback
+    attributes:
+      label: Rollback plan (optional but pro)
+      description: How to revert if deployment fails?
+      placeholder: |
+        - Re-deploy previous image tag
+        - docker compose down && docker compose up -d with last known working version
+    validations:
+      required: false

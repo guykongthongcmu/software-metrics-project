@@ -1,0 +1,63 @@
+<%- include('./colorMap') %>
+<a href="/products/<%= product.id %>" class="product-card" style="text-decoration:none; color:inherit; display:block;">
+    <div class="product-image-container">
+        <img src="<%= product.image %>" alt="<%= product.name %>" class="product-image" <% if(product.imageStyle) { %>
+        style="<%= product.imageStyle %>" <% } %>>
+                <% const isFav=locals.userFavorites && locals.userFavorites.includes(product.id); const heartFill=isFav
+                    ? "currentColor" : "none" ; const activeClass=isFav ? "active" : "" ; %>
+                    <button type="button" class="wishlist-btn favorite-toggle <%= activeClass %>" aria-label="Toggle favorite"
+                        data-id="<%= product.id %>" onclick="event.preventDefault(); event.stopPropagation();">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
+                            fill="<%= heartFill %>">
+                            <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                            </path>
+                        </svg>
+                    </button>
+                    <% if(product.discount) { %>
+                        <span class="discount-badge">-<%= product.discount %>%</span>
+                        <% } %>
+                            <% if(!product.inStock) { %>
+                                <span class="out-of-stock-badge">Out of Stock</span>
+                                <% } %>
+                                <div class="quick-view-overlay">QUICK VIEW</div>
+    </div>
+    <div class="product-info">
+        <h3>
+            <%= product.name %>
+        </h3>
+        <div class="product-colors">
+            <% product.colors.forEach(function(color) { %>
+                <span class="color-swatch"
+                    style="background-color: <%= color.hex %>; <%= color.border ? 'border: 1px solid #ddd;' : '' %>"></span>
+                <% }); %>
+        </div>
+        <p class="product-price">
+            <% if(product.discount && product.originalPrice) { %>
+                <span class="original-price" style="text-decoration: line-through; color: #999; margin-right: 8px;">
+                    <%= product.originalPrice %> USD
+                </span>
+                <% } %>
+                    <%= product.price %> USD
+        </p>
+    </div>
+</a>
+<style>
+    .quick-view-overlay {
+  position: absolute;
+  bottom: -40px;
+  left: 0; right: 0;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  transition: bottom 0.3s ease;
+  pointer-events: none;
+}
+
+.product-image-container:hover .quick-view-overlay {
+  bottom: 0;
+}
+</style>

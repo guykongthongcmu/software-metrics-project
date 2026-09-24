@@ -1,0 +1,243 @@
+<main class="signup-main">
+    <div class="signup-container signup-success-container">
+        <div class="signup-header">
+            <h1>Become our member</h1>
+            <p>SIGN UP NOW!</p>
+        </div>
+
+        <!-- Progress Steps -->
+        <div class="progress-container">
+            <div class="progress-track">
+                <div class="progress-track-fill full"></div>
+            </div>
+            <div class="progress-step completed">
+                <div class="step-circle">1</div>
+                <div class="step-label">EMAIL</div>
+            </div>
+            <div class="progress-step completed">
+                <div class="step-circle">2</div>
+                <div class="step-label">INFO</div>
+            </div>
+            <div class="progress-step active">
+                <div class="step-circle">3</div>
+                <div class="step-label">CONFIRM</div>
+            </div>
+        </div>
+
+        <div class="success-content">
+            <h2>We already sent you<br>a verification through email</h2>
+
+            <div class="mail-icon">
+                <svg viewBox="0 0 100 80" width="120" height="96" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Envelope Body -->
+                    <rect x="10" y="20" width="80" height="50" rx="6" ry="6" fill="#1C1B1F" />
+                    <!-- Envelope Flap (V shape) -->
+                    <path d="M10 25 L50 50 L90 25" fill="none" stroke="#F8F5F0" stroke-width="6" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <path d="M10 25 L50 50 L90 25" fill="none" stroke="#1C1B1F" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    <!-- Notification Badge/Circle (Top Right) -->
+                    <circle cx="85" cy="15" r="12" fill="#1C1B1F" />
+                    <circle cx="85" cy="15" r="10" fill="#1C1B1F" stroke="#F8F5F0" stroke-width="3" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="signup-footer-link">
+            <p>already a member? <a href="/login">Log in</a></p>
+        </div>
+    </div>
+</main>
+
+<style>
+    /* Signup Success Page Styles */
+    .signup-page {
+        background-color: #F8F5F0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .signup-main {
+        flex: 1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 50px 20px;
+        background-color: #F8F5F0;
+    }
+
+    .signup-container {
+        width: 100%;
+        max-width: 520px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .signup-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .signup-header h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.8rem;
+        font-weight: 400;
+        color: #A69B91;
+        margin-bottom: 15px;
+        letter-spacing: 0.5px;
+    }
+
+    .signup-header p {
+        color: #B5AC9F;
+        font-size: 0.8rem;
+        font-weight: 500;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    /* Progress Tracker */
+    .progress-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        max-width: 400px;
+        position: relative;
+        margin-bottom: 50px;
+        padding: 0 10px;
+    }
+
+    .progress-track {
+        position: absolute;
+        top: 15px;
+        left: 40px;
+        right: 40px;
+        height: 1px;
+        background-color: #DCD4CC;
+        z-index: 1;
+    }
+
+    .progress-track-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background-color: #C3A37C;
+        z-index: 1;
+    }
+
+    .progress-track-fill.full {
+        width: 100%;
+    }
+
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 2;
+        background-color: transparent;
+        width: 60px;
+    }
+
+    .step-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #F8F5F0;
+        border: 1px solid #DCD4CC;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        color: #A3978F;
+        margin-bottom: 12px;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .step-label {
+        font-size: 0.65rem;
+        color: #B5AC9F;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        text-align: center;
+    }
+
+    .progress-step.active .step-circle,
+    .progress-step.completed .step-circle {
+        background-color: #C3A37C;
+        border-color: #C3A37C;
+        color: #FFFFFF;
+        font-weight: 600;
+    }
+
+    .progress-step.active .step-label,
+    .progress-step.completed .step-label {
+        color: #A69B91;
+        font-weight: 600;
+    }
+
+    /* Success Content */
+    .success-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 10px;
+        margin-bottom: 60px;
+        text-align: center;
+    }
+
+    .success-content h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 2rem;
+        font-weight: 400;
+        color: #A69B91;
+        margin-bottom: 50px;
+        line-height: 1.3;
+        letter-spacing: 0.5px;
+    }
+
+    .mail-icon {
+        margin-top: 10px;
+    }
+
+    /* Footer Link */
+    .signup-footer-link {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 0.8rem;
+        color: #A69B91;
+    }
+
+    .signup-footer-link a {
+        color: #A69B91;
+        text-decoration: underline;
+        font-weight: 500;
+        margin-left: 5px;
+        transition: color 0.3s;
+    }
+
+    .signup-footer-link a:hover {
+        color: #8c7e73;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .signup-header h1 {
+            font-size: 2.2rem;
+        }
+
+        .progress-track {
+            left: 30px;
+            right: 30px;
+        }
+
+        .success-content h2 {
+            font-size: 1.6rem;
+            margin-bottom: 40px;
+        }
+    }
+</style>

@@ -1,0 +1,228 @@
+<main class="site-main">
+  <%  const eq = query ? encodeURIComponent(query) : ''; 
+      const categoryChips = Array.isArray(locals.categoryChips) && locals.categoryChips.length
+        ? locals.categoryChips
+        : [{ key: 'all', label: 'All' }];
+      const sortOptions = [
+      { key: 'relevance',   label: 'Recommended' },
+      { key: 'price_asc',   label: 'Lowest Price' },
+      { key: 'price_desc',  label: 'Highest Price' },
+      { key: 'newest',      label: 'Newest' },
+      ];
+      const sortLabels = {
+        relevance:  'Recommended',
+        price_asc:  'Lowest Price',
+        price_desc: 'Highest Price',
+        newest:     'Newest',
+      }; %>
+
+        <% if (!query) { %>
+
+          <section class="empty-search-hero">
+            <div class="search-box-wrap">
+              <form class="search-box" action="/search" method="GET" role="search">
+                <i data-lucide="search" class="search-icon" width="18" height="18"></i>
+                <input type="text" name="q" class="search-input" placeholder="Type here to search..." autofocus
+                  autocomplete="off" aria-label="Search products" />
+              </form>
+            </div>
+
+            <% if (suggestions && suggestions.length) { %>
+              <div class="suggestions-wrap">
+                <h2 class="suggestions-title">Product suggestions</h2>
+                <ul class="suggestions-list">
+                  <% suggestions.forEach(function(s) { %>
+                    <li class="suggestion-item">
+                      <a href="/search?q=<%= encodeURIComponent(s.name) %>" class="suggestion-link">
+                        <div class="suggestion-img-wrap">
+                          <img src="<%= s.image %>" alt="<%= s.name %>" loading="lazy" />
+                        </div>
+                        <div class="suggestion-meta">
+                          <span class="suggestion-name">
+                            <%= s.name %>
+                          </span>
+                          <span class="suggestion-collection">
+                            <%= s.category %>
+                          </span>
+                        </div>
+                        <div class="suggestion-price">
+                          <% if (s.originalFormatted) { %>
+                            <span class="sugg-price-was">
+                              <%= s.originalFormatted %>
+                            </span>
+                            <% } %>
+                              <span class="sugg-price-now <%= s.originalFormatted ? 'is-sale' : '' %>">
+                                <%= s.priceFormatted %>
+                              </span>
+                        </div>
+                      </a>
+                    </li>
+                    <% }) %>
+                </ul>
+                <a href="/search?q=" class="view-all-link">
+                  View all <%= counts.all %> results
+                    <i data-lucide="arrow-right" width="16" height="16"></i>
+                </a>
+              </div>
+              <% } %>
+          </section>
+
+          <% } else { %>
+
+            <section class="search-hero">
+              <p class="search-label">SEARCH RESULT</p>
+              <h1 class="search-heading">
+                <%= query %>
+              </h1>
+              <div class="search-box-wrap">
+                <form class="search-box" action="/search" method="GET" role="search">
+                  <i data-lucide="search" class="search-icon" width="18" height="18"></i>
+                  <input type="text" name="q" class="search-input" value="<%= query %>"
+                    placeholder="Search for anything…" autocomplete="off" aria-label="Search" />
+                  <% if (category !=='all' ) { %>
+                    <input type="hidden" name="cat" value="<%= category %>" />
+                    <% } %>
+                </form>
+              </div>
+            </section>
+
+            <div class="filter-bar">
+              <div class="filter-bar-inner">
+                <div class="filter-chips">
+                  <% categoryChips.forEach(function(c) { %>
+                    <a href="/search?q=<%= eq %>&cat=<%= c.key %>&sort=<%= sort %>"
+                      class="chip <%= category === c.key ? 'chip--active' : '' %>">
+                      <%= c.label %> (<%= counts[c.key] %>)
+                    </a>
+                    <% }) %>
+                </div>
+                <div class="sort-dropdown">
+                  <button class="sort-btn" id="sortToggle" aria-expanded="false">
+                      <span>Sort by: <%= sortLabels[sort] || 'Featured' %></span>
+                      <svg class="sort-chevron" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                      </svg>
+                    </button>
+                  <ul class="sort-menu" id="sortMenu" role="listbox">
+                    <% sortOptions.forEach(function(o) { %>
+                      <li class="<%= sort === o.key ? 'active' : '' %>">
+                        <a href="/search?q=<%= eq %>&cat=<%= category %>&sort=<%= o.key %>">
+                          <%= o.label %>
+                        </a>
+                      </li>
+                      <% }) %>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <section class="product-grid-section">
+              <% if (products.length===0) { %>
+
+                <div class="no-results">
+                  <i data-lucide="search-x" width="48" height="48"></i>
+                  <h2>No results for "<%= query %>"</h2>
+                  <p>Try different keywords or browse our categories.</p>
+                  <div class="no-results-cats">
+                    <% categoryChips.filter(c => c.key !== 'all').slice(0, 3).forEach(function(cat) { %>
+                      <a href="/search?q=<%= encodeURIComponent(cat.key) %>&cat=<%= cat.key %>" class="chip">
+                        <%= cat.label %>
+                      </a>
+                      <% }) %>
+                  </div>
+                </div>
+
+                <% } else { %>
+
+                  <div class="product-grid">
+                    <% products.forEach(function(p) { %>
+                      <%- include('../../../partials/webstore/client-productCardSearch', { p }) %>
+                        <% }) %>
+                  </div>
+
+                  <% if (totalPages> 1) { %>
+                    <nav class="pagination-wrap" aria-label="Page navigation">
+                      <ul class="pagination-list">
+
+                        <li>
+                          <% if (page> 1) { %>
+                            <a href="/search?q=<%= eq %>&cat=<%= category %>&sort=<%= sort %>&page=<%= page-1 %>"
+                              class="page-btn page-btn--arrow" aria-label="Previous">
+                              <i data-lucide="chevron-left" width="16" height="16"></i>
+                            </a>
+                            <% } else { %>
+                              <span class="page-btn page-btn--arrow page-btn--disabled">
+                                <i data-lucide="chevron-left" width="16" height="16"></i>
+                              </span>
+                              <% } %>
+                        </li>
+
+                        <% for (let pn=1; pn <=totalPages; pn++) { %>
+                          <% if (pn===1 || pn===totalPages || (pn>= page-1 && pn <= page+1)) { %>
+                              <li>
+                                <a href="/search?q=<%= eq %>&cat=<%= category %>&sort=<%= sort %>&page=<%= pn %>"
+                                  class="page-btn <%= pn === page ? 'page-btn--active' : '' %>"
+                                  aria-current="<%= pn === page ? 'page' : '' %>">
+                                  <%= pn %>
+                                </a>
+                              </li>
+                              <% } else if (pn===page-2 || pn===page+2) { %>
+                                <li><span class="page-ellipsis">…</span></li>
+                                <% } %>
+                                  <% } %>
+
+                                    <li>
+                                      <% if (page < totalPages) { %>
+                                        <a href="/search?q=<%= eq %>&cat=<%= category %>&sort=<%= sort %>&page=<%= page+1 %>"
+                                          class="page-btn page-btn--arrow" aria-label="Next">
+                                          <i data-lucide="chevron-right" width="16" height="16"></i>
+                                        </a>
+                                        <% } else { %>
+                                          <span class="page-btn page-btn--arrow page-btn--disabled">
+                                            <i data-lucide="chevron-right" width="16" height="16"></i>
+                                          </span>
+                                          <% } %>
+                                    </li>
+
+                      </ul>
+                      <p class="pagination-info">
+                        Showing <%= (page-1)*12+1 %>–<%= Math.min(page*12, totalResults) %> of <%= totalResults %>
+                              results
+                      </p>
+                    </nav>
+                    <% } %>
+
+                      <% } %>
+            </section>
+
+            <% } %>
+</main>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+
+    const sortToggle = document.getElementById('sortToggle');
+    const sortMenu   = document.getElementById('sortMenu');
+
+    if (sortToggle && sortMenu) {
+      sortToggle.addEventListener('click', () => {
+        const isOpen = sortMenu.classList.toggle('open');
+        sortToggle.setAttribute('aria-expanded', String(isOpen));
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!sortToggle.contains(e.target) && !sortMenu.contains(e.target)) {
+          sortMenu.classList.remove('open');
+          sortToggle.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    document.querySelectorAll('.product-grid .product-card').forEach((card, i) => {
+      card.style.animationDelay = (i * 0.04) + 's';
+    });
+    document.querySelectorAll('.suggestions-list .suggestion-item').forEach((item, i) => {
+      item.style.animationDelay = (i * 0.05) + 's';
+    });
+  });
+</script>

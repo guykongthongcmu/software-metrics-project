@@ -1,0 +1,234 @@
+<main class="auth-main">
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1>SIGN IN</h1>
+            <p>Welcome back to your premium account</p>
+        </div>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+        <div class="auth-error">
+            <%= error %>
+        </div>
+        <% } %>
+
+        <form class="auth-form" action="/auth/user/signin" method="POST">
+            <div class="form-group">
+                <label for="email">EMAIL *</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email address" value="<%= locals.formData?.email || '' %>" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">PASSWORD *</label>
+                <div class="password-input-wrapper">
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                            </path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="/forgot-password" class="forgot-password">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full auth-btn">SIGN IN &rarr;</button>
+        </form>
+
+        <div class="auth-footer">
+            <p>Do not have an account? <a href="/auth/signup">Sign up now!</a></p>
+        </div>
+    </div>
+</main>
+
+<style>
+    /* Auth Pages (Sign In, Sign Up, etc.) */
+    .auth-main {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4rem 2rem;
+    }
+
+    .auth-container {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .auth-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .auth-header h1 {
+        font-family: var(--font-body);
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--accent-dark);
+        letter-spacing: 2px;
+        margin-bottom: 0.5rem;
+    }
+
+    .auth-header p {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        letter-spacing: 0.5px;
+    }
+
+    .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--accent-dark);
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.5px;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1px solid #EAE5D9;
+        background-color: var(--white);
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 0.3s ease;
+    }
+
+    .form-group input::placeholder {
+        color: #A9A9A9;
+    }
+
+    .form-group input:focus {
+        border-color: var(--accent-color);
+    }
+
+    .password-input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-input-wrapper input {
+        padding-right: 48px;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 16px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #A9A9A9;
+        padding: 0;
+        display: flex;
+    }
+
+    .toggle-password svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-start;
+        margin-top: -0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .forgot-password {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .forgot-password:hover {
+        color: var(--text-primary);
+        text-decoration: underline;
+    }
+
+    .auth-btn {
+        width: 100%;
+        padding: 14px;
+        border-radius: 4px;
+        font-weight: 500;
+        letter-spacing: 1px;
+        margin-top: 1rem;
+    }
+
+    .auth-btn:hover {
+        background-color: var(--accent-dark);
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 3rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .auth-footer p {
+        display: inline-flex;
+        gap: 4px;
+    }
+
+    .auth-footer a {
+        color: var(--accent-dark);
+        font-weight: 500;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .auth-error {
+    background-color: #fff0f0;
+    border: 1px solid #ffcccc;
+    color: #cc0000;
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var passwordInput = document.getElementById('password');
+        var toggleButton = document.querySelector('.toggle-password');
+
+        if (!passwordInput || !toggleButton) {
+            return;
+        }
+
+        var slashLine = toggleButton.querySelector('line');
+
+        toggleButton.addEventListener('click', function () {
+            var isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+            toggleButton.setAttribute(
+                'aria-label',
+                isHidden ? 'Hide password' : 'Show password'
+            );
+
+            if (slashLine) {
+                slashLine.style.display = isHidden ? 'none' : '';
+            }
+        });
+    });
+</script>

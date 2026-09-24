@@ -1,0 +1,408 @@
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Billing & Receipt Management</h1>
+            <p class="page-subtitle">Track your platform transactions and manage financial records</p>
+        </div>
+        <div class="page-header-actions d-flex align-items-center gap-3">
+            <div class="search-box-premium" style="position: relative; width: 260px;">
+                <i class="bi bi-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--golden-straw); font-size: 14px; pointer-events: none;"></i>
+                <input type="text" id="billingSearch" placeholder="Search records..." 
+                    style="width: 100%; height: 38px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(200, 167, 125, 0.2); border-radius: 20px; padding: 0 14px 0 38px; color: var(--text-primary); font-size: 13px; outline: none; transition: all 0.3s ease;">
+            </div>
+            <button type="button" class="btn-glass" onclick="window.print()" style="white-space: nowrap;">
+                <i class="bi bi-printer"></i> Print
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Overview (Optional but adds to the premium feel) -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="glass-card-solid" style="padding: 24px; display: flex; align-items: center; gap: 16px;">
+                <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(76, 209, 55, 0.1); color: #4cd137; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                    <i class="bi bi-wallet2"></i>
+                </div>
+                <div>
+                    <div style="font-size: 13px; color: var(--text-muted);">Total Paid</div>
+                    <div style="font-size: 20px; font-weight: 600; color: var(--text-primary);">$<%= billingStats.totalPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card-solid" style="padding: 24px; display: flex; align-items: center; gap: 16px;">
+                <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(255, 71, 87, 0.1); color: #ff4757; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div>
+                    <div style="font-size: 13px; color: var(--text-muted);">Outstanding</div>
+                    <div style="font-size: 20px; font-weight: 600; color: var(--text-primary);">$<%= billingStats.outstanding.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card-solid" style="padding: 24px; display: flex; align-items: center; gap: 16px;">
+                <div style="width: 50px; height: 50px; border-radius: 12px; background: rgba(241, 196, 15, 0.1); color: var(--golden-straw); display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <div>
+                    <div style="font-size: 13px; color: var(--text-muted);">Receipts Generated</div>
+                    <div style="font-size: 20px; font-weight: 600; color: var(--text-primary);"><%= billingStats.receiptsGenerated %></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Stats Overview -->
+
+    <!-- Section A: Receipt History Section -->
+    <div class="glass-card-solid mb-5" style="padding: 0; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
+        <div class="billing-section-header" style="padding: 24px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h5 style="margin: 0; font-size: 16px; font-weight: 600; color: var(--text-primary);">Receipt History</h5>
+                <p style="margin: 4px 0 0; font-size: 12px; color: var(--text-muted);">Platform-related subscriptions and marketing charges</p>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="glass-table w-100 table-hover-effect">
+                <thead>
+                    <tr>
+                        <th style="padding: 16px 24px;">Date</th>
+                        <th>Receipt ID</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+
+                    </tr>
+                </thead>
+                <tbody id="receiptTableBody">
+                    <% if (billingData && billingData.length > 0) { %>
+                        <% billingData.forEach(function(item) { %>
+                            <tr>
+                                <td style="padding: 16px 24px;">
+                                    <div style="font-size: 13px; color: var(--text-primary); font-weight: 500;"><%= item.date %></div>
+                                </td>
+                                <td>
+                                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--golden-straw); background: rgba(200, 167, 125, 0.1); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(200, 167, 125, 0.2);">
+                                        <%= item.id %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="font-size: 13px; color: var(--text-secondary);"><%= item.description %></div>
+                                </td>
+                                <td>
+                                    <div style="font-size: 14px; font-weight: 600; color: var(--text-primary);">$<%= item.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) %></div>
+                                </td>
+                                <td>
+                                    <% if (item.status === 'Paid') { %>
+                                        <span class="badge-status-glass status-paid">
+                                            <i class="bi bi-check-circle-fill"></i> Paid
+                                        </span>
+                                    <% } else { %>
+                                        <span class="badge-status-glass status-unpaid">
+                                            <i class="bi bi-exclamation-circle-fill"></i> Unpaid
+                                        </span>
+                                    <% } %>
+                                </td>
+
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="text-center" style="padding: 40px;">
+                                <div style="color: var(--text-muted); font-size: 14px;">No transaction records found.</div>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section B: Clothing Order History Section -->
+    <div class="glass-card-solid" style="padding: 0; overflow: hidden; border: 1px solid rgba(255,255,255,0.15);">
+        <div class="billing-section-header" style="padding: 24px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.15); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(200, 167, 125, 0.15); display: flex; align-items: center; justify-content: center; color: var(--golden-straw);">
+                        <i class="bi bi-bag-check" style="font-size: 16px;"></i>
+                    </div>
+                    <h5 style="margin: 0; font-size: 16px; font-weight: 600; color: var(--text-primary);">Clothing Order History</h5>
+                </div>
+                <p style="margin: 4px 0 0; font-size: 12px; color: var(--text-muted);">Consolidated product sales and customer transactions</p>
+            </div>
+            <!-- Search for this section removed in favor of unified search above -->
+        </div>
+        
+        <div class="table-responsive">
+            <table class="glass-table w-100 table-hover-effect">
+                <thead>
+                    <tr>
+                        <th style="padding: 16px 24px;">Date & Time</th>
+                        <th>Order ID</th>
+                        <th>Customer Name</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="orderTableBody">
+                    <% if (typeof orders !== 'undefined' && orders.length > 0) { %>
+                        <% orders.forEach(function(order) { %>
+                            <tr>
+                                <td style="padding: 16px 24px;">
+                                    <div style="font-size: 13px; color: var(--text-primary);"><%= order.created_at %></div>
+                                </td>
+                                <td>
+                                    <a href="/admin/orders/<%= order.id %>" class="order-link-ref">
+                                        <%= order.order_id %>
+                                    </a>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--golden-straw); color: white; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700;">
+                                            <%= order.customer_avatar %>
+                                        </div>
+                                        <span style="font-size: 13px; color: var(--text-secondary);"><%= order.customer_name %></span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-size: 14px; font-weight: 600; color: var(--text-primary);">$<%= order.total.toFixed(2) %></div>
+                                </td>
+                                <td>
+                                    <% 
+                                        let statusClass = 'status-neutral';
+                                        if(order.status === 'DELIVERED') statusClass = 'status-paid';
+                                        if(order.status === 'SHIPPED') statusClass = 'status-shipped';
+                                        if(order.status === 'PENDING') statusClass = 'status-unpaid';
+                                    %>
+                                    <span class="badge-status-glass <%= statusClass %>">
+                                        <%= order.status %>
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="/admin/orders/<%= order.id %>" class="btn-icon-glass" title="View Order Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="6" class="text-center" style="padding: 40px;">
+                                <div style="color: var(--text-muted); font-size: 14px;">No order history found.</div>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .search-box-premium input:focus {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border-color: var(--golden-straw) !important;
+        box-shadow: 0 0 0 4px rgba(200, 167, 125, 0.1) !important;
+    }
+    .search-box-premium input::placeholder {
+        color: var(--text-muted);
+        opacity: 0.7;
+    }
+    .glass-table {
+        border-collapse: collapse;
+    }
+    .glass-table thead tr {
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .glass-table th {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-align: left;
+    }
+    .glass-table tbody tr {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.04);
+        transform: scale(1.002);
+        z-index: 10;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .glass-table td {
+        vertical-align: middle;
+        padding: 16px 24px;
+    }
+
+    .badge-status-glass {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .status-paid {
+        background: rgba(76, 209, 55, 0.15);
+        color: #4cd137;
+        border: 1px solid rgba(76, 209, 55, 0.3);
+        box-shadow: 0 0 10px rgba(76, 209, 55, 0.1);
+    }
+
+    .status-unpaid {
+        background: rgba(255, 71, 87, 0.15);
+        color: #ff4757;
+        border: 1px solid rgba(255, 71, 87, 0.3);
+        box-shadow: 0 0 10px rgba(255, 71, 87, 0.1);
+    }
+
+    .status-shipped {
+        background: rgba(52, 152, 219, 0.15);
+        color: #3498db;
+        border: 1px solid rgba(52, 152, 219, 0.3);
+    }
+
+    .status-neutral {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-secondary);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .order-link-ref {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 13px;
+        color: var(--golden-straw);
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        padding-bottom: 2px;
+        border-bottom: 1px dashed transparent;
+    }
+
+    .order-link-ref:hover {
+        color: white;
+        border-bottom-color: var(--golden-straw);
+    }
+
+    .btn-icon-glass {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: var(--text-muted);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    .btn-icon-glass:hover {
+        background: var(--golden-straw);
+        color: white;
+        border-color: var(--golden-straw);
+        transform: translateY(-3px) rotate(5deg);
+        box-shadow: 0 5px 15px rgba(200, 167, 125, 0.3);
+    }
+
+    .billing-section-header {
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .table-responsive .glass-table {
+        min-width: 720px;
+    }
+
+    @media (max-width: 767.98px) {
+        .search-box-premium {
+            width: 100% !important;
+        }
+
+        .billing-section-header {
+            padding: 18px 16px !important;
+        }
+
+        .table-responsive .glass-table {
+            min-width: 680px;
+        }
+    }
+
+    /* Print Specific Styles */
+    @media print {
+        .liquid-bg-layer, .sidebar, .topbar, .btn-glass, .btn-icon-glass, .page-subtitle, .topbar-search {
+            display: none !important;
+        }
+        body {
+            background: white !important;
+            color: black !important;
+        }
+        .main-content {
+            margin-left: 0 !important;
+            padding: 0 !important;
+        }
+        .glass-card-solid {
+            background: white !important;
+            border: 1px solid #eee !important;
+            box-shadow: none !important;
+            color: black !important;
+        }
+        .glass-table th, .glass-table td {
+            color: black !important;
+            border-bottom: 1px solid #ddd !important;
+        }
+        .badge-glass {
+            border: 1px solid #ddd !important;
+            color: black !important;
+        }
+        .page-title {
+            color: black !important;
+            margin-bottom: 20px;
+        }
+    }
+</style>
+
+<script>
+    function downloadReceipt(receiptId) {
+        // Triggering the print view as a simulation of PDF download/report
+        // In a real app, this might open a hidden iframe with the receipt content and call window.print()
+        showToast('Processing', 'Generating receipt ' + receiptId + '...', 'success');
+        
+        setTimeout(() => {
+            window.print();
+        }, 500);
+    }
+
+    function showToast(title, message, type) {
+        if (typeof parent.showToast === 'function') {
+            parent.showToast(title, message, type);
+        } else {
+            console.log('Toast:', title, message, type);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const billingSearch = document.getElementById('billingSearch');
+        if (billingSearch) {
+            billingSearch.addEventListener('keyup', function() {
+                const term = this.value.toLowerCase().trim();
+                const rows = document.querySelectorAll('#receiptTableBody tr, #orderTableBody tr');
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(term) ? '' : 'none';
+                });
+            });
+        }
+    });
+</script>

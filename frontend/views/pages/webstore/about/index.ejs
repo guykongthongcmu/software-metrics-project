@@ -1,0 +1,176 @@
+<!-- /views/pages/webstore/about/index.ejs -->
+<div class="about-page-container">
+    <!-- Hero Banner Full Width -->
+    <div class="about-hero">
+        <img src="/images/about_us_banner.png" alt="Core & Co Editorial Campaign" class="hero-img">
+        <div class="hero-overlay">
+            <h1 class="hero-title">CORE &amp; CO</h1>
+            <p class="hero-subtitle">REDEFINING MODERN ELEGANCE</p>
+        </div>
+    </div>
+
+    <div class="about-content" style="max-width: 1000px; margin: 80px auto; padding: 0 20px;">
+        <!-- Brand Story -->
+        <section class="story-section" style="text-align: center; margin-bottom: 100px;">
+            <h2
+                style="font-family: var(--font-heading), serif; font-weight: 300; font-size: 2.5rem; letter-spacing: 2px; margin-bottom: 30px; text-transform: uppercase;">
+                Our Story</h2>
+            <p
+                style="font-family: var(--font-body), sans-serif; font-size: 1.1rem; line-height: 1.8; color: var(--text-secondary); max-width: 700px; margin: 0 auto;">
+                Born from a desire to create a wardrobe that transcends time, Core &amp; Co was founded on the
+                principles of minimalism, quality, and effortless sophistication. We believe in fashion that speaks
+                quietly but resonates deeply—pieces designed to be lived in, loved, and passed down.
+            </p>
+        </section>
+
+        <!-- Image and text split -->
+        <section class="split-section"
+            style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; margin-bottom: 100px;">
+            <div class="split-image"
+                style="background-color: var(--warm-gray); aspect-ratio: 3/4; overflow: hidden; border-radius: 2px;">
+                <img src="/images/aboutus.jpeg" alt="Fashion Editorial"
+                    style="width: 100%; height: 100%; object-fit: cover; filter: grayscale(15%); transition: transform 0.7s ease;">
+            </div>
+            <div class="split-text" style="padding: 20px 0;">
+                <h3
+                    style="font-family: var(--font-heading), serif; font-weight: 300; font-size: 2.2rem; letter-spacing: 1px; margin-bottom: 25px;">
+                    The Philosophy</h3>
+                <p
+                    style="font-family: var(--font-body), sans-serif; font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary); margin-bottom: 40px;">
+                    Our approach is simple: curate the essential. By focusing on refined silhouettes, premium fabrics,
+                    and neutral palettes, we offer collections that are inherently versatile. Every garment is a canvas,
+                    empowering you to express your individual style with quiet confidence.
+                </p>
+                <a href="/" class="btn-editorial"
+                    style="display: inline-block; padding: 14px 35px; border: 1px solid var(--text-primary); color: var(--text-primary); text-transform: uppercase; letter-spacing: 2px; text-decoration: none; font-size: 0.85rem; transition: all 0.3s ease;">Explore
+                    Collection</a>
+            </div>
+        </section>
+
+        <!-- Values -->
+        <section class="values-section" style="margin-bottom: 80px;">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 50px; text-align: center;">
+                <div>
+                    <h4
+                        style="font-family: var(--font-heading), serif; font-weight: 400; font-size: 1.2rem; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">
+                        Timeless Design</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7;">Silhouettes designed
+                        beyond seasonal trends, ensuring enduring relevance.</p>
+                </div>
+                <div>
+                    <h4
+                        style="font-family: var(--font-heading), serif; font-weight: 400; font-size: 1.2rem; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">
+                        Premium Craft</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7;">Exceptional materials
+                        sourced responsibly and crafted with precise attention to detail.</p>
+                </div>
+                <div>
+                    <h4
+                        style="font-family: var(--font-heading), serif; font-weight: 400; font-size: 1.2rem; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">
+                        Conscious Ethos</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.7;">A commitment to
+                        sustainable practices and transparency at every step.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<style>
+    .about-hero {
+        position: relative;
+        width: 100vw;
+        height: 75vh;
+        left: 50%;
+        right: 50%;
+        margin-left: -50vw;
+        margin-right: -50vw;
+        overflow: hidden;
+        background-color: #e5e0db;
+    }
+
+    .hero-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 30%;
+        filter: contrast(1.05) brightness(0.95);
+        opacity: 0.85;
+        /* Blend with background */
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #ffffff;
+        width: 100%;
+    }
+
+    .hero-title {
+        font-family: var(--font-heading), serif;
+        font-weight: 300;
+        font-size: 5.5rem;
+        letter-spacing: 16px;
+        margin-bottom: 15px;
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        text-transform: uppercase;
+        margin-left: 16px;
+        /* offset for tracking */
+    }
+
+    .hero-subtitle {
+        font-family: var(--font-body), sans-serif;
+        font-size: 1.1rem;
+        letter-spacing: 8px;
+        font-weight: 300;
+        text-transform: uppercase;
+        margin-left: 8px;
+        /* offset for tracking */
+        color: rgba(255, 255, 255, 0.95);
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-editorial:hover {
+        background-color: var(--text-primary);
+        color: var(--white) !important;
+    }
+
+    .split-image:hover img {
+        transform: scale(1.03);
+    }
+
+    @media (max-width: 768px) {
+        .about-hero {
+            height: 60vh;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            letter-spacing: 8px;
+            margin-left: 8px;
+        }
+
+        .hero-subtitle {
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            margin-left: 4px;
+        }
+
+        .split-section {
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+
+        .split-text {
+            text-align: center;
+        }
+
+        .values-section>div {
+            grid-template-columns: 1fr;
+            gap: 40px;
+        }
+    }
+</style>

@@ -1,0 +1,518 @@
+<div class="fade-in" id="admin-order-detail-page" data-order-id="<%= orderId %>">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" id="order-title">Order #<%= orderId %></h1>
+            <p class="page-subtitle" id="order-subtitle">Loading order details...</p>
+        </div>
+        <div class="page-header-actions order-header-actions">
+            <a href="/admin/orders" class="btn-glass"><i class="bi bi-arrow-left"></i> Back to Orders</a>
+            <button type="button" id="delete-order-btn" class="btn-glass btn-delete-order">
+                <i class="bi bi-trash"></i> Delete Order
+            </button>
+        </div>
+    </div>
+
+    <div id="order-error-card" class="glass-card-solid" style="padding:24px; display:none;">
+        <div style="display:flex; align-items:flex-start; gap:12px;">
+            <i class="bi bi-exclamation-triangle" style="font-size:24px; color:#c0392b;"></i>
+            <div>
+                <div style="font-weight:600; color:var(--text-primary); margin-bottom:4px;">Failed to load order</div>
+                <div id="order-error-message" style="color:var(--text-muted); margin-bottom:16px;"></div>
+                <button type="button" id="retry-load-btn" class="btn-glass">Retry</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="order-loading-card" class="glass-card-solid" style="padding:32px; text-align:center;">
+        <div class="spinner-border text-primary" role="status" style="width:20px;height:20px;border-width:2px;"></div>
+        <span style="margin-left:10px;color:var(--text-muted);">Loading order details...</span>
+    </div>
+
+    <div id="order-content" style="display:none;">
+        <div class="row g-4">
+            <div class="col-xl-8">
+                <div class="glass-card-solid" style="padding:24px; margin-bottom:20px;">
+                    <div class="order-section-header">
+                        <div>
+                            <h5 style="font-size:16px; margin:0;">Order Items</h5>
+                            <p style="margin:4px 0 0; color:var(--text-muted); font-size:12px;">
+                                Purchased items captured at checkout time.
+                            </p>
+                        </div>
+                        <span id="order-status-badge" class="badge-glass status-purchased">PURCHASED</span>
+                    </div>
+
+                    <div class="table-scroll-x">
+                        <table class="glass-table order-items-table">
+                            <thead>
+                                <tr>
+                                    <th>PRODUCT</th>
+                                    <th>COLOUR</th>
+                                    <th>SIZE</th>
+                                    <th>QTY</th>
+                                    <th>UNIT PRICE</th>
+                                    <th>LINE TOTAL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="order-items-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="glass-card-solid" style="padding:24px;">
+                    <div class="order-section-header">
+                        <div>
+                            <h5 style="font-size:16px; margin:0;">Shipping Snapshot</h5>
+                            <p style="margin:4px 0 0; color:var(--text-muted); font-size:12px;">
+                                Admin corrections here update the stored order snapshot used for admin records.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form id="shipping-form" class="row g-3">
+                        <div class="col-md-6">
+                            <label class="glass-label" for="full-name">Full Name</label>
+                            <input id="full-name" name="fullName" class="glass-input" maxlength="150" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="glass-label" for="phone-number">Phone Number</label>
+                            <input id="phone-number" name="phoneNumber" class="glass-input" maxlength="30" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="glass-label" for="address-line1">Address Line 1</label>
+                            <input id="address-line1" name="addressLine1" class="glass-input" maxlength="255" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="glass-label" for="address-line2">Address Line 2</label>
+                            <input id="address-line2" name="addressLine2" class="glass-input" maxlength="255">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="glass-label" for="district">District</label>
+                            <input id="district" name="district" class="glass-input" maxlength="120" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="glass-label" for="province">Province</label>
+                            <input id="province" name="province" class="glass-input" maxlength="120" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="glass-label" for="postal-code">Postal Code</label>
+                            <input id="postal-code" name="postalCode" class="glass-input" maxlength="20" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="glass-label" for="country">Country</label>
+                            <input id="country" name="country" class="glass-input" maxlength="100" required>
+                        </div>
+                        <div class="col-12">
+                            <div style="display:flex; justify-content:flex-end;">
+                                <button type="submit" id="save-order-btn" class="btn-golden">
+                                    <i class="bi bi-save"></i> Save Address Snapshot
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-xl-4">
+                <div class="glass-card-solid" style="padding:24px; margin-bottom:20px;">
+                    <h5 style="font-size:16px; margin-bottom:16px;">Customer</h5>
+                    <div style="display:grid; gap:10px;">
+                        <div>
+                            <div class="meta-label">Name</div>
+                            <div id="customer-name" class="meta-value">--</div>
+                        </div>
+                        <div>
+                            <div class="meta-label">Email</div>
+                            <div id="customer-email" class="meta-value">--</div>
+                        </div>
+                        <div>
+                            <div class="meta-label">User ID</div>
+                            <div id="customer-user-id" class="meta-value">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card-solid" style="padding:24px; margin-bottom:20px;">
+                    <h5 style="font-size:16px; margin-bottom:16px;">Order Summary</h5>
+                    <div class="summary-grid">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <strong id="summary-subtotal">$0.00</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>Shipping Fee</span>
+                            <strong id="summary-shipping">$0.00</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>VAT</span>
+                            <strong id="summary-vat">$0.00</strong>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <span>Total</span>
+                            <strong id="summary-total">$0.00</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card-solid" style="padding:24px;">
+                    <h5 style="font-size:16px; margin-bottom:16px;">Metadata</h5>
+                    <div style="display:grid; gap:10px;">
+                        <div>
+                            <div class="meta-label">Status</div>
+                            <div id="meta-status" class="meta-value">--</div>
+                        </div>
+                        <div>
+                            <div class="meta-label">Created At</div>
+                            <div id="meta-created-at" class="meta-value">--</div>
+                        </div>
+                        <div>
+                            <div class="meta-label">Updated At</div>
+                            <div id="meta-updated-at" class="meta-value">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const root = document.getElementById('admin-order-detail-page');
+    const orderId = Number.parseInt(root.dataset.orderId, 10);
+
+    const elements = {
+        title: document.getElementById('order-title'),
+        subtitle: document.getElementById('order-subtitle'),
+        loading: document.getElementById('order-loading-card'),
+        content: document.getElementById('order-content'),
+        errorCard: document.getElementById('order-error-card'),
+        errorMessage: document.getElementById('order-error-message'),
+        retry: document.getElementById('retry-load-btn'),
+        deleteButton: document.getElementById('delete-order-btn'),
+        saveButton: document.getElementById('save-order-btn'),
+        shippingForm: document.getElementById('shipping-form'),
+        statusBadge: document.getElementById('order-status-badge'),
+        itemsBody: document.getElementById('order-items-body'),
+        customerName: document.getElementById('customer-name'),
+        customerEmail: document.getElementById('customer-email'),
+        customerUserId: document.getElementById('customer-user-id'),
+        subtotal: document.getElementById('summary-subtotal'),
+        shippingFee: document.getElementById('summary-shipping'),
+        vatAmount: document.getElementById('summary-vat'),
+        total: document.getElementById('summary-total'),
+        metaStatus: document.getElementById('meta-status'),
+        metaCreatedAt: document.getElementById('meta-created-at'),
+        metaUpdatedAt: document.getElementById('meta-updated-at'),
+        fullName: document.getElementById('full-name'),
+        phoneNumber: document.getElementById('phone-number'),
+        addressLine1: document.getElementById('address-line1'),
+        addressLine2: document.getElementById('address-line2'),
+        district: document.getElementById('district'),
+        province: document.getElementById('province'),
+        postalCode: document.getElementById('postal-code'),
+        country: document.getElementById('country'),
+    };
+
+    let currentOrder = null;
+    let isSaving = false;
+    let isDeleting = false;
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function formatMoney(value) {
+        const amount = Number(value || 0);
+        return `$${amount.toFixed(2)}`;
+    }
+
+    function formatDateTime(value) {
+        if (!value) return '--';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value);
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    async function requestJson(url, options = {}) {
+        const headers = {
+            ...(options.headers || {})
+        };
+
+        if (options.body && !headers['Content-Type']) {
+            headers['Content-Type'] = 'application/json';
+        }
+
+        const response = await window.adminFetch(url, {
+            ...options,
+            headers
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(payload.message || `Request failed with status ${response.status}`);
+        }
+
+        return payload;
+    }
+
+    function toggleLoading(isLoading) {
+        elements.loading.style.display = isLoading ? '' : 'none';
+        elements.content.style.display = isLoading ? 'none' : '';
+        elements.errorCard.style.display = 'none';
+    }
+
+    function showError(message) {
+        elements.loading.style.display = 'none';
+        elements.content.style.display = 'none';
+        elements.errorCard.style.display = '';
+        elements.errorMessage.textContent = message || 'Failed to load order';
+    }
+
+    function fillAddressForm(snapshot = {}) {
+        elements.fullName.value = snapshot.fullName || '';
+        elements.phoneNumber.value = snapshot.phoneNumber || '';
+        elements.addressLine1.value = snapshot.addressLine1 || '';
+        elements.addressLine2.value = snapshot.addressLine2 || '';
+        elements.district.value = snapshot.district || '';
+        elements.province.value = snapshot.province || '';
+        elements.postalCode.value = snapshot.postalCode || '';
+        elements.country.value = snapshot.country || '';
+    }
+
+    function renderItems(items = []) {
+        if (!items.length) {
+            elements.itemsBody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:24px; color:var(--text-muted);">
+                        No line items found for this order.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        elements.itemsBody.innerHTML = items.map((item) => `
+            <tr>
+                <td style="font-weight:600;">${escapeHtml(item.snapshotProductName || '--')}</td>
+                <td>${escapeHtml(item.snapshotColor || '--')}</td>
+                <td>${escapeHtml(item.snapshotSize || '--')}</td>
+                <td>${Number(item.quantity || 0)}</td>
+                <td>${formatMoney(item.snapshotUnitPrice)}</td>
+                <td style="font-weight:600;">${formatMoney(item.lineTotal)}</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderOrder(order) {
+        currentOrder = order;
+
+        elements.title.textContent = `Order #${order.orderId}`;
+        elements.subtitle.textContent = `Placed on ${formatDateTime(order.createdAt)}`;
+        elements.statusBadge.textContent = order.status || 'PURCHASED';
+        elements.metaStatus.textContent = order.status || 'PURCHASED';
+        elements.customerName.textContent = order.customer?.name || '--';
+        elements.customerEmail.textContent = order.customer?.email || '--';
+        elements.customerUserId.textContent = order.customer?.userId != null ? `User #${order.customer.userId}` : '--';
+        elements.subtotal.textContent = formatMoney(order.subtotal);
+        elements.shippingFee.textContent = formatMoney(order.shippingFee);
+        elements.vatAmount.textContent = formatMoney(order.vatAmount);
+        elements.total.textContent = formatMoney(order.total);
+        elements.metaCreatedAt.textContent = formatDateTime(order.createdAt);
+        elements.metaUpdatedAt.textContent = formatDateTime(order.updatedAt);
+
+        fillAddressForm(order.shippingAddressSnapshot || {});
+        renderItems(order.items || []);
+    }
+
+    async function loadOrder() {
+        toggleLoading(true);
+
+        try {
+            const payload = await requestJson(`/api/admin/orders/${orderId}`);
+            renderOrder(payload.data);
+            toggleLoading(false);
+        } catch (error) {
+            console.error('Failed to load order detail:', error);
+            showError(error.message || 'Failed to load order');
+        }
+    }
+
+    function collectAddressSnapshot() {
+        return {
+            fullName: elements.fullName.value.trim(),
+            phoneNumber: elements.phoneNumber.value.trim(),
+            addressLine1: elements.addressLine1.value.trim(),
+            addressLine2: elements.addressLine2.value.trim(),
+            district: elements.district.value.trim(),
+            province: elements.province.value.trim(),
+            postalCode: elements.postalCode.value.trim(),
+            country: elements.country.value.trim()
+        };
+    }
+
+    async function saveOrder(event) {
+        event.preventDefault();
+        if (isSaving) return;
+
+        isSaving = true;
+        elements.saveButton.disabled = true;
+        const originalLabel = elements.saveButton.innerHTML;
+        elements.saveButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
+
+        try {
+            const payload = await requestJson(`/api/admin/orders/${orderId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    shippingAddressSnapshot: collectAddressSnapshot()
+                })
+            });
+
+            renderOrder(payload.data);
+            if (window.showToast) {
+                window.showToast('Success', 'Order address snapshot updated.', 'success');
+            }
+        } catch (error) {
+            console.error('Failed to update order:', error);
+            if (window.showToast) {
+                window.showToast('Update Failed', error.message || 'Could not update order', 'error');
+            }
+        } finally {
+            isSaving = false;
+            elements.saveButton.disabled = false;
+            elements.saveButton.innerHTML = originalLabel;
+        }
+    }
+
+    async function deleteOrder() {
+        if (isDeleting) return;
+        if (!window.confirm(`Delete order #${orderId}? This cannot be undone.`)) return;
+
+        isDeleting = true;
+        elements.deleteButton.disabled = true;
+        const originalLabel = elements.deleteButton.innerHTML;
+        elements.deleteButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Deleting...';
+
+        try {
+            await requestJson(`/api/admin/orders/${orderId}`, {
+                method: 'DELETE'
+            });
+
+            if (window.showToast) {
+                window.showToast('Deleted', `Order #${orderId} deleted successfully.`, 'success');
+            }
+
+            window.location.href = '/admin/orders';
+        } catch (error) {
+            console.error('Failed to delete order:', error);
+            if (window.showToast) {
+                window.showToast('Delete Failed', error.message || 'Could not delete order', 'error');
+            }
+            elements.deleteButton.disabled = false;
+            elements.deleteButton.innerHTML = originalLabel;
+            isDeleting = false;
+        }
+    }
+
+    elements.retry.addEventListener('click', loadOrder);
+    elements.shippingForm.addEventListener('submit', saveOrder);
+    elements.deleteButton.addEventListener('click', deleteOrder);
+    document.addEventListener('DOMContentLoaded', loadOrder);
+})();
+</script>
+
+<style>
+.order-header-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.order-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.order-items-table {
+    min-width: 760px;
+}
+
+.summary-grid {
+    display: grid;
+    gap: 12px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--text-secondary);
+}
+
+.summary-total {
+    padding-top: 12px;
+    border-top: 1px solid rgba(215, 205, 190, 0.35);
+    color: var(--text-primary);
+}
+
+.meta-label {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.meta-value {
+    color: var(--text-primary);
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.btn-delete-order {
+    border-color: rgba(192, 57, 43, 0.25);
+    color: #b03a2e;
+}
+
+.btn-delete-order:hover {
+    border-color: rgba(192, 57, 43, 0.4);
+    color: #922b21;
+}
+
+.badge-glass.status-purchased {
+    background: rgba(46, 204, 113, 0.15);
+    color: #27ae60;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+@media (max-width: 767.98px) {
+    .order-header-actions {
+        width: 100%;
+    }
+
+    .order-header-actions .btn-glass,
+    .order-header-actions .btn-delete-order {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .order-section-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+</style>

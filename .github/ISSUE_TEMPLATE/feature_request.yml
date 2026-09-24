@@ -1,0 +1,75 @@
+name: Feature
+description: Build a new feature or user-facing improvement
+title: "feature: "
+labels: ["type: feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for new functionality. Keep it small enough to finish in 1–3 hours if possible.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal / user story
+      description: What are we building and why?
+      placeholder: "As a user, I want to..., so that..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - "area: frontend"
+        - "area: backend"
+        - "area: devops"
+        - "area: general"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / notes
+      description: Any constraints, edge cases, dependencies, or links to related issues/PRs.
+      placeholder: "- Depends on #12\n- Needs API endpoint GET /...\n- UI should match design X"
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria (Definition of Done)
+      description: Checklist that must be true before closing.
+      value: |
+        - [ ] Works as described
+        - [ ] Handles errors/loading states (if relevant)
+        - [ ] Tests added/updated (if relevant)
+        - [ ] Docs/README updated (if relevant)
+    validations:
+      required: true
+
+  - type: textarea
+    id: api
+    attributes:
+      label: API contract (if applicable)
+      description: Endpoint, request, response, auth, errors.
+      placeholder: |
+        Endpoint:
+        Request:
+        Response:
+        Auth:
+        Error cases:
+    validations:
+      required: false
+
+  - type: textarea
+    id: ui
+    attributes:
+      label: UI mockups / screenshots (if applicable)
+      description: Paste images/links if you have them.
+    validations:
+      required: false

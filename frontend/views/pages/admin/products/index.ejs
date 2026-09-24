@@ -1,0 +1,327 @@
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">All Products</h1>
+            <p class="page-subtitle">Manage your product catalog</p>
+        </div>
+        <div class="page-header-actions">
+            <a href="/admin/products/create" class="btn-golden"><i class="bi bi-plus-lg"></i> Add Item</a>
+        </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <div class="glass-tabs" id="categoryTabs">
+        <button class="glass-tab active" data-category="null">All</button>
+    </div>
+
+    <!-- Search Bar & Stats -->
+    <div class="products-toolbar" style="display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap;">
+        <div class="topbar-search" style="flex:1; position:relative; margin:0; max-width: 600px;">
+            <i class="bi bi-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);"></i>
+            <input type="text" id="productSearch" class="glass-input w-100" style="padding-left:36px; margin:0;"
+                placeholder="Search items...">
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary); margin-left: auto;" id="statsCounter">
+            Showing 0 of 0
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="glass-card-solid table-scroll-x" style="padding:0; overflow-x:auto;">
+        <table class="glass-table products-table">
+            <thead>
+                <tr>
+                    <th>Product Name & ID</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Engagement (Likes)</th>
+                    <th>Items Sold</th>
+                    <th>Remaining Stock</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody id="productTableBody">
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">Synchronizing with catalog...</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="glass-pagination" id="pagination"></div>
+</div>
+
+<script>
+/**
+ * Admin Products Catalog Orchestrator
+ * Enterprise-grade state & API integration
+ */
+(function() {
+    // 1. Reactive State Management
+    const state = {
+        currentPage: 1,
+        currentLimit: 60,
+        searchQuery: '',
+        activeCategoryId: null,
+        totalPages: 0,
+        totalItems: 0
+    };
+
+    const elements = {
+        tableBody: document.getElementById('productTableBody'),
+        searchInput: document.getElementById('productSearch'),
+        tabsContainer: document.getElementById('categoryTabs'),
+        pagination: document.getElementById('pagination'),
+        counter: document.getElementById('statsCounter')
+    };
+
+    const topLevelCategoryOrder = {
+        men: 1,
+        women: 2,
+        kids: 3,
+        baby: 4,
+        unisex: 5
+    };
+
+    function getRenderedTabs() {
+        return elements.tabsContainer.querySelectorAll('.glass-tab');
+    }
+
+    function renderCategoryTabs(categories) {
+        const topLevelCategories = (categories || [])
+            .filter((category) => category.parentCategoryId === null)
+            .filter((category) => !String(category.slug || '').startsWith('tag-'))
+            .sort((left, right) => {
+                const leftOrder = topLevelCategoryOrder[String(left.slug || '').toLowerCase()] || 999;
+                const rightOrder = topLevelCategoryOrder[String(right.slug || '').toLowerCase()] || 999;
+                if (leftOrder !== rightOrder) {
+                    return leftOrder - rightOrder;
+                }
+
+                return String(left.categoryName || '').localeCompare(String(right.categoryName || ''));
+            });
+
+        const tabsHtml = [
+            '<button class="glass-tab' + (state.activeCategoryId ? '' : ' active') + '" data-category="null">All</button>',
+            ...topLevelCategories.map((category) => {
+                const isActive = String(state.activeCategoryId) === String(category.categoryId);
+                return `<button class="glass-tab${isActive ? ' active' : ''}" data-category="${category.categoryId}">${category.categoryName}</button>`;
+            })
+        ].join('');
+
+        elements.tabsContainer.innerHTML = tabsHtml;
+    }
+
+    async function fetchAdminCategories() {
+        try {
+            const response = await window.adminFetch('/api/admin/categories');
+            if (!response || !response.ok) {
+                throw new Error(`API_COMMUNICATION_ERROR: ${response?.status || 'Connection Refused'}`);
+            }
+
+            const result = await response.json();
+            if (!result || result.status !== 'success' || !Array.isArray(result.data?.categories)) {
+                throw new Error(result?.message || 'INVALID_CATEGORY_PAYLOAD');
+            }
+
+            renderCategoryTabs(result.data.categories);
+        } catch (error) {
+            console.error('--- CATEGORY_TAB_ERROR ---', error);
+            renderCategoryTabs([]);
+        }
+    }
+
+    /**
+     * API Service: Fetch Products
+     */
+    async function fetchAdminProducts() {
+        try {
+            const params = new URLSearchParams({
+                page: state.currentPage,
+                limit: state.currentLimit,
+                lang: 'EN'
+            });
+
+            if (state.searchQuery) params.append('search', state.searchQuery);
+            if (state.activeCategoryId) params.append('category', state.activeCategoryId);
+
+            // 1. Network level safety check
+            const response = await window.adminFetch(`/api/admin/products?${params.toString()}`);
+            if (!response || !response.ok) {
+                throw new Error(`API_COMMUNICATION_ERROR: ${response?.status || 'Connection Refused'}`);
+            }
+
+            const result = await response.json();
+
+            // 2. Data structure safety check (Defensive Extraction)
+            // Even if 200 OK, payload might be an error or malformed
+            if (!result || result.status !== 'success' || !result.data) {
+                throw new Error(result?.message || 'INVALID_PAYLOAD_STRUCTURE');
+            }
+
+            // 3. Optional Chaining & Fallbacks for nested properties
+            const items = result.data?.items || [];
+            const pagination = result.data?.pagination || {};
+
+            state.totalPages = Number(pagination?.totalPages ?? result.data?.totalPages ?? 0);
+            state.totalItems = Number(pagination?.totalItems ?? result.data?.totalItems ?? 0);
+
+            // 4. Update UI with validated data
+            renderTable(items);
+            renderPagination();
+            updateCounter();
+
+        } catch (error) {
+            console.error('--- CATALOG_ERROR ---', error);
+            
+            // Graceful Error UI: Reset state and show specific error message
+            state.totalPages = 0;
+            state.totalItems = 0;
+            renderPagination();
+            renderTable([]); // Show empty state if possible
+            
+            elements.tableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-5">
+                        <div style="color: var(--status-danger); font-weight: 600; font-size: 16px;">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Communication failure with Catalog Service (Port 3000)
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-muted); margin-top: 10px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+                            ${error.message || 'The server encountered an unexpected condition and could not fulfill the request.'}
+                        </div>
+                        <button onclick="location.reload()" class="btn-glass btn-sm mt-3">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Retry Connection
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+
+    /**
+     * UI Rendering & Fallback Handling
+     */
+    function renderTable(products) {
+        if (!products || products.length === 0) {
+            elements.tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-muted">No products match your current filters.</td></tr>`;
+            return;
+        }
+
+        elements.tableBody.innerHTML = products.map(p => {
+            const stock = p.totalStock || 0;
+            const stockLabel = stock === 0 ? 'Out of Stock' : (stock < 10 ? 'Low Stock' : 'In Stock');
+            const stockClass = stock === 0 ? 'badge-draft' : (stock < 10 ? 'badge-pending' : 'badge-active');
+            const stockStyle = stock <= 10 ? 'color: var(--status-warning); font-weight:700;' : '';
+
+            return `
+                <tr onclick="window.location='/admin/products/edit/${p.productId}'">
+                    <td class="ps-4">
+                        <div style="font-weight:600; color:var(--text-primary);">${p.name}</div>
+                        <div style="font-size:11px; color:var(--text-muted);">#${p.productId}</div>
+                    </td>
+                    <td><span class="badge-glass" style="background:rgba(215, 205, 190, 0.2);">${p.rootCategoryName || p.primaryCategoryName || 'General'}</span></td>
+                    <td style="font-weight:500; font-size:13px; color:var(--text-primary);">${p.productType || 'N/A'}</td>
+                    <td class="text-muted">
+                        <!-- DEV_NOTE: Backend team needs to add 'likes' field to payload -->
+                        <i class="bi bi-heart me-1"></i> -
+                    </td>
+                    <td class="text-muted">
+                        <!-- DEV_NOTE: Backend team needs to add 'items_sold' field to payload -->
+                        <i class="bi bi-bag me-1"></i> -
+                    </td>
+                    <td><span class="badge-glass ${stockClass}" style="${stockStyle}">${stockLabel} (${stock})</span></td>
+                    <td class="pe-4" style="font-weight:700; color:var(--text-primary);">$${p.priceFrom}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Helper: Pagination & Stats
+     */
+    function renderPagination() {
+        if (state.totalPages <= 1) { elements.pagination.innerHTML = ''; return; }
+        let html = '';
+        for(let i=1; i<=state.totalPages; i++) {
+            html += `<a href="#" class="${state.currentPage === i ? 'active' : ''}" data-page="${i}">${i}</a>`;
+        }
+        elements.pagination.innerHTML = html;
+        elements.pagination.querySelectorAll('a').forEach(l => l.onclick = (e) => {
+            e.preventDefault();
+            state.currentPage = parseInt(l.dataset.page);
+            fetchAdminProducts();
+        });
+    }
+
+    function updateCounter() {
+        const start = ((state.currentPage - 1) * state.currentLimit) + 1;
+        const end = Math.min(state.currentPage * state.currentLimit, state.totalItems);
+        elements.counter.textContent = `Showing ${state.totalItems ? start : 0} - ${end} of ${state.totalItems}`;
+    }
+
+    /**
+     * Debounced Search Orchestration
+     */
+    function debounce(fn, ms) {
+        let t;
+        return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    }
+
+    elements.searchInput.oninput = debounce(() => {
+        state.searchQuery = elements.searchInput.value.trim();
+        state.currentPage = 1;
+        fetchAdminProducts();
+    }, 500);
+
+    elements.tabsContainer.onclick = (event) => {
+        const tab = event.target.closest('.glass-tab');
+        if (!tab) {
+            return;
+        }
+
+        getRenderedTabs().forEach((button) => button.classList.remove('active'));
+        tab.classList.add('active');
+        state.activeCategoryId = tab.dataset.category === 'null' ? null : Number(tab.dataset.category);
+        state.currentPage = 1;
+        fetchAdminProducts();
+    };
+
+    // Bootstrapping
+    fetchAdminCategories();
+    fetchAdminProducts();
+})();
+</script>
+
+<style>
+.badge-glass.badge-active { background: rgba(46, 204, 113, 0.15); color: #27ae60; border: 1px solid rgba(46, 204, 113, 0.3); }
+.badge-glass.badge-pending { background: rgba(241, 196, 15, 0.15); color: #f39c12; border: 1px solid rgba(241, 196, 15, 0.3); }
+.badge-glass.badge-draft { background: rgba(231, 76, 60, 0.15); color: #c0392b; border: 1px solid rgba(231, 76, 60, 0.3); }
+.spinner-border { width: 3rem; height: 3rem; color: var(--golden-straw); }
+.glass-table tr { cursor: pointer; transition: background 0.2s; }
+.glass-table tr:hover { background: rgba(255, 255, 255, 0.4); }
+
+.products-table {
+    min-width: 920px;
+}
+
+@media (max-width: 767.98px) {
+    .products-toolbar {
+        align-items: stretch !important;
+    }
+
+    .products-toolbar .topbar-search {
+        max-width: none !important;
+        flex-basis: 100%;
+    }
+
+    .products-toolbar #statsCounter {
+        width: 100%;
+        margin-left: 0 !important;
+    }
+}
+</style>

@@ -1,0 +1,357 @@
+/* ═══════════════════════════════════════════════════════════
+   client-cartStyle.css
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --ct-bg: #f5f0e8;
+  --ct-warm: #edeae3;
+  --ct-gold: #b89b6e;
+  --ct-gold-h: #a0855a;
+  --ct-text: #2a2520;
+  --ct-muted: #999;
+  --ct-border: #e0dbd2;
+  --ct-red: #c0392b;
+}
+
+/* ── page ── */
+.ct-page {
+  background: var(--ct-bg);
+  min-height: 80vh;
+  padding-bottom: 0;
+}
+
+/* ── heading ── */
+.ct-heading {
+  font-family: "Playfair Display", serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  color: var(--ct-text);
+  margin-bottom: 2px;
+}
+.ct-subheading {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ct-muted);
+  margin-bottom: 20px;
+}
+
+/* ── cart item ── */
+.ct-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--ct-border);
+  animation: ctFadeIn 0.3s ease both;
+}
+.ct-item:first-child {
+  border-top: 1px solid var(--ct-border);
+}
+
+.ct-item-img {
+  width: 100px;
+  height: 130px;
+  object-fit: cover;
+  background: var(--ct-warm);
+  flex-shrink: 0;
+}
+
+.ct-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ct-item-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ct-text);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ct-item-meta {
+  font-size: 0.68rem;
+  color: var(--ct-muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ct-item-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* qty control */
+.ct-qty {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--ct-border);
+  background: #fff;
+  height: 30px;
+  width: fit-content;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.ct-qty-btn {
+  width: 28px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  font-size: 0.95rem;
+  cursor: pointer;
+  color: var(--ct-text);
+  transition: background 0.15s;
+}
+.ct-qty-btn:hover {
+  background: var(--ct-warm);
+}
+.ct-qty-val {
+  width: 28px;
+  text-align: center;
+  font-size: 0.8rem;
+  border-left: 1px solid var(--ct-border);
+  border-right: 1px solid var(--ct-border);
+  color: var(--ct-text);
+}
+
+/* item actions (wish + delete) */
+.ct-item-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.ct-icon-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--ct-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+  padding: 0;
+}
+.ct-icon-btn:hover {
+  color: var(--ct-text);
+}
+.ct-icon-btn.delete:hover {
+  color: var(--ct-red);
+}
+
+/* item price */
+.ct-item-price {
+  text-align: right;
+  flex-shrink: 0;
+}
+.ct-item-price-now {
+  font-size: 0.88rem;
+  color: var(--ct-text);
+  font-weight: 500;
+}
+.ct-item-price-was {
+  font-size: 0.72rem;
+  color: var(--ct-muted);
+  text-decoration: line-through;
+  display: block;
+}
+
+/* ── empty state ── */
+.ct-empty {
+  font-size: 0.82rem;
+  color: var(--ct-muted);
+  padding: 16px 0 0;
+}
+
+/* ── total + checkout ── */
+.ct-summary {
+  padding-top: 8px;
+}
+
+.ct-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 16px 0 14px;
+  border-top: 1px solid var(--ct-border);
+  margin-top: 8px;
+}
+.ct-total-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ct-muted);
+}
+.ct-total-amount {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: var(--ct-text);
+}
+
+.ct-checkout-btn {
+  display: block;
+  width: 100%;
+  height: 46px;
+  background: var(--ct-gold);
+  color: #fff;
+  border: none;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.15s;
+  margin-bottom: 10px;
+}
+.ct-checkout-btn:hover {
+  background: var(--ct-gold-h);
+}
+
+.ct-secure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  color: var(--ct-muted);
+  letter-spacing: 0.05em;
+}
+
+/* ── you may also like ── */
+.ct-rec-section {
+  margin-top: 40px;
+}
+.ct-rec-title {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ct-muted);
+  margin-bottom: 16px;
+}
+
+.ct-rec-card {
+  display: block;
+  text-decoration: none;
+  position: relative;
+}
+.ct-rec-img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  background: var(--ct-warm);
+  margin-bottom: 8px;
+  transition: opacity 0.2s;
+}
+.ct-rec-card:hover .ct-rec-img {
+  opacity: 0.85;
+}
+.ct-rec-name {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ct-text);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ct-rec-price {
+  font-size: 0.75rem;
+  color: var(--ct-gold);
+  margin-bottom: 4px;
+}
+.ct-rec-colors {
+  display: flex;
+  gap: 4px;
+}
+.ct-rec-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+.ct-rec-wish {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--ct-muted);
+  transition: color 0.15s;
+}
+.ct-rec-wish:hover {
+  color: var(--ct-gold);
+}
+
+/* ── animations ── */
+@keyframes ctFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── cart badge & bounce (shared with product detail) ── */
+.cart-count--has {
+  background: var(--ct-gold) !important;
+  color: #fff !important;
+}
+@keyframes cartBounce {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.35);
+  }
+  60% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.cart-bounce {
+  animation: cartBounce 0.4s ease;
+}
+
+/* ── responsive ── */
+@media (max-width: 767.98px) {
+  .ct-heading {
+    font-size: 1.3rem;
+  }
+  .ct-item-img {
+    width: 64px;
+    height: 80px;
+  }
+  .ct-item-name {
+    font-size: 0.82rem;
+  }
+  .ct-total-amount {
+    font-size: 1rem;
+  }
+  .ct-checkout-btn {
+    height: 42px;
+  }
+}

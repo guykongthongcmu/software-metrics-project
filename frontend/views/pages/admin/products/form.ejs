@@ -1,0 +1,560 @@
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">
+                <%= editing ? 'Edit Product' : 'Create Product' %>
+            </h1>
+            <p class="page-subtitle">
+                <%= editing ? 'Update product information' : 'Add a new product to your catalog' %>
+            </p>
+        </div>
+        <div class="page-header-actions">
+            <a href="/admin/products" class="btn-glass"><i class="bi bi-arrow-left"></i> Back</a>
+        </div>
+    </div>
+
+    <form id="productForm" action="/admin/products/<%= editing ? 'edit/' + product.id : 'create' %>" method="POST">
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="glass-card-solid" style="padding:24px;margin-bottom:20px;">
+                    <style>
+                        @media (max-width: 768px) {
+                            .stat-card-value { font-size: 1.5rem; }
+                            .glass-table th, .glass-table td { font-size: 11px; padding: 10px 12px; }
+                        }
+                    </style>
+                    <h5 style="font-size:16px;margin-bottom:20px;">Basic Information</h5>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3">
+                            <label class="glass-label">Product ID</label>
+                            <input type="number" name="id" class="glass-input" 
+                                value="<%= editing ? product.id : '' %>" 
+                                placeholder="Auto" <%= editing ? 'readonly style="background:rgba(0,0,0,0.05);"' : '' %>>
+                        </div>
+                        <div class="col-md-9">
+                            <label class="glass-label">Product Name *</label>
+                            <input type="text" id="productName" name="name" class="glass-input"
+                                value="<%= editing ? product.name : '' %>" placeholder="Enter product name" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="glass-label">Description</label>
+                        <textarea name="description"
+                            class="glass-textarea"><%= editing ? product.description : '' %></textarea>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="glass-label">Category</label>
+                            <select id="productCategory" name="category_id" class="glass-select" onchange="updateSubTypes()">
+                                <option value="">Select Category</option>
+                                <% categories.forEach(function(cat) { %>
+                                    <option value="<%= cat.id %>" <%= (editing && product.category_id == cat.id) ? 'selected' : '' %>>
+                                        <%= cat.name %>
+                                        <%= cat.is_hidden ? '(Hidden)' : '' %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="glass-label">Sub Type (Optional)</label>
+                            <select id="productSubType" name="sub_type" class="glass-select">
+                                <option value="">Select Sub Type</option>
+                                <% if (editing && product.sub_type) { %>
+                                    <option value="<%= product.sub_type %>" selected><%= product.sub_type %></option>
+                                <% } %>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="glass-label">SKU</label>
+                            <input type="text" name="sku" class="glass-input" value="<%= editing ? product.sku : '' %>"
+                                placeholder="SKU-XX-XXXX">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card-solid" style="padding:24px;margin-bottom:20px;">
+                    <h5 style="font-size:16px;margin-bottom:20px;">Pricing & Stock</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="glass-label">Price ($) *</label>
+                            <input type="number" id="productPrice" name="price" class="glass-input"
+                                value="<%= editing ? product.price : '' %>" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="glass-label">Discount Price ($)</label>
+                            <input type="number" name="discount_price" class="glass-input"
+                                value="<%= (editing && product.discount_price) ? product.discount_price : '' %>"
+                                placeholder="0.00" step="0.01">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="glass-label">Stock *</label>
+                            <input type="number" id="productStock" name="stock" class="glass-input"
+                                value="<%= editing ? product.stock : '' %>" placeholder="0" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card-solid table-scroll-x" style="padding:24px;">
+                    <h5 style="font-size:16px;margin-bottom:20px;">Variants</h5>
+                    <table class="glass-table product-variants-table" id="variantsTable">
+                        <thead>
+                            <tr>
+                                <th>Size</th>
+                                <th>Color</th>
+                                <th>Stock</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (editing && product.variants) { product.variants.forEach(function(v, i) { %>
+                                <tr>
+                                    <td><input type="text" class="glass-input" value="<%= v.size %>" style="width:80px;"></td>
+                                    <td><input type="text" class="glass-input" value="<%= v.color %>" style="width:120px;"></td>
+                                    <td><input type="number" class="glass-input" value="<%= v.stock %>" style="width:80px;"></td>
+                                    <td><button type="button" class="btn-glass btn-sm" style="color:var(--status-danger);" onclick="removeVariantRow(this)"><i class="bi bi-trash"></i></button></td>
+                                </tr>
+                            <% }); } %>
+                            <!-- Add Row -->
+                            <tr class="add-variant-row">
+                                <td><input type="text" id="newVariantSize" class="glass-input" placeholder="S" style="width:80px;"></td>
+                                <td><input type="text" id="newVariantColor" class="glass-input" placeholder="White" style="width:120px;"></td>
+                                <td><input type="number" id="newVariantStock" class="glass-input" placeholder="0" style="width:80px;"></td>
+                                <td><button type="button" class="btn-glass btn-sm" onclick="addVariantRow(this)"><i class="bi bi-plus"></i></button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <script>
+                    function removeVariantRow(btn) {
+                        const tr = btn.closest('tr');
+                        tr.style.opacity = '0';
+                        tr.style.transform = 'scale(0.9)';
+                        setTimeout(() => tr.remove(), 200);
+                    }
+
+                    function addVariantRow(btn) {
+                        const sizeInput = document.getElementById('newVariantSize');
+                        const colorInput = document.getElementById('newVariantColor');
+                        const stockInput = document.getElementById('newVariantStock');
+
+                        const size = sizeInput.value.trim();
+                        const color = colorInput.value.trim();
+                        const stock = stockInput.value.trim() || '0';
+
+                        if (!size || !color) {
+                            if (typeof showToast === 'function') 
+                                showToast('Warning', 'Please enter both size and color', 'warning');
+                            else alert('Please enter both size and color');
+                            return;
+                        }
+
+                        const tbody = document.querySelector('#variantsTable tbody');
+                        const addRow = document.querySelector('.add-variant-row');
+                        
+                        const newTr = document.createElement('tr');
+                        newTr.style.opacity = '0';
+                        newTr.style.transition = 'all 0.2s ease';
+                        newTr.innerHTML = `
+                            <td><input type="text" class="glass-input" value="${size}" style="width:80px;"></td>
+                            <td><input type="text" class="glass-input" value="${color}" style="width:120px;"></td>
+                            <td><input type="number" class="glass-input" value="${stock}" style="width:80px;"></td>
+                            <td><button type="button" class="btn-glass btn-sm" style="color:var(--status-danger);" onclick="removeVariantRow(this)"><i class="bi bi-trash"></i></button></td>
+                        `;
+                        
+                        tbody.insertBefore(newTr, addRow);
+                        setTimeout(() => newTr.style.opacity = '1', 50);
+
+                        // Clear inputs
+                        sizeInput.value = '';
+                        colorInput.value = '';
+                        stockInput.value = '';
+                        sizeInput.focus();
+                    }
+                </script>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="glass-card-solid" style="padding:24px;margin-bottom:20px;">
+                    <h5 style="font-size:16px;margin-bottom:20px;">Status</h5>
+                    <select name="status" class="glass-select">
+                        <option value="active" <%= (editing && product.status === 'active') ? 'selected' : '' %>>Active</option>
+                        <option value="draft" <%= (editing && product.status === 'draft') ? 'selected' : '' %>>Draft</option>
+                        <option value="archived" <%= (editing && product.status === 'archived') ? 'selected' : '' %>>Archived</option>
+                    </select>
+                </div>
+
+                <div class="glass-card-solid" style="padding:24px;margin-bottom:20px;">
+                    <h5 style="font-size:16px;margin-bottom:20px;">Media</h5>
+                    <input type="file" id="productImages" name="images" accept="image/*" multiple style="display:none;">
+                    <div id="mediaDropZone" onclick="document.getElementById('productImages').click()"
+                        style="border:2px dashed var(--warm-linen);border-radius:var(--radius-md);padding:20px;text-align:center;color:var(--text-muted);cursor:pointer;transition:all 0.2s; min-height: 180px; display: flex; flex-direction: column; justify-content: center; align-items: center;"
+                        onmouseover="this.style.borderColor='var(--golden-straw)'"
+                        onmouseout="this.style.borderColor='var(--warm-linen)'">
+                        <div id="uploadPlaceholder">
+                            <i class="bi bi-cloud-upload" style="font-size:32px;color:var(--golden-straw);"></i>
+                            <p style="margin-top:8px;font-size:13px;">Drag & dropdown or click to upload</p>
+                            <p style="font-size:11px;">Upload 1 or more images (JPG, PNG)</p>
+                        </div>
+                        <div id="imagesPreviewContainer" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; width:100%;">
+                            <% if (editing && product.images && product.images.length > 0) { %>
+                                <% product.images.forEach(function(img) { %>
+                                    <div class="preview-thumb" style="width: calc(33.33% - 6px); aspect-ratio:1; position:relative;">
+                                        <img src="<%= img %>" style="width:100%; height:100%; object-fit:cover; border-radius:4px;">
+                                    </div>
+                                <% }); %>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="saveProductBtn" class="btn-golden"
+                    style="width:100%;padding:12px;justify-content:center;">
+                    <i class="bi bi-check-lg"></i>
+                    <%= editing ? 'Update Product' : 'Create Product' %>
+                </button>
+                <% if (editing) { %>
+                    <button type="button" class="btn-glass" id="deleteProductBtn"
+                        style="width:100%;padding:12px;margin-top:10px;color:var(--status-danger);border-color:rgba(244,67,54,0.3);"
+                        data-id="<%= product.id %>"
+                        onclick="deleteProduct(this)">
+                        <i class="bi bi-trash"></i> Delete Product
+                    </button>
+                <% } %>
+            </div>
+        </div>
+    </form>
+
+    <% /* Data for JS: pass categories and product images in a linter-safe way */ %>
+    <div id="ejs-data" style="display:none;" 
+         data-categories="<%- JSON.stringify(categories || []) %>"
+         data-existing-images="<%- JSON.stringify(editing ? (product.images || []) : []) %>">
+    </div>
+
+<!-- Product Architecture Orchestrator: Create & Edit Flow -->
+<script>
+/**
+ * Admin Product Architect: Form Orchestrator
+ * Strictly targeting Port 3000 with Absolute Payload Parity
+ */
+(function() {
+    // 1. Enterprise Category Mapping
+    const categoryMap = {
+        'Men': ['T-Shirts & Sweatshirts', 'Shirts & Polo Shirts', 'Knitwear & Sweaters', 'Outerwear', 'Pants', 'Innerwear & Socks', 'Loungewear', 'Linen', 'Sport Utility Wear', 'UV Protection Collection', 'AIRism', 'HEATTECH', 'Accessories', 'Special Collaborations', 'New Arrivals', 'Price Down'],
+        'Women': ['T-Shirts & Sweats & Bra Tops', 'Shirts & Polo Shirts', 'Knitwear & Cardigans', 'Outerwear', 'Bottoms', 'Dresses & Skirts', 'Innerwear & Socks', 'Loungewear', 'Linen', 'Accessories', 'Sport Utility Wear', 'UV Protection Collection', 'AIRism', 'HEATTECH', 'Maternity', 'New Arrivals'],
+        'Kids': ['T-Shirts & Sweatshirts', 'Shirts & Blouses', 'Outerwear', 'Bottoms', 'Dresses & Skirts', 'Activewear', 'Innerwear & Socks', 'Pajamas', 'Accessories', 'AIRism', 'HEATTECH', 'Special Collaborations'],
+        'Baby': ['Bodysuits & Rompers', 'Tops & T-Shirts', 'Bottoms & Leggings', 'Dresses & Skirts', 'Outerwear', 'Innerwear & Socks', 'Pajamas & Sleepwear', 'Accessories', 'Maternity & Newborn', 'AIRism', 'HEATTECH', 'Special Collaborations'],
+        'Unisex': ['T-Shirts', 'Sweatshirts & Hoodies', 'Outerwear', 'Bottoms', 'Activewear', 'Loungewear', 'Accessories', 'Bags', 'Shoes', 'Sunglasses', 'AIRism', 'Special Collaborations']
+    };
+
+    // 2. State & DOM Refs
+    const productId = window.location.pathname.split('/').pop();
+    const isEditing = window.location.pathname.includes('/edit/');
+    let selectedMediaFiles = []; // Array of File objects (1-4)
+    let existingMedia = []; // For Edit mode
+    const embeddedCategories = (() => {
+        try {
+            return JSON.parse(document.getElementById('ejs-data')?.dataset.categories || '[]');
+        } catch (error) {
+            return [];
+        }
+    })();
+
+    const elements = {
+        form: document.getElementById('productForm'),
+        category: document.getElementById('productCategory'),
+        subType: document.getElementById('productSubType'),
+        dropZone: document.getElementById('mediaDropZone'),
+        fileInput: document.getElementById('productImages'),
+        preview: document.getElementById('imagesPreviewContainer'),
+        placeholder: document.getElementById('uploadPlaceholder'),
+        saveBtn: document.getElementById('saveProductBtn')
+    };
+
+    function normalizeEmbeddedCategory(category) {
+        return {
+            categoryId: Number(category.id),
+            categoryName: category.name,
+            slug: String(category.name || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+            isHidden: Boolean(category.is_hidden),
+            parentCategoryId: null
+        };
+    }
+
+    function renderCategoryOptions(categories) {
+        const currentValue = elements.category.value;
+        const topLevelCategories = (categories || [])
+            .filter(category => category.parentCategoryId === null)
+            .filter(category => !String(category.slug || '').startsWith('tag-'))
+            .sort((left, right) => String(left.categoryName || '').localeCompare(String(right.categoryName || '')));
+
+        elements.category.innerHTML = '<option value="">Select Category</option>' + topLevelCategories.map((category) => {
+            return `<option value="${category.categoryId}">${category.categoryName}${category.isHidden ? ' (Hidden)' : ''}</option>`;
+        }).join('');
+
+        if (currentValue && elements.category.querySelector(`option[value="${currentValue}"]`)) {
+            elements.category.value = currentValue;
+        }
+    }
+
+    async function loadCategoryOptions() {
+        try {
+            const response = await window.adminFetch('/api/admin/categories');
+            if (!response || !response.ok) {
+                throw new Error(`Failed to load categories: ${response?.status || 'unknown'}`);
+            }
+
+            const result = await response.json();
+            if (!result || result.status !== 'success' || !Array.isArray(result.data?.categories)) {
+                throw new Error(result?.message || 'Invalid category payload');
+            }
+
+            renderCategoryOptions(result.data.categories);
+        } catch (error) {
+            console.error('Category option load failed', error);
+            renderCategoryOptions(embeddedCategories.map(normalizeEmbeddedCategory));
+        }
+    }
+
+    /**
+     * Requirement: Multi-Image Previews (Max 4)
+     */
+    function renderMediaPreviews() {
+        elements.preview.innerHTML = '';
+        
+
+        // Render Existing (Edit Mode)
+        existingMedia.forEach((img, idx) => {
+            elements.preview.innerHTML += createThumb(img.publicUrl, () => {
+                existingMedia.splice(idx, 1);
+                renderMediaPreviews();
+
+            });
+        });
+
+        // Render New Selections
+        selectedMediaFiles.forEach((file, idx) => {
+            const url = URL.createObjectURL(file);
+            elements.preview.innerHTML += createThumb(url, () => {
+                selectedMediaFiles.splice(idx, 1);
+                renderMediaPreviews();
+            });
+        });
+
+        elements.placeholder.style.display = (existingMedia.length + selectedMediaFiles.length === 0) ? 'flex' : 'none';
+    }
+
+    function createThumb(src, onX) {
+        return `<div class="preview-thumb" style="width:calc(25% - 8px); aspect-ratio:1; position:relative; overflow:hidden; border-radius:8px;">
+            <img src="${src}" style="width:100%; height:100%; object-fit:cover;">
+            <div onclick="this.parentElement.remove()" style="position:absolute; top:4px; right:4px; cursor:pointer; background:rgba(0,0,0,0.5); color:white; border-radius:50%; width:18px; height:18px; font-size:12px; display:flex; align-items:center; justify-content:center;">&times;</div>
+        </div>`;
+    }
+
+    elements.fileInput.onchange = (e) => {
+        const files = Array.from(e.target.files);
+        if (selectedMediaFiles.length + files.length > 4) {
+            alert('Maximum 4 images allowed.');
+            return;
+        }
+        selectedMediaFiles = [...selectedMediaFiles, ...files];
+        renderMediaPreviews();
+    };
+
+    /**
+     * Requirement 3: Pre-fill Detail for Edit Mode
+     */
+    async function loadProductDetail() {
+        if (!isEditing) return;
+        try {
+            const res = await window.adminFetch(`/api/admin/products/${productId}?lang=EN`);
+            if (!res || !res.ok) {
+                throw new Error(`Failed to load product ${productId}`);
+            }
+
+            const result = await res.json();
+            if (!result || result.status !== 'success' || !result.data) {
+                throw new Error(result?.message || `Invalid product payload for ${productId}`);
+            }
+
+            const { data } = result;
+            
+            // Map logic
+            document.getElementById('productName').value = data.name;
+            document.querySelector('[name="description"]').value = data.description;
+            document.getElementById('productPrice').value = data.priceFrom || data.variants[0]?.price;
+            document.getElementById('productStock').value = data.totalStock || data.variants[0]?.stockQty;
+            document.querySelector('[name="sku"]').value = data.variants[0]?.sku || '';
+            document.querySelector('[name="status"]').value = (data.status || 'ACTIVE').toLowerCase();
+            
+            // Category Mapping
+            const catName = data.categories?.find(c => c.isPrimary)?.name?.split(' ')[0] || 'Men';
+            elements.category.value = [...elements.category.options].find(o => o.text === catName)?.value;
+            window.updateSubTypes();
+            elements.subType.value = data.categories?.find(c => c.isPrimary)?.name?.split(' ').slice(1).join(' ');
+
+            existingMedia = data.media || [];
+            renderMediaPreviews();
+        } catch (e) {
+            console.error('Prefill failed', e);
+            alert('Unable to load that product. Returning to the product list.');
+            window.location.href = '/admin/products';
+        }
+    }
+
+    /**
+     * Requirement 1 & 2: Strict Creation (POST) & Update (PUT)
+     */
+    elements.form.onsubmit = async (e) => {
+        e.preventDefault();
+        elements.saveBtn.disabled = true;
+
+        try {
+            if (!isEditing) {
+                // Collect Form Data
+                const rawFormData = new FormData(elements.form);
+                const formName = rawFormData.get('name');
+                const formDesc = rawFormData.get('description') || '';
+                const selectedCategoryId = Number.parseInt(rawFormData.get('category_id'), 10);
+                // Recalibrate Price Mapping (Strict backend parity: Selling Price vs. Sticker/Compare Price)
+                const stickerPrice = parseFloat(rawFormData.get('price')) || 0;
+                const sellingPrice = parseFloat(rawFormData.get('discount_price')) || stickerPrice;
+                // rule: compareAtPrice (sticker) must be >= price (selling)
+
+                if (!Number.isInteger(selectedCategoryId) || selectedCategoryId <= 0) {
+                    throw new Error('Please select a valid category');
+                }
+                
+                // Build Variant Array (Strict Contract Mapping)
+                const variants = [];
+                document.querySelectorAll('#variantsTable tbody tr:not(.add-variant-row)').forEach(row => {
+                    const inputs = row.querySelectorAll('input');
+                    if (inputs.length >= 3) {
+                        variants.push({
+                            sku: `${formName.substring(0,3)}-${inputs[0].value.trim()}-${inputs[1].value.trim()}`.toUpperCase(),
+                            colour: inputs[1].value.trim().toUpperCase(),
+                            size: inputs[0].value.trim().toUpperCase(),
+                            price: sellingPrice,
+                            compareAtPrice: stickerPrice > sellingPrice ? stickerPrice : null,
+                            stockQty: parseInt(inputs[2].value) || 0
+                        });
+                    }
+                });
+
+                // Fallback for single variant if table is empty
+                if (variants.length === 0) {
+                    variants.push({
+                        sku: rawFormData.get('sku') || 'NEW-PROD-SKU',
+                        colour: 'DEFAULT',
+                        size: 'FREE',
+                        price: sellingPrice,
+                        compareAtPrice: stickerPrice > sellingPrice ? stickerPrice : null,
+                        stockQty: parseInt(rawFormData.get('stock')) || 0
+                    });
+                }
+
+                // Construct Contract-Compliant Payload (Strict Requirement)
+                const payloadObject = {
+                    productType: 'TOP',
+                    status: String(rawFormData.get('status') || 'active').toUpperCase(),
+                    translations: [
+                        { languageCode: "en", name: formName, description: formDesc },
+                        { languageCode: "th", name: formName, description: formDesc }
+                    ],
+                    categories: [
+                        { categoryId: selectedCategoryId, isPrimary: true }
+                    ],
+                    variants: variants,
+                    media: selectedMediaFiles.map((_, index) => ({
+                        sortOrder: index + 1,
+                        isThumbnail: index === 0,
+                        isHero: index === 0,
+                        altText: formName
+                    }))
+                };
+
+                // Final FormData Construction
+                const submissionData = new FormData();
+                submissionData.append('payload', JSON.stringify(payloadObject));
+                
+                // Append multiple files for multi-image support
+                selectedMediaFiles.forEach(file => {
+                    submissionData.append('mediaFiles', file);
+                });
+
+                console.log('--- MISSION_CRITICAL_DISPATCH ---');
+                
+                const response = await window.adminFetch('/api/admin/products', {
+                    method: 'POST',
+                    body: submissionData
+                });
+
+                const result = await response.json();
+                console.log('--- ARCHITECT_AUDIT: BACKEND_RESULT ---', result);
+
+                if (!response.ok) {
+                    const serverMsg = result.message || 'Validation Logic Failed';
+                    
+                    // Specific RLS Intelligence (Thailand/Enterprise Support)
+                    if (serverMsg.includes('row-level security') || result.code === 'STORAGE_UPLOAD_FAILED') {
+                        throw new Error(`Supabase Permission Denied: Please use SERVICE_ROLE_KEY in your .env file to allow uploads.`);
+                    }
+
+                    const detailMap = result.details || result.errors || {};
+                    const fields = Object.keys(detailMap).join(', ') || 'Payload Structure';
+                    throw new Error(`${serverMsg} | Issues: ${fields}`);
+                }
+
+                if (window.showToast) window.showToast('Success', 'Product Catalog Updated.', 'success');
+                setTimeout(() => window.location.href = '/admin/products', 1200);
+
+            } else {
+                // PART 3: Strict UPDATE (PUT JSON)
+                const raw = new FormData(elements.form);
+                const categoryId = Number.parseInt(raw.get('category_id'), 10);
+                const body = {
+                    name: raw.get('name'),
+                    description: raw.get('description'),
+                    status: raw.get('status').toUpperCase(),
+                    category_id: Number.isInteger(categoryId) && categoryId > 0 ? categoryId : undefined,
+                    price: parseFloat(raw.get('price')),
+                    stock: parseInt(raw.get('stock'))
+                };
+
+                const res = await window.adminFetch(`/api/admin/products/${productId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                
+                // Note: Image updates should be handled via POST /api/admin/products/:productId/images
+                if (res.ok) window.location.href = '/admin/products';
+            }
+        } catch (err) { alert('Operation failed: ' + err.message); }
+        elements.saveBtn.disabled = false;
+    };
+
+    window.updateSubTypes = () => {
+        const cat = elements.category.options[elements.category.selectedIndex].text;
+        elements.subType.innerHTML = '<option value="">Select Sub Type</option>';
+        (categoryMap[cat] || []).forEach(t => elements.subType.innerHTML += `<option value="${t}">${t}</option>`);
+    };
+
+    (async () => {
+        await loadCategoryOptions();
+        await loadProductDetail();
+    })();
+})();
+</script>
+<style>
+    .product-variants-table {
+        min-width: 480px;
+    }
+
+    @media (max-width: 767.98px) {
+        #imagesPreviewContainer .preview-thumb {
+            width: calc(50% - 4px) !important;
+        }
+    }
+</style>
+</div>

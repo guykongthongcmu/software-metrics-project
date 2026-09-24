@@ -1,0 +1,409 @@
+<div class="fade-in">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Orders Management</h1>
+            <p class="page-subtitle">Manage and track all customer orders efficiently.</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="stat-card">
+                <div class="stat-card-icon golden"><i class="bi bi-cart-check"></i></div>
+                <div id="total-orders-growth-container">
+                    <span id="total-orders-growth" class="stat-card-change">--%</span>
+                </div>
+                <div class="stat-card-label">Total Orders</div>
+                <div id="total-orders-value" class="stat-card-value">...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="glass-card-solid table-scroll-x" style="padding:0; overflow-x:auto;">
+        <div class="orders-card-header" style="padding:16px 24px;display:flex;align-items:center;justify-content:space-between;">
+            <h5 style="font-size:16px;margin:0;">Recent Orders</h5>
+        </div>
+        <table class="glass-table orders-table" style="min-width:800px;">
+            <thead id="orders-table-head">
+                <tr>
+                    <th>ORDER ID</th>
+                    <th>DATE</th>
+                    <th>USER ID</th>
+                    <th>STATUS</th>
+                    <th>TOTAL</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody id="orders-table-body">
+                <!-- Data will be injected here -->
+                <tr>
+                    <td colspan="6" style="text-align:center;padding:40px;">
+                        <div class="spinner-border text-primary" role="status" style="width:20px;height:20px;border-width:2px;"></div>
+                        <span style="margin-left:10px;color:var(--text-muted);">Loading orders...</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div id="pagination-container" class="orders-pagination" style="padding:12px 24px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-muted);">
+            <!-- Pagination will be injected here -->
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Admin Orders Orchestration logic
+ * Optimized for Antigravity Platform Architecture
+ */
+(function() {
+    // Page State
+    let state = {
+        currentPage: 1,
+        limit: 7,
+        status: 'PURCHASED'
+    };
+
+    // DOM Elements
+    const elements = {
+        totalValue: document.getElementById('total-orders-value'),
+        totalGrowth: document.getElementById('total-orders-growth'),
+        tableBody: document.getElementById('orders-table-body'),
+        pagination: document.getElementById('pagination-container')
+    };
+
+    /**
+     * Entry Point: Parallel Data Orchestration
+     */
+    async function initPage() {
+        try {
+            // Requirement 1: Simultaneous fetching using Promise.all
+            const [summaryRes, ordersRes] = await Promise.all([
+                fetchApi('/api/admin/dashboard/summary?period=7d'),
+                fetchOrders(state.currentPage)
+            ]);
+
+            // Requirement 1: Populate KPI card
+            if (ordersRes && ordersRes.data) {
+                renderKPI(ordersRes.data, summaryRes && summaryRes.data ? summaryRes.data.orders : null);
+            }
+
+            // Requirement 2 & 3: Handle Orders and Pagination
+            if (ordersRes && ordersRes.data) {
+                renderTable(ordersRes.data.items);
+                renderPagination(ordersRes.data);
+            }
+        } catch (error) {
+            handleGlobalError('Failed to initialize page', error);
+        }
+    }
+
+    /**
+     * Core Fetching Logic with Security & Error Handling
+     */
+    async function fetchApi(url, options = {}) {
+        try {
+            // --- THE ABSOLUTE AUTH FINAL FIX ---
+            // Using adminFetch with a relative URL ensures cookie persistence
+            const response = await window.adminFetch(url, options);
+            
+            if (!response || !response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `API Error: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Fetch error:', error);
+            throw error;
+        }
+    }
+
+    async function fetchOrders(page) {
+        return fetchApi(`/api/admin/orders?page=${page}&limit=${state.limit}&status=${state.status}`);
+    }
+
+    /**
+     * KPI Rendering
+     */
+    function renderKPI(ordersListData, ordersSummaryData) {
+        if (!ordersListData) return;
+
+        elements.totalValue.textContent = Number(ordersListData.totalItems || 0).toLocaleString();
+
+        const growth = ordersSummaryData && Number.isFinite(Number(ordersSummaryData.growth))
+            ? Number(ordersSummaryData.growth)
+            : 0;
+        const isPositive = growth >= 0;
+        elements.totalGrowth.textContent = `${isPositive ? '+' : ''}${growth}%`;
+        elements.totalGrowth.className = `stat-card-change ${isPositive ? 'positive' : 'negative'}`;
+    }
+
+    /**
+     * Requirement 2: Table Rendering & API Mismatch Mitigation
+     */
+    function renderTable(items) {
+        if (!items || items.length === 0) {
+            elements.tableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">
+                        No orders found for this criteria.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        elements.tableBody.innerHTML = items.map(order => `
+            <tr>
+                <td>
+                    <a href="/admin/orders/${order.orderId}" style="font-weight:600; color:var(--text-primary);">
+                        ORD-${order.orderId}
+                    </a>
+                </td>
+                <td style="font-size:12.5px;">${formatDate(order.createdAt)}</td>
+                <td style="font-size:13px; font-weight:500;">User #${order.userId}</td>
+                <td>
+                    <span class="badge-glass status-${order.status.toLowerCase()}">${order.status}</span>
+                </td>
+                <td style="font-weight:600;">$${Number(order.total).toFixed(2)}</td>
+                <td>
+                    <div class="order-actions">
+                        <a href="/admin/orders/${order.orderId}" class="btn-glass btn-sm">Manage</a>
+                        <button type="button" class="btn-glass btn-sm btn-delete-order-inline" data-delete-order="${order.orderId}">
+                            Delete
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    /**
+     * Requirement 3: Advanced Pagination State Machine
+     */
+    function renderPagination(metadata) {
+        const { page, totalPages, totalItems } = metadata;
+        
+        if (totalPages <= 1) {
+            elements.pagination.innerHTML = `<span>Showing ${totalItems} total items</span>`;
+            return;
+        }
+
+        let html = `<span>Showing page ${page} of ${totalPages} (${totalItems} total items)</span>`;
+        html += `<div class="glass-pagination" style="margin:0;">`;
+        
+        // Prev button
+        html += `<a href="#" class="${page === 1 ? 'disabled' : ''}" data-page="${page - 1}"><i class="bi bi-chevron-left"></i></a>`;
+        
+        // Simplified numbered pages for vanilla orchestrator
+        const startRange = Math.max(1, page - 2);
+        const endRange = Math.min(totalPages, startRange + 4);
+        
+        for (let i = startRange; i <= endRange; i++) {
+            html += `<a href="#" class="${i === page ? 'active' : ''}" data-page="${i}">${i}</a>`;
+        }
+        
+        // Next button
+        html += `<a href="#" class="${page === totalPages ? 'disabled' : ''}" data-page="${page + 1}"><i class="bi bi-chevron-right"></i></a>`;
+        
+        html += `</div>`;
+        elements.pagination.innerHTML = html;
+
+        // Bind click events
+        elements.pagination.querySelectorAll('a[data-page]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const newPage = parseInt(link.dataset.page);
+                if (newPage > 0 && newPage <= totalPages && newPage !== state.currentPage) {
+                    goToPage(newPage);
+                }
+            });
+        });
+    }
+
+    async function goToPage(page) {
+        state.currentPage = page;
+        elements.tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;"><div class="spinner-border text-primary" role="status"></div></td></tr>`;
+        
+        try {
+            const ordersRes = await fetchOrders(page);
+            if (ordersRes && ordersRes.data) {
+                renderTable(ordersRes.data.items);
+                renderPagination(ordersRes.data);
+            }
+        } catch (error) {
+            handleGlobalError('Failed to load page', error);
+        }
+    }
+
+    async function deleteOrder(orderId) {
+        if (!window.confirm(`Delete order #${orderId}? This cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            await fetchApi(`/api/admin/orders/${orderId}`, {
+                method: 'DELETE'
+            });
+
+            if (window.showToast) {
+                window.showToast('Deleted', `Order #${orderId} deleted successfully.`, 'success');
+            }
+
+            const [summaryRes, currentPageRes] = await Promise.all([
+                fetchApi('/api/admin/dashboard/summary?period=7d'),
+                fetchOrders(state.currentPage)
+            ]);
+            const hasItems = Array.isArray(currentPageRes?.data?.items) && currentPageRes.data.items.length > 0;
+            const totalPages = Number(currentPageRes?.data?.totalPages || 0);
+
+            if (!hasItems && state.currentPage > 1 && totalPages > 0) {
+                state.currentPage = Math.min(state.currentPage - 1, totalPages);
+                await goToPage(state.currentPage);
+                return;
+            }
+
+            if (currentPageRes && currentPageRes.data) {
+                renderKPI(currentPageRes.data, summaryRes && summaryRes.data ? summaryRes.data.orders : null);
+                renderTable(currentPageRes.data.items);
+                renderPagination(currentPageRes.data);
+            }
+        } catch (error) {
+            console.error('Delete order failed:', error);
+            if (window.showToast) {
+                window.showToast('Delete Failed', error.message || 'Could not delete order', 'error');
+            }
+        }
+    }
+
+    /**
+     * Utility: Date Formatting
+     */
+    function formatDate(dateStr) {
+        if (!dateStr) return '--';
+        const d = new Date(dateStr);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    /**
+     * Requirement 4: Global Error Handling
+     */
+    function handleGlobalError(title, error) {
+        console.error(`${title}:`, error);
+        
+        // Show Toast
+        if (window.showToast) {
+            window.showToast('Error', 'Failed to load orders', 'error');
+        }
+
+        // Empty state in table
+        elements.tableBody.innerHTML = `
+            <tr>
+                <td colspan="6" style="text-align:center;padding:40px;">
+                    <div style="color:var(--text-danger);margin-bottom:8px;"><i class="bi bi-exclamation-triangle" style="font-size:24px;"></i></div>
+                    <div style="color:var(--text-muted);font-weight:500;">Failed to load order data</div>
+                    <button class="btn-glass" onclick="window.location.reload()" style="margin-top:12px;padding:6px 16px;font-size:12px;">Retry</button>
+                </td>
+            </tr>`;
+    }
+
+    elements.tableBody.addEventListener('click', (event) => {
+        const deleteButton = event.target.closest('[data-delete-order]');
+        if (!deleteButton) return;
+
+        event.preventDefault();
+        const orderId = Number.parseInt(deleteButton.dataset.deleteOrder, 10);
+        if (!Number.isInteger(orderId) || orderId <= 0) return;
+        deleteOrder(orderId);
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', initPage);
+})();
+</script>
+
+<style>
+/* Refined Status Badges for Mismatch Mitigation */
+.badge-glass.status-purchased {
+    background: rgba(46, 204, 113, 0.15);
+    color: #27ae60;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+.badge-glass.status-pending {
+    background: rgba(241, 196, 15, 0.15);
+    color: #f39c12;
+    border: 1px solid rgba(241, 196, 15, 0.3);
+}
+.badge-glass.status-shipped {
+    background: rgba(52, 152, 219, 0.15);
+    color: #2980b9;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+.badge-glass.status-delivered {
+    background: rgba(155, 89, 182, 0.15);
+    color: #8e44ad;
+    border: 1px solid rgba(155, 89, 182, 0.3);
+}
+
+.order-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-delete-order-inline {
+    color: #b03a2e;
+    border-color: rgba(192, 57, 43, 0.2);
+}
+
+/* Spinner adjustment */
+.spinner-border {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    vertical-align: text-bottom;
+    border: .2em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border .75s linear infinite;
+    color: var(--golden-straw);
+}
+@keyframes spinner-border {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 992px) {
+    .glass-table th, .glass-table td { font-size: 11px; padding: 12px 10px; }
+    .badge-glass { padding: 4px 8px; font-size: 10px; }
+    .order-actions { min-width: 120px; }
+}
+
+@media (max-width: 767.98px) {
+    .orders-card-header,
+    .orders-pagination {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+
+    .orders-pagination {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+
+    .orders-pagination .glass-pagination {
+        justify-content: flex-start;
+        width: 100%;
+        margin-top: 0;
+        overflow-x: auto;
+        padding-bottom: 2px;
+    }
+
+    .orders-table {
+        min-width: 680px !important;
+    }
+}
+</style>
