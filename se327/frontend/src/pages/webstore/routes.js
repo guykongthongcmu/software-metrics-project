@@ -1,0 +1,17 @@
+export const storefrontRoutes = [
+  { path: '/', title: 'Home' },
+  { path: '/men', title: 'Men' },
+  { path: '/women', title: 'Women' },
+  { path: '/kids', title: 'Kids' },
+  { path: '/baby', title: 'Baby' },
+  { path: '/unisex', title: 'Unisex' },
+  { path: '/products', title: 'All products' },
+  { path: '/search', title: 'Search' },
+  { path: '/products/:id', title: 'Product details' },
+  { path: '/cart', title: 'Shopping cart' },
+  { path: '/checkout', title: 'Checkout' },
+  { path: '/checkout/success', title: 'Order confirmed' },
+  { path: '/favorites', title: 'Favorites' },
+  { path: '/about', title: 'About' },
+  { path: '/contact', title: 'Contact' },
+]
