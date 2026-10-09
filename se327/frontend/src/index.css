@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-store-ui);
+  --font-display: var(--font-store-display);
+  --color-canvas: var(--ui-canvas);
+  --color-ink: var(--ui-ink);
+  --color-muted: var(--ui-muted);
+  --color-accent: var(--ui-accent);
+  --color-accent-soft: var(--ui-accent-soft);
+  --color-panel: var(--ui-panel);
+  --color-line: var(--ui-line);
+}
+
+:root {
+  color-scheme: light;
+  --font-store-ui: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-store-body: 'Inter', sans-serif;
+  --font-store-display: 'Playfair Display', serif;
+  --font-store-secondary: 'Manrope', sans-serif;
+  --font-admin-ui: 'Inter', sans-serif;
+  --font-admin-display: 'DM Serif Display', serif;
+  --ui-canvas: #f6f4ef;
+  --ui-ink: #333333;
+  --ui-muted: #716b63;
+  --ui-accent: #b5a087;
+  --ui-accent-soft: #eaddcd;
+  --ui-panel: #ffffff;
+  --ui-line: rgba(51, 51, 51, 0.12);
+  --radius-card: 20px;
+  --radius-control: 8px;
+  --shadow-panel: 0 4px 24px rgba(0, 0, 0, 0.07);
+  --layout-width: 1280px;
+  --admin-sidebar-width: 250px;
+  --admin-topbar-height: 60px;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+[data-theme='admin'] {
+  --ui-canvas: #fcfbf9;
+  --ui-ink: #1a1a2e;
+  --ui-muted: #8f8272;
+  --ui-accent: #c8a77d;
+  --ui-accent-soft: rgba(200, 167, 125, 0.15);
+  --ui-panel: rgba(255, 255, 255, 0.72);
+  --ui-line: rgba(215, 205, 190, 0.42);
+  --radius-card: 16px;
+  --shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--ui-canvas);
+  color: var(--ui-ink);
+  font-family: var(--font-store-body);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.font-admin-ui {
+  font-family: var(--font-admin-ui);
+}
+
+.font-admin-display {
+  font-family: var(--font-admin-display);
+}
+
+[data-theme='admin'] main {
+  min-height: calc(100vh - var(--admin-topbar-height));
+}
+
+@media (max-width: 480px) {
+  [data-theme='storefront'] header > div {
+    align-items: flex-start;
+  }
+
+  [data-theme='storefront'] nav {
+    max-width: calc(100% - 64px);
+    gap: 8px 12px;
+  }
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
