@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-@import "tailwindcss";
+@import "tailwindcss" source("../");
 
 @theme inline {
   --font-sans: var(--font-store-ui);
@@ -93,6 +93,54 @@ a {
     gap: 8px 12px;
   }
 }
+
+  .storefront-desktop-nav {
+    display: none;
+  }
+
+  .storefront-mobile-toggle {
+    display: grid;
+  }
+
+  .storefront-mobile-nav {
+    display: block;
+  }
+
+  .storefront-category-toggle {
+    display: grid;
+  }
+
+  .storefront-mega-panel:not(.storefront-mega-panel-mobile) {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: min(calc(100vw - 48px), 1100px);
+    max-height: min(72vh, 680px);
+    transform: translateX(-50%);
+    border: 1px solid #e7e5e4;
+    padding: 28px;
+    box-shadow: 0 18px 45px rgba(35, 30, 24, 0.16);
+  }
+
+  .storefront-mega-panel-mobile {
+    position: static;
+    width: 100%;
+    max-height: 65vh;
+    transform: none;
+    padding: 16px;
+  }
+
+  @media (min-width: 1024px) {
+    .storefront-desktop-nav {
+      display: flex;
+    }
+
+    .storefront-mobile-toggle,
+    .storefront-mobile-nav,
+    .storefront-category-toggle {
+      display: none;
+    }
+  }
 
 button,
 input,

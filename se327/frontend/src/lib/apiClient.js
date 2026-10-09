@@ -11,14 +11,15 @@ export class ApiError extends Error {
 }
 
 export async function apiFetch(path, options = {}) {
+  const { redirectOn401 = true, ...requestOptions } = options
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
+    ...requestOptions,
     credentials: 'include',
     headers: {
-      ...(options.body && !(options.body instanceof FormData)
+      ...(requestOptions.body && !(requestOptions.body instanceof FormData)
         ? { 'Content-Type': 'application/json' }
         : {}),
-      ...options.headers,
+      ...requestOptions.headers,
     },
   })
 
@@ -33,7 +34,7 @@ export async function apiFetch(path, options = {}) {
       { status: response.status, code: payload?.code, payload },
     )
 
-    if (response.status === 401 && typeof window !== 'undefined') {
+    if (response.status === 401 && redirectOn401 && typeof window !== 'undefined') {
       const loginPath = window.location.pathname.startsWith('/admin/')
         ? '/admin/login'
         : '/login'
@@ -41,6 +42,10 @@ export async function apiFetch(path, options = {}) {
     }
 
     throw error
+  }
+
+  if (options.method && options.method !== 'GET' && /\/client\/(cart|favorites)(\/|\?|$)/.test(path)) {
+    window.dispatchEvent(new CustomEvent('storefront:refresh-header'))
   }
 
   return payload
