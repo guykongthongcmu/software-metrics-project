@@ -48,8 +48,12 @@ def parse_positive_int(raw, default):
     return value if value >= 1 else default
 
 
+# keeps OFFSET well inside bigint for absurd page numbers
+PAGE_MAX = 1_000_000
+
+
 def parse_page(raw):
-    return parse_positive_int(raw, PAGE_DEFAULT)
+    return min(parse_positive_int(raw, PAGE_DEFAULT), PAGE_MAX)
 
 
 def parse_limit(raw, default=LIMIT_DEFAULT):
@@ -97,7 +101,7 @@ def parse_exclude_ids(raw):
     for token in (part.strip() for part in raw.split(',')):
         if not token:
             continue
-        if not token.isdigit() or int(token) <= 0:
+        if not token.isdecimal() or not 0 < int(token) < 2**63:
             raise CatalogError(
                 400, 'INVALID_EXCLUDE_PRODUCT_IDS',
                 'excludeProductIds must be a comma-separated list of positive integers',

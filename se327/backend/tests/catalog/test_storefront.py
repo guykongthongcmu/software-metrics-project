@@ -346,8 +346,12 @@ class RecommendationTests(TestCase):
             self.assertEqual(res.status_code, 400)
             self.assertEqual(res.json()['code'], 'INVALID_QUERY')
 
+    def test_huge_page_number_does_not_error(self):
+        res = self.client.get(f'{BASE}/products?page=99999999999999999999')
+        self.assertEqual(res.status_code, 200)
+
     def test_bad_exclude_ids(self):
-        for value in ('1,x', '-3', '0'):
+        for value in ('1,x', '-3', '0', '²', '99999999999999999999'):
             res = self.client.get(f'{BASE}/products/recommendations?excludeProductIds={value}')
             self.assertEqual(res.status_code, 400)
             self.assertEqual(res.json()['code'], 'INVALID_EXCLUDE_PRODUCT_IDS')
