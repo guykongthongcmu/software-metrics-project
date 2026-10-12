@@ -39,7 +39,7 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: se327/backend
-        run: pip install --only-binary :all: -r requirements.txt coverage==7.16.2
+        run: "pip install --only-binary :all: -r requirements.txt coverage==7.16.2"
 
       - name: Run tests with coverage
         working-directory: se327/backend
