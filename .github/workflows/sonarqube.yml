@@ -1,0 +1,62 @@
+name: SonarQube Cloud
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: core_co
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_PASSWORD: postgres
+      SECRET_KEY: ci-only-secret-key
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so Sonar can blame and detect new code
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: se327/backend/requirements.txt
+
+      - name: Install backend dependencies
+        working-directory: se327/backend
+        run: "pip install --only-binary :all: -r requirements.txt coverage==7.16.2"
+
+      - name: Run tests with coverage
+        working-directory: se327/backend
+        run: |
+          coverage run --source=. --omit=".venv/*,*/migrations/*,manage.py" manage.py test
+          coverage xml -o coverage.xml
+
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      # Baseline of the original SE262 code, separate project so it stays comparable
+      - name: SonarQube scan (SE262 baseline)
+        if: github.event_name == 'push'
+        uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: -Dproject.settings=sonar-se262.properties
