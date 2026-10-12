@@ -19,8 +19,8 @@ export default function StorefrontFooter() {
           <h2 className="mb-6 text-[0.9rem] font-medium tracking-[1px] text-[#333]">INFO</h2>
           <ul className="space-y-[0.8rem] text-[0.9rem]">
             <li><Link className="hover:text-accent" to="/about">About</Link></li>
-            <li><a className="hover:text-accent" href="#">Sustainability</a></li>
-            <li><a className="hover:text-accent" href="#">Press</a></li>
+            <li><span>Sustainability</span></li>
+            <li><span>Press</span></li>
             <li><Link className="hover:text-accent" to="/contact">Contact Us</Link></li>
           </ul>
         </div>
@@ -35,7 +35,7 @@ export default function StorefrontFooter() {
       </div>
       <div className="flex flex-col items-center justify-between gap-4 border-t border-black/5 pt-8 text-[0.8rem] sm:flex-row">
         <p>© 2026 Core & Co. All rights reserved.</p>
-        <div className="flex gap-8"><a className="hover:text-accent" href="#">Privacy Policy</a><a className="hover:text-accent" href="#">Terms of Service</a></div>
+        <div className="flex gap-8"><span>Privacy Policy</span><span>Terms of Service</span></div>
       </div>
     </footer>
   )

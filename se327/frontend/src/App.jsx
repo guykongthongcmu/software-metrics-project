@@ -28,11 +28,17 @@ function NotFoundPage() {
   return <StorefrontPlaceholder title="Page not found" />
 }
 
+function getStorefrontPage(route) {
+  if (route.path === '/about') return <AboutPage />
+  if (route.path === '/contact') return <ContactPage />
+  return <StorefrontPlaceholder title={route.title} />
+}
+
 export default function App() {
   return (
     <Routes>
       <Route element={<StorefrontLayout />}>
-        {storefrontRoutes.map((route) => <Route key={route.path} path={route.path} element={route.path === '/about' ? <AboutPage /> : route.path === '/contact' ? <ContactPage /> : <StorefrontPlaceholder title={route.title} />} />)}
+        {storefrontRoutes.map((route) => <Route key={route.path} path={route.path} element={getStorefrontPage(route)} />)}
         {accountRoutes.map((route) => <Route key={route.path} path={route.path} element={<StorefrontPlaceholder title={route.title} />} />)}
         <Route path="*" element={<NotFoundPage />} />
       </Route>

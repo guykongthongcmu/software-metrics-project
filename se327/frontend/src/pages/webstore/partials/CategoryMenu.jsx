@@ -32,6 +32,9 @@ export default function CategoryMenu({ slug, title, open, onOpen, onClose, mobil
       </div>
     </div>
   )
+  let renderedPanel = null
+  if (mobile) renderedPanel = panel
+  else if (panel) renderedPanel = createPortal(panel, document.body)
 
   return (
     <>
@@ -43,7 +46,7 @@ export default function CategoryMenu({ slug, title, open, onOpen, onClose, mobil
           </button>
         </div>
       </div>
-      {mobile ? panel : panel ? createPortal(panel, document.body) : null}
+      {renderedPanel}
     </>
   )
 }
