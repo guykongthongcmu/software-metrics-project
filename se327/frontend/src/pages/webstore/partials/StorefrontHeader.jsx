@@ -82,17 +82,18 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
       setCartCount(headerData.cartCount)
       setFavoriteCount(headerData.favoriteCount)
     }
-    loadHeaderData()
-    window.addEventListener('storefront:refresh-header', loadHeaderData)
-    window.addEventListener('focus', loadHeaderData)
+    void loadHeaderData()
+    const refreshHeader = () => { void loadHeaderData() }
+    window.addEventListener('storefront:refresh-header', refreshHeader)
+    window.addEventListener('focus', refreshHeader)
     const refreshCart = (event) => setCartCount(Number(event.detail?.count ?? event.detail?.totalItems ?? 0))
     const refreshFavorites = (event) => setFavoriteCount(Number(event.detail?.count ?? event.detail?.favoritesCount ?? 0))
     window.addEventListener('storefront:cart-updated', refreshCart)
     window.addEventListener('storefront:favorites-updated', refreshFavorites)
     return () => {
       active = false
-      window.removeEventListener('storefront:refresh-header', loadHeaderData)
-      window.removeEventListener('focus', loadHeaderData)
+      window.removeEventListener('storefront:refresh-header', refreshHeader)
+      window.removeEventListener('focus', refreshHeader)
       window.removeEventListener('storefront:cart-updated', refreshCart)
       window.removeEventListener('storefront:favorites-updated', refreshFavorites)
     }
