@@ -1,12 +1,13 @@
 from django.db import models
 from django.db.models import Q
+from django.db.models.functions import Lower
 
 from common.choices import Language
 
 
 class User(models.Model):
     user_id = models.BigAutoField(primary_key=True)
-    email = models.CharField(max_length=255, unique=True)
+    email = models.CharField(max_length=255)
     password_hash = models.CharField(max_length=255)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -19,6 +20,7 @@ class User(models.Model):
 
     class Meta:
         db_table = 'users'
+        constraints = [models.UniqueConstraint(Lower('email'), name='uq_users_email_ci')]
 
 
 class EmailVerificationToken(models.Model):
@@ -49,7 +51,7 @@ class PasswordResetToken(models.Model):
 
 class Admin(models.Model):
     admin_id = models.BigAutoField(primary_key=True)
-    email = models.CharField(max_length=255, unique=True)
+    email = models.CharField(max_length=255)
     password_hash = models.CharField(max_length=255)
     display_name = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)
@@ -58,6 +60,7 @@ class Admin(models.Model):
 
     class Meta:
         db_table = 'admin'
+        constraints = [models.UniqueConstraint(Lower('email'), name='uq_admin_email_ci')]
 
 
 class Session(models.Model):
@@ -79,6 +82,10 @@ class Session(models.Model):
         db_table = 'sessions'
         indexes = [models.Index(fields=['user', 'created_at'], name='idx_session_user_created')]
         constraints = [
+            models.CheckConstraint(
+                name='chk_sessions_subject_type',
+                condition=Q(subject_type__in=['USER', 'ADMIN']),
+            ),
             models.CheckConstraint(
                 name='chk_sessions_exactly_one_owner',
                 condition=(

@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import F, Q
+from django.db.models.functions import Lower
 
 from common.choices import Language
 
@@ -11,13 +12,14 @@ class Category(models.Model):
         db_column='parent_category_id', related_name='children',
     )
     category_name = models.CharField(max_length=100)
-    slug = models.CharField(max_length=255, unique=True)
+    slug = models.CharField(max_length=255)
     is_hidden = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'category'
+        constraints = [models.UniqueConstraint(Lower('slug'), name='uq_category_slug_ci')]
         indexes = [
             models.Index(fields=['parent', 'category_name'], name='idx_category_parent_name'),
             models.Index(fields=['is_hidden', 'category_name'], name='idx_category_hidden_name'),
@@ -121,7 +123,7 @@ class ProductCategory(models.Model):
 class ProductVariant(models.Model):
     product_variant_id = models.BigAutoField(primary_key=True)
     product = models.ForeignKey(Product, on_delete=models.CASCADE, db_column='product_id', related_name='variants')
-    sku_code = models.CharField(max_length=100, unique=True)
+    sku_code = models.CharField(max_length=100)
     colour = models.CharField(max_length=100)
     size = models.CharField(max_length=20)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -134,6 +136,7 @@ class ProductVariant(models.Model):
     class Meta:
         db_table = 'product_variant'
         constraints = [
+            models.UniqueConstraint(Lower('sku_code'), name='uq_variant_sku_ci'),
             models.UniqueConstraint(fields=['product', 'colour', 'size'], name='uq_product_colour_size'),
             models.CheckConstraint(name='chk_variant_price_nonnegative', condition=Q(price__gte=0)),
         ]
