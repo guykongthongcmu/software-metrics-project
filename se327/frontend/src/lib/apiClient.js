@@ -1,6 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export class ApiError extends Error {
+  /** @param {string} message @param {{status?: number, code?: string, payload?: any}} [details] */
   constructor(message, { status, code, payload } = {}) {
     super(message)
     this.name = 'ApiError'

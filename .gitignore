@@ -65,3 +65,7 @@ db/webstore-assets/
 __pycache__/
 *.pyc
 .venv/
+
+# Coverage reports
+.coverage
+coverage.xml
