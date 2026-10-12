@@ -11,6 +11,8 @@
   --color-accent-soft: var(--ui-accent-soft);
   --color-panel: var(--ui-panel);
   --color-line: var(--ui-line);
+  --font-inter: var(--font-store-body);
+  --color-navblue: #2356c9;
 }
 
 :root {
@@ -108,26 +110,6 @@ a {
 
   .storefront-category-toggle {
     display: grid;
-  }
-
-  .storefront-mega-panel:not(.storefront-mega-panel-mobile) {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    width: min(calc(100vw - 48px), 1100px);
-    max-height: min(72vh, 680px);
-    transform: translateX(-50%);
-    border: 1px solid #e7e5e4;
-    padding: 28px;
-    box-shadow: 0 18px 45px rgba(35, 30, 24, 0.16);
-  }
-
-  .storefront-mega-panel-mobile {
-    position: static;
-    width: 100%;
-    max-height: 65vh;
-    transform: none;
-    padding: 16px;
   }
 
   @media (min-width: 1024px) {

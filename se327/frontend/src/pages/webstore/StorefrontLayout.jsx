@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import { storefrontRoutes } from './routes.js'
@@ -9,17 +10,54 @@ const categoryAliases = { kid: 'kids' }
 
 const iconPaths = {
   search: <><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 5 5" /></>,
-  account: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></>,
-  favorite: <path d="M20.8 8.7c0 5.2-8.8 11-8.8 11s-8.8-5.8-8.8-11A4.7 4.7 0 0 1 12 6a4.7 4.7 0 0 1 8.8 2.7Z" />,
-  cart: <><path d="M3 4h2l2.2 11.1a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 8H6" /><circle cx="10" cy="21" r="1" /><circle cx="18" cy="21" r="1" /></>,
+  account: <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7Z" />,
+  favorite: <path d="M4.3 6.3a4.5 4.5 0 0 1 6.4 0L12 7.6l1.3-1.3a4.5 4.5 0 0 1 6.4 6.4L12 20.4l-7.7-7.7a4.5 4.5 0 0 1 0-6.4Z" />,
+  cart: <path d="M16 11V7a4 4 0 0 0-8 0v4M5 9h14l1 12H4L5 9Z" />,
 }
 
 function IconLink({ label, to, kind, count }) {
   return (
-    <Link aria-label={label} className="relative grid h-10 w-10 place-items-center rounded-full text-stone-800 transition hover:bg-stone-100" to={to}>
-      <svg aria-hidden="true" className="h-[21px] w-[21px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.55" viewBox="0 0 24 24">{iconPaths[kind]}</svg>
-      {count !== undefined && <span aria-label={`${count} ${label.toLowerCase()}`} className="absolute -right-0.5 -top-0.5 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-stone-900 px-1 text-[10px] font-semibold leading-none text-white">{count}</span>}
+    <Link aria-label={label} className="relative grid h-10 w-10 place-items-center text-stone-900 transition-colors hover:text-stone-500" to={to}>
+      <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.55" viewBox="0 0 24 24">{iconPaths[kind]}</svg>
+      {count !== undefined && <span aria-label={`${count} ${label.toLowerCase()}`} className="absolute -right-2.5 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-medium leading-none text-white">{count}</span>}
     </Link>
+  )
+}
+
+function LanguageSelector({ language, onChange, mobile = false }) {
+  const [open, setOpen] = useState(false)
+  const selectorRef = useRef(null)
+
+  useEffect(() => {
+    if (!open) return undefined
+    const closeOnOutsideClick = (event) => {
+      if (!selectorRef.current?.contains(event.target)) setOpen(false)
+    }
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('pointerdown', closeOnOutsideClick)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [open])
+
+  return (
+    <div className={`relative ${mobile ? 'w-full border-t border-stone-200 pt-4' : ''}`} ref={selectorRef}>
+      <button aria-expanded={open} aria-haspopup="menu" className={`flex items-center gap-2 text-[0.85rem] font-medium text-stone-900 hover:text-stone-600 ${mobile ? 'w-full justify-between py-1' : 'px-1 py-2'}`} onClick={() => setOpen((value) => !value)} type="button">
+        <span>{language}</span>
+        <svg aria-hidden="true" className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg>
+      </button>
+      {open && (
+        <div className={`z-60 min-w-20 border border-stone-200 bg-white py-1 shadow-lg ${mobile ? 'absolute left-0 top-full' : 'absolute right-0 top-full'}`} role="menu">
+          {['EN', 'TH'].map((option) => (
+            <button aria-current={language === option ? 'true' : undefined} className="block w-full px-5 py-2 text-center text-sm text-stone-800 hover:bg-stone-100" key={option} onClick={() => { onChange(option); setOpen(false) }} role="menuitem" type="button">{option}</button>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -30,33 +68,46 @@ function categorySlug(category) {
 
 function CategoryMenu({ slug, title, open, onOpen, onClose, mobile = false }) {
   const items = megaMenuData[slug] || []
-  return (
-    <div className="static lg:relative" onMouseEnter={mobile ? undefined : onOpen} onMouseLeave={mobile ? undefined : onClose}>
-      <div className="flex items-center gap-1">
-        <NavLink className={({ isActive }) => `py-3 text-[13px] transition hover:text-accent ${isActive ? 'font-semibold' : ''}`} onClick={onClose} to={`/${slug}`}>{title}</NavLink>
-        <button aria-expanded={open} aria-label={`Show ${title} categories`} className="storefront-category-toggle grid h-8 w-7 place-items-center text-stone-500 lg:hidden" onClick={onOpen} type="button">
-          <svg aria-hidden="true" className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" /></svg>
-        </button>
+  const closeTimer = useRef(null)
+  const cancelClose = () => {
+    window.clearTimeout(closeTimer.current)
+    closeTimer.current = null
+  }
+  const scheduleClose = () => {
+    cancelClose()
+    closeTimer.current = window.setTimeout(onClose, 240)
+  }
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), [])
+
+  const panel = open && (
+    <div className={`storefront-mega-panel ${mobile ? 'relative mt-1 max-h-[65vh] overflow-y-auto border-y border-stone-200 bg-white px-3 pb-4 pt-5' : 'fixed inset-x-0 top-24 z-60 max-h-[calc(100dvh-6rem)] overflow-y-auto border-y border-stone-200 bg-white px-5 pb-10 pt-8 shadow-[0_12px_40px_rgba(0,0,0,0.1)] sm:px-8 lg:px-12'}`} onMouseEnter={mobile ? undefined : cancelClose} onMouseLeave={mobile ? undefined : scheduleClose}>
+      <button aria-label="Close category menu" className="absolute right-4 top-3 grid h-8 w-8 place-items-center text-xl leading-none text-stone-500 hover:bg-stone-100 hover:text-stone-900" onClick={onClose} type="button">×</button>
+      <div className="grid grid-cols-1 gap-x-4 gap-y-3 pt-2 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-4 lg:gap-x-8 lg:gap-y-5">
+        {items.map((item) => (
+          <Link className="group flex min-w-0 items-center gap-3 rounded-md px-2 py-1.5 text-[0.88rem] font-normal text-stone-800 transition-colors hover:bg-stone-100" key={`${slug}-${item.query}`} onClick={onClose} to={item.href}>
+            <div className="h-13 w-13 shrink-0 overflow-hidden rounded bg-stone-100">
+              <img alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" loading="lazy" onError={(event) => { event.currentTarget.style.visibility = 'hidden' }} src={item.image} />
+            </div>
+            <span className="leading-snug group-hover:text-stone-950">{item.label}</span>
+          </Link>
+        ))}
       </div>
-      {open && (
-        <div className={`storefront-mega-panel z-40 mt-1 max-h-[65vh] overflow-y-auto border-y border-stone-200 bg-white p-4 lg:absolute lg:left-1/2 lg:top-full lg:mt-0 lg:max-h-[min(72vh,680px)] lg:w-[min(100vw-48px,1100px)] lg:-translate-x-1/2 lg:rounded-b-sm lg:border lg:p-7 lg:shadow-[0_18px_45px_rgba(35,30,24,0.16)] ${mobile ? 'storefront-mega-panel-mobile' : ''}`}>
-          <div className="mb-5 flex items-center justify-between border-b border-stone-100 pb-3">
-            <div><p className="font-display text-xl">{title}</p><Link className="mt-1 inline-block text-xs text-stone-500 underline underline-offset-4" onClick={onClose} to={`/${slug}`}>Shop all {title.toLowerCase()}</Link></div>
-            <button aria-label="Close category menu" className="grid h-9 w-9 place-items-center rounded-full hover:bg-stone-100" onClick={onClose} type="button">×</button>
-          </div>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {items.map((item) => (
-              <Link className="group min-w-0" key={`${slug}-${item.query}`} onClick={onClose} to={item.href}>
-                <div className="aspect-[4/3] overflow-hidden bg-stone-100">
-                  <img alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" loading="lazy" onError={(event) => { event.currentTarget.style.visibility = 'hidden' }} src={item.image} />
-                </div>
-                <span className="mt-2 block text-xs leading-snug text-stone-700 group-hover:text-stone-950">{item.label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
+  )
+
+  return (
+    <>
+      <div className="static lg:relative" onMouseEnter={mobile ? undefined : () => { cancelClose(); onOpen() }} onMouseLeave={mobile ? undefined : scheduleClose}>
+        <div className="flex items-center gap-1">
+          <NavLink className={({ isActive }) => `flex h-8 items-center rounded-full border text-[0.9rem] transition-colors hover:text-stone-500 ${isActive ? 'border-[#333] px-6' : 'border-transparent'}`} onClick={onClose} to={`/${slug}`}>{title}</NavLink>
+          <button aria-expanded={open} aria-label={`Show ${title} categories`} className="storefront-category-toggle grid h-8 w-7 place-items-center text-stone-500 lg:hidden" onClick={onOpen} type="button">
+            <svg aria-hidden="true" className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" /></svg>
+          </button>
+        </div>
+      </div>
+      {mobile ? panel : panel ? createPortal(panel, document.body) : null}
+    </>
   )
 }
 
@@ -66,6 +117,7 @@ function StorefrontHeader({ visibleCategoryRoutes }) {
   const [user, setUser] = useState(null)
   const [cartCount, setCartCount] = useState(0)
   const [favoriteCount, setFavoriteCount] = useState(0)
+  const [language, setLanguage] = useState('EN')
 
   useEffect(() => {
     let active = true
@@ -103,16 +155,16 @@ function StorefrontHeader({ visibleCategoryRoutes }) {
 
   return (
     <>
-      <header className="relative z-50 border-b border-stone-200/80 bg-[var(--ui-canvas)]">
-        <div className="mx-auto grid min-h-[78px] max-w-[1440px] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 sm:px-7 lg:px-10">
+      <header className="sticky top-0 z-50 border-b border-stone-200/70 bg-canvas">
+        <div className="relative mx-auto grid min-h-24 w-full grid-cols-[1fr_1fr] items-center px-5 sm:px-7 lg:px-12">
           <Link aria-label="Core & Co home" className="flex w-fit items-center" to="/">
-            <img alt="Core & Co" className="h-[48px] w-[48px] object-contain sm:h-[54px] sm:w-[54px]" src="/images/logo.png" />
+            <img alt="Core & Co" className="h-11 w-11 object-contain sm:h-12 sm:w-12" src="/images/logo.png" />
           </Link>
-          <nav aria-label="Main navigation" className="storefront-desktop-nav hidden items-center justify-center gap-5 lg:flex xl:gap-7">
-            <NavLink className={({ isActive }) => `py-3 text-[13px] ${isActive ? 'font-semibold' : ''}`} end onClick={() => setOpenCategory(null)} to="/">Home</NavLink>
-            <NavLink className={({ isActive }) => `py-3 text-[13px] ${isActive ? 'font-semibold' : ''}`} onClick={() => setOpenCategory(null)} to="/products">Products</NavLink>
+          <nav aria-label="Main navigation" className="storefront-desktop-nav absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-8 lg:flex">
+            <NavLink className={({ isActive }) => `flex h-8 items-center rounded-full border text-[0.9rem] transition-colors hover:text-stone-500 ${isActive ? 'border-[#333] px-6' : 'border-transparent'}`} end onClick={() => setOpenCategory(null)} to="/">Home</NavLink>
+            <NavLink className={({ isActive }) => `flex h-8 items-center rounded-full border text-[0.9rem] transition-colors hover:text-stone-500 ${isActive ? 'border-[#333] px-6' : 'border-transparent'}`} onClick={() => setOpenCategory(null)} to="/products">Products</NavLink>
             {visibleCategoryRoutes.map((category) => (
-              <CategoryMenu key={category.path} onClose={() => setOpenCategory(null)} onOpen={() => setOpenCategory(category.path)} open={openCategory === category.path} slug={category.path.slice(1)} title={category.title} />
+              <CategoryMenu key={category.path} onClose={() => setOpenCategory((current) => current === category.path ? null : current)} onOpen={() => setOpenCategory(category.path)} open={openCategory === category.path} slug={category.path.slice(1)} title={category.title} />
             ))}
           </nav>
           <div className="flex items-center justify-end gap-0.5 sm:gap-1">
@@ -120,15 +172,16 @@ function StorefrontHeader({ visibleCategoryRoutes }) {
             <IconLink label="Account" kind="account" to={user ? '/account/profile' : '/login'} />
             <IconLink count={favoriteCount} label="Favorites" kind="favorite" to="/favorites" />
             <IconLink count={cartCount} label="Cart" kind="cart" to="/cart" />
-            <button aria-expanded={menuOpen} aria-label={menuOpen ? 'Close menu' : 'Open menu'} className="storefront-mobile-toggle ml-1 grid h-10 w-10 place-items-center rounded-full hover:bg-stone-100 lg:hidden" onClick={() => setMenuOpen((value) => !value)} type="button">
+            <div className="hidden lg:block"><LanguageSelector language={language} onChange={setLanguage} /></div>
+            <button aria-expanded={menuOpen} aria-label={menuOpen ? 'Close menu' : 'Open menu'} className="storefront-mobile-toggle ml-1 grid h-10 w-10 place-items-center text-stone-900 hover:text-stone-500 lg:hidden" onClick={() => setMenuOpen((value) => !value)} type="button">
               <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">{menuOpen ? <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" strokeWidth="1.6" /> : <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" strokeWidth="1.6" />}</svg>
             </button>
           </div>
         </div>
         {menuOpen && (
-          <nav aria-label="Mobile navigation" className="storefront-mobile-nav absolute inset-x-0 top-full z-50 max-h-[calc(100dvh-78px)] overflow-y-auto border-t border-stone-200 bg-[var(--ui-canvas)] px-5 pb-6 shadow-lg lg:hidden">
-            <NavLink className="block border-b border-stone-200 py-4 text-sm" end onClick={() => setMenuOpen(false)} to="/">Home</NavLink>
-            <NavLink className="block border-b border-stone-200 py-4 text-sm" onClick={() => setMenuOpen(false)} to="/products">Products</NavLink>
+          <nav aria-label="Mobile navigation" className="storefront-mobile-nav absolute inset-x-0 top-full z-50 max-h-[calc(100dvh-88px)] overflow-y-auto border-t border-stone-200 bg-canvas px-5 pb-6 shadow-lg lg:hidden">
+            <NavLink className={({ isActive }) => `block border-b py-4 text-sm ${isActive ? 'border-stone-400 font-medium' : 'border-stone-200'}`} end onClick={() => setMenuOpen(false)} to="/">Home</NavLink>
+            <NavLink className={({ isActive }) => `block border-b py-4 text-sm ${isActive ? 'border-stone-400 font-medium' : 'border-stone-200'}`} onClick={() => setMenuOpen(false)} to="/products">Products</NavLink>
             {visibleCategoryRoutes.map((category) => (
               <CategoryMenu key={category.path} mobile onClose={() => { setOpenCategory(null); setMenuOpen(false) }} onOpen={() => setOpenCategory(openCategory === category.path ? null : category.path)} open={openCategory === category.path} slug={category.path.slice(1)} title={category.title} />
             ))}
@@ -136,6 +189,7 @@ function StorefrontHeader({ visibleCategoryRoutes }) {
               <Link onClick={() => setMenuOpen(false)} to={user ? '/account/profile' : '/login'}>{user ? 'My account' : 'Sign in'}</Link>
               <Link onClick={() => setMenuOpen(false)} to="/about">About</Link><Link onClick={() => setMenuOpen(false)} to="/contact">Contact</Link>
             </div>
+            <LanguageSelector language={language} mobile onChange={setLanguage} />
           </nav>
         )}
       </header>
