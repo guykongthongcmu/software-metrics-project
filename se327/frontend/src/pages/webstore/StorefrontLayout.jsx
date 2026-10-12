@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
+import { accountRoutes } from '../account/routes.js'
 import { storefrontRoutes } from './routes.js'
 import StorefrontFooter from './partials/StorefrontFooter.jsx'
 import StorefrontHeader from './partials/StorefrontHeader.jsx'
@@ -16,6 +17,15 @@ function categorySlug(category) {
 export default function StorefrontLayout() {
   const location = useLocation()
   const [categories, setCategories] = useState([])
+  useEffect(() => {
+    const routes = [...storefrontRoutes, ...accountRoutes]
+    const route = routes.find((entry) => entry.path === location.pathname)
+      || (location.pathname.startsWith('/products/') ? storefrontRoutes.find((entry) => entry.path === '/products/:id') : null)
+    const query = new URLSearchParams(location.search).get('q')?.trim()
+    document.title = location.pathname === '/search' && query
+      ? `${query} - Search`
+      : route?.documentTitle || 'Page Not Found | Core & Co'
+  }, [location.pathname, location.search])
   useEffect(() => {
     let active = true
     const applyCategories = (payload) => {
