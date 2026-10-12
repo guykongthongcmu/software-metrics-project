@@ -10,6 +10,7 @@ const iconPaths = {
   cart: <path d="M16 11V7a4 4 0 0 0-8 0v4M5 9h14l1 12H4L5 9Z" />,
 }
 
+/** @param {{label: string, to: string, kind: string, count?: number}} props */
 function IconLink({ label, to, kind, count }) {
   return (
     <Link aria-label={label} className="relative grid h-10 w-10 place-items-center text-stone-900 transition-colors hover:text-stone-500" to={to}>
