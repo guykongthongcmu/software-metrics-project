@@ -32,6 +32,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'rest_framework',
     'common',
+    'apps.accounts',
+    'apps.catalog',
+    'apps.campaigns',
+    'apps.cart',
+    'apps.orders',
+    'apps.analytics',
 ]
 
 MIDDLEWARE = [
