@@ -46,14 +46,14 @@ function LanguageSelector({ language, onChange, mobile = false }) {
 
   return (
     <div className={`relative ${mobile ? 'w-full border-t border-stone-200 pt-4' : ''}`} ref={selectorRef}>
-      <button aria-expanded={open} aria-haspopup="menu" className={`flex items-center gap-2 text-[0.85rem] font-medium text-stone-900 hover:text-stone-600 ${mobile ? 'w-full justify-between py-1' : 'px-1 py-2'}`} onClick={() => setOpen((value) => !value)} type="button">
+      <button aria-expanded={open} aria-haspopup="menu" className={`flex items-center gap-2 rounded-sm text-[0.85rem]! font-medium text-stone-900 hover:text-stone-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${mobile ? 'w-full justify-between py-1' : 'px-1 py-2'}`} onClick={() => setOpen((value) => !value)} type="button">
         <span>{language}</span>
         <svg aria-hidden="true" className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg>
       </button>
       {open && (
-        <div className={`z-60 min-w-20 border border-stone-200 bg-white py-1 shadow-lg ${mobile ? 'absolute left-0 top-full' : 'absolute right-0 top-full'}`} role="menu">
+        <div className={`z-60 min-w-20 rounded-lg border border-stone-200 bg-white py-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.1)] ${mobile ? 'absolute left-0 top-full mt-2.5' : 'absolute right-0 top-full mt-2.5'}`} role="menu">
           {['EN', 'TH'].map((option) => (
-            <button aria-current={language === option ? 'true' : undefined} className="block w-full px-5 py-2 text-center text-sm text-stone-800 hover:bg-stone-100" key={option} onClick={() => { onChange(option); setOpen(false) }} role="menuitem" type="button">{option}</button>
+            <button aria-current={language === option ? 'true' : undefined} className="block w-full px-5 py-2 text-center text-[0.85rem]! text-stone-800 hover:bg-stone-100" key={option} onClick={() => { onChange(option); setOpen(false) }} role="menuitem" type="button">{option}</button>
           ))}
         </div>
       )}
@@ -226,7 +226,7 @@ function StorefrontFooter() {
           <h2 className="mb-6 text-[0.9rem] font-medium tracking-[1px] text-[#333]">MEMBERSHIP</h2>
           <p className="mb-6 text-[0.9rem]">Join now and get 15% off your first order.</p>
           <div className="flex flex-wrap gap-4">
-            <Link className="rounded-full border border-accent bg-accent px-7.5 py-2 text-[0.8rem] font-medium !text-white transition-colors hover:border-[#97836d] hover:bg-[#97836d]" to="/auth/signup">SIGN UP</Link>
+            <Link className="rounded-full border border-accent bg-accent px-7.5 py-2 text-[0.8rem] font-medium text-white! transition-colors hover:border-[#97836d] hover:bg-[#97836d]" to="/auth/signup">SIGN UP</Link>
             <Link className="rounded-full border border-[#c4b9a9] px-7.5 py-2 text-[0.8rem] font-medium text-ink transition-colors hover:bg-black/5" to="/login">LOG IN</Link>
           </div>
         </div>
