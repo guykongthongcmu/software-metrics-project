@@ -198,28 +198,43 @@ function StorefrontHeader({ visibleCategoryRoutes }) {
   )
 }
 
-function StorefrontFooter({ visibleCategoryRoutes }) {
+function StorefrontFooter() {
   return (
-    <footer className="mt-12 border-t border-stone-300 bg-[#eae5d9]">
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-5 py-12 sm:grid-cols-2 sm:px-8 lg:grid-cols-[1fr_1fr_1.25fr] lg:gap-16 lg:py-16">
+    <footer className="bg-[#eae5d9] px-6 py-12 text-[#555] lg:px-16 lg:pt-16 lg:pb-8">
+      <div className="mb-8 grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12 lg:mb-16 lg:gap-12">
         <div>
-          <h2 className="mb-4 text-[11px] font-semibold tracking-[0.14em]">PRODUCT</h2>
-          <ul className="space-y-2 text-sm text-stone-700">
-            {visibleCategoryRoutes.map((entry) => <li key={entry.path}><Link className="hover:underline" to={entry.path}>{entry.title}</Link></li>)}
-            <li><Link className="hover:underline" to="/">Home</Link></li>
+          <h2 className="mb-6 text-[0.9rem] font-medium tracking-[1px] text-[#333]">PRODUCT</h2>
+          <ul className="space-y-[0.8rem] text-[0.9rem]">
+            <li><Link className="hover:text-accent" to="/men">Men</Link></li>
+            <li><Link className="hover:text-accent" to="/women">Women</Link></li>
+            <li><Link className="hover:text-accent" to="/kids">Kids</Link></li>
+            <li><Link className="hover:text-accent" to="/baby">Baby</Link></li>
+            <li><Link className="hover:text-accent" to="/unisex">Unisex</Link></li>
+            <li><Link className="hover:text-accent" to="/">Home</Link></li>
           </ul>
         </div>
         <div>
-          <h2 className="mb-4 text-[11px] font-semibold tracking-[0.14em]">INFO</h2>
-          <ul className="space-y-2 text-sm text-stone-700"><li><Link className="hover:underline" to="/about">About</Link></li><li><a className="hover:underline" href="mailto:coreandco2026@gmail.com">Sustainability</a></li><li><Link className="hover:underline" to="/contact">Contact Us</Link></li></ul>
+          <h2 className="mb-6 text-[0.9rem] font-medium tracking-[1px] text-[#333]">INFO</h2>
+          <ul className="space-y-[0.8rem] text-[0.9rem]">
+            <li><Link className="hover:text-accent" to="/about">About</Link></li>
+            <li><a className="hover:text-accent" href="#">Sustainability</a></li>
+            <li><a className="hover:text-accent" href="#">Press</a></li>
+            <li><Link className="hover:text-accent" to="/contact">Contact Us</Link></li>
+          </ul>
         </div>
         <div>
-          <h2 className="mb-3 text-[11px] font-semibold tracking-[0.14em]">MEMBERSHIP</h2>
-          <p className="max-w-sm text-sm leading-relaxed text-stone-700">Join now and get 15% off your first order.</p>
-          <div className="mt-5 flex flex-wrap gap-3"><Link className="bg-stone-900 px-5 py-3 text-[11px] font-semibold tracking-[0.12em] text-white hover:bg-stone-700" to="/auth/signup">SIGN UP</Link><Link className="border border-stone-500 px-5 py-3 text-[11px] font-semibold tracking-[0.12em] hover:bg-white/50" to="/login">LOG IN</Link></div>
+          <h2 className="mb-6 text-[0.9rem] font-medium tracking-[1px] text-[#333]">MEMBERSHIP</h2>
+          <p className="mb-6 text-[0.9rem]">Join now and get 15% off your first order.</p>
+          <div className="flex flex-wrap gap-4">
+            <Link className="rounded-full border border-accent bg-accent px-7.5 py-2 text-[0.8rem] font-medium !text-white transition-colors hover:border-[#97836d] hover:bg-[#97836d]" to="/auth/signup">SIGN UP</Link>
+            <Link className="rounded-full border border-[#c4b9a9] px-7.5 py-2 text-[0.8rem] font-medium text-ink transition-colors hover:bg-black/5" to="/login">LOG IN</Link>
+          </div>
         </div>
       </div>
-      <div className="mx-auto flex max-w-[1280px] flex-col gap-3 border-t border-stone-400/40 px-5 py-5 text-xs text-stone-600 sm:flex-row sm:items-center sm:justify-between sm:px-8"><p>© 2026 Core & Co. All rights reserved.</p><div className="flex gap-5"><a href="#privacy">Privacy Policy</a><a href="#terms">Terms of Service</a></div></div>
+      <div className="flex flex-col items-center justify-between gap-4 border-t border-black/5 pt-8 text-[0.8rem] sm:flex-row">
+        <p>© 2026 Core & Co. All rights reserved.</p>
+        <div className="flex gap-8"><a className="hover:text-accent" href="#">Privacy Policy</a><a className="hover:text-accent" href="#">Terms of Service</a></div>
+      </div>
     </footer>
   )
 }
@@ -248,5 +263,5 @@ export default function StorefrontLayout() {
     .map((slug) => storefrontRoutes.find((route) => route.path === `/${slug}`))
     .filter(Boolean)
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [location.pathname])
-  return <div data-theme="storefront" className="min-h-screen bg-canvas text-ink"><StorefrontHeader visibleCategoryRoutes={visibleCategoryRoutes} /><Outlet /><StorefrontFooter visibleCategoryRoutes={visibleCategoryRoutes} /></div>
+  return <div data-theme="storefront" className="min-h-screen bg-canvas text-ink"><StorefrontHeader visibleCategoryRoutes={visibleCategoryRoutes} /><Outlet /><StorefrontFooter /></div>
 }
