@@ -5,8 +5,9 @@ import { accountRoutes } from '../account/routes.js'
 import { storefrontRoutes } from './routes.js'
 import StorefrontFooter from './partials/StorefrontFooter.jsx'
 import StorefrontHeader from './partials/StorefrontHeader.jsx'
+import { FavoritesProvider } from './partials/FavoritesContext.jsx'
 
-const categoryOrder = ['men', 'women', 'kids', 'baby', 'unisex']
+const categoryOrder = ['men', 'women']
 const categoryAliases = { kid: 'kids' }
 
 function categorySlug(category) {
@@ -47,5 +48,5 @@ export default function StorefrontLayout() {
     .map((slug) => storefrontRoutes.find((route) => route.path === `/${slug}`))
     .filter(Boolean)
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [location.pathname])
-  return <div data-theme="storefront" className="min-h-screen bg-canvas text-ink"><StorefrontHeader visibleCategoryRoutes={visibleCategoryRoutes} /><Outlet /><StorefrontFooter /></div>
+  return <div data-theme="storefront" className="min-h-screen bg-canvas text-ink"><StorefrontHeader visibleCategoryRoutes={visibleCategoryRoutes} /><FavoritesProvider><Outlet /></FavoritesProvider><StorefrontFooter /></div>
 }
