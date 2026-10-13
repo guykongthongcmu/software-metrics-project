@@ -14,6 +14,8 @@ from .services import OrderError
 VAT_RATE = Decimal('0.07')
 SHIPPING_FEE = Decimal('0.00')
 CENT = Decimal('0.01')
+# orders.total is a DecimalField(max_digits=10, decimal_places=2)
+MAX_TOTAL = Decimal('99999999.99')
 
 
 def cents(value):
@@ -23,6 +25,11 @@ def cents(value):
 def product_name(product_id):
     row = ProductTranslation.objects.filter(product_id=product_id, language_code=Language.EN).first()
     return row.name if row else f'Product #{product_id}'
+
+
+def read_items(cart, lock=False):
+    items = CartItem.objects.filter(cart=cart).order_by('cart_item_id')
+    return items.select_for_update() if lock else items
 
 
 def lock_variants(items):
@@ -46,11 +53,16 @@ def check_items(items, variants):
 def purchase(user):
     with transaction.atomic():
         cart = Cart.objects.select_for_update().filter(user=user, status=Cart.Status.ACTIVE).first()
-        items = list(CartItem.objects.filter(cart=cart).order_by('cart_item_id')) if cart else []
-        if not items:
+        if cart is None:
             raise OrderError(409, 'CART_EMPTY', 'the cart is empty')
 
-        variants = lock_variants(items)
+        # variants are locked before the items are read for good, so quantities cannot move under us
+        variants = lock_variants(read_items(cart))
+        items = list(read_items(cart, lock=True))
+        if any(item.product_variant_id not in variants for item in items):
+            variants = lock_variants(items)
+        if not items:
+            raise OrderError(409, 'CART_EMPTY', 'the cart is empty')
         check_items(items, variants)
 
         address = current_address(user)
@@ -60,6 +72,8 @@ def purchase(user):
         subtotal = sum((variants[i.product_variant_id].price * i.quantity for i in items), Decimal('0'))
         subtotal = cents(subtotal)
         vat_amount = cents(subtotal * VAT_RATE)
+        if subtotal + SHIPPING_FEE + vat_amount > MAX_TOTAL:
+            raise OrderError(409, 'ORDER_TOTAL_TOO_LARGE', 'the order total is too large')
         snapshot = address_payload(address)
         order = Order.objects.create(
             user=user,
@@ -96,7 +110,7 @@ def purchase(user):
                 raise OrderError(409, 'INSUFFICIENT_STOCK', 'requested quantity exceeds available stock')
             total_items += item.quantity
 
-        CartItem.objects.filter(cart=cart).delete()
+        CartItem.objects.filter(pk__in=[item.pk for item in items]).delete()
         cart.status = Cart.Status.CONVERTED
         cart.save(update_fields=['status', 'updated_at'])
 
