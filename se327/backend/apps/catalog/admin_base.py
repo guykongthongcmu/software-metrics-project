@@ -1,3 +1,4 @@
+from django.core.exceptions import SuspiciousOperation
 from django.http import JsonResponse
 from rest_framework.views import APIView
 
@@ -28,6 +29,9 @@ class AdminView(APIView):
             if getattr(exc, 'details', None):
                 body['details'] = exc.details
             return JsonResponse(body, status=exc.status)
+        if isinstance(exc, SuspiciousOperation):
+            # oversize text fields or too many form fields, Django would otherwise let this reach a 500
+            return JsonResponse(error_body('BAD_REQUEST', 'the request body was rejected'), status=400)
         return super().handle_exception(exc)
 
 
