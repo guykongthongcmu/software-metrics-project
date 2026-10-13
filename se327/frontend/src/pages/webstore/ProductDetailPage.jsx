@@ -80,8 +80,10 @@ export default function ProductDetailPage() {
       setImages(urls)
       setSelectedImage(urls[0] || '')
       const availableColors = unique(nextVariants.map((entry) => entry.color))
-      const initialColor = availableColors[0] || item.color?.[0] || ''
-      const initialSize = unique(nextVariants.filter((entry) => entry.color === initialColor).map((entry) => entry.size))[0]
+      const firstAvailableVariant = nextVariants.find((entry) => Number(entry.stockQty) > 0)
+      const initialColor = firstAvailableVariant?.color || availableColors[0] || item.color?.[0] || ''
+      const initialSize = firstAvailableVariant?.size
+        || unique(nextVariants.filter((entry) => entry.color === initialColor).map((entry) => entry.size))[0]
         || item.size?.[0] || ''
       setColor(initialColor)
       setSize(initialSize)
@@ -90,7 +92,13 @@ export default function ProductDetailPage() {
       const params = new URLSearchParams({ lang: 'EN', limit: '4', excludeProductIds: String(item.productId) })
       if (category) params.set('category', category)
       const result = await apiClient.get(`/client/products/recommendations?${params}`, { redirectOn401: false }).catch(() => null)
-      if (active) setRecommendations(Array.isArray(result?.data?.products) ? result.data.products : [])
+      if (active) {
+        const currentProductId = Number(item.productId)
+        const recommended = Array.isArray(result?.data?.products) ? result.data.products : []
+        setRecommendations(recommended
+          .filter((entry) => Number(entry.productId) !== currentProductId)
+          .slice(0, 4))
+      }
       if (active) setLoadedId(id)
     }).catch(() => {
       if (active) {
@@ -114,12 +122,21 @@ export default function ProductDetailPage() {
     return unique(matching.length ? matching.map((variant) => variant.size) : (product?.size || []))
   }, [color, product, variants])
   const chosenVariant = variants.find((variant) => variant.color === color && variant.size === size)
-  const canAddToCart = Boolean(product?.inStock && (variants.length === 0 || (chosenVariant && chosenVariant.stockQty > 0)))
+  const variantStock = Number(chosenVariant?.stockQty)
+  const hasVariantCatalog = variants.length > 0
+  const canAddToCart = Boolean(product?.inStock && (!hasVariantCatalog || (chosenVariant && variantStock > 0)))
+  const displayedPrice = chosenVariant?.price ?? product?.price
+  const displayedOriginalPrice = chosenVariant
+    ? (Number(chosenVariant.compareAtPrice) > Number(chosenVariant.price) ? chosenVariant.compareAtPrice : null)
+    : product?.originalPrice
+  const quantityLimit = chosenVariant ? Math.min(10, Math.max(1, variantStock || 1)) : 10
 
   function selectColor(nextColor) {
     setColor(nextColor)
-    const nextSizes = unique(variants.filter((variant) => variant.color === nextColor).map((variant) => variant.size))
-    setSize(nextSizes[0] || '')
+    const nextVariants = variants.filter((variant) => variant.color === nextColor)
+    const nextSizes = unique(nextVariants.map((variant) => variant.size))
+    setSize(nextVariants.find((variant) => Number(variant.stockQty) > 0)?.size || nextSizes[0] || '')
+    setQuantity(1)
   }
 
   async function toggleFavorite() {
@@ -166,7 +183,6 @@ export default function ProductDetailPage() {
   if ((error && errorId === id) || !product) return <main className="min-h-[55vh] bg-[#f5f0e8] px-5 py-12"><p className="mx-auto max-w-6xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{errorId === id ? error : 'This product could not be loaded.'}</p><Link className="mx-auto mt-5 block max-w-6xl text-sm underline" to="/products">Back to products</Link></main>
 
   const category = product.category
-  const originalPrice = product.originalPrice
   const imageList = images.length ? images : [product.image]
   return (
     <main className="bg-[#f5f0e8] text-[#2a2520]">
@@ -186,27 +202,31 @@ export default function ProductDetailPage() {
 
           <section className="min-[992px]:translate-x-3 min-[992px]:pl-6 min-[992px]:pr-1 max-[991px]:mt-5">
             <h1 className="mb-1.5 font-display text-[1.75rem] font-normal leading-[1.2] text-[#2a2520] max-[991px]:text-[1.4rem] max-[767px]:text-[1.25rem]">{product.name}</h1>
-            <p className="mb-3 text-[1.1rem] font-medium text-[#b89b6e]">{money(product.price)}{originalPrice != null && <span className="ml-2 text-[0.85rem] text-[#999] line-through">{money(originalPrice)}</span>}</p>
+            <p className="mb-3 text-[1.1rem] font-medium text-[#b89b6e]">{money(displayedPrice)}{displayedOriginalPrice != null && <span className="ml-2 text-[0.85rem] text-[#999] line-through">{money(displayedOriginalPrice)}</span>}</p>
             <p className="mb-[18px] text-[0.8rem] leading-[1.75] text-[#999]">{product.detail || ''}</p>
 
             <p className="mb-[7px] text-[0.62rem] uppercase tracking-[0.12em] text-[#999]">COLOR: <strong className="text-[#2a2520]">{color}</strong></p>
             <div aria-label="Available colors" className="mb-4 flex gap-[7px]">
               {colors.map((entry) => {
                 const key = entry.toLowerCase()
-                return <button aria-label={entry} aria-pressed={entry === color} className={`h-6 w-6 rounded-full border-2 transition-transform ${entry === color ? 'scale-110 border-[#b89b6e]' : 'border-transparent hover:scale-110'}`} key={entry} onClick={() => selectColor(entry)} style={{ backgroundColor: colorSwatches[key] || '#ccc', boxShadow: lightColors.has(key) ? 'inset 0 0 0 1px #bbb' : undefined }} title={entry} type="button" />
+                const colorHasStock = !hasVariantCatalog || variants.some((variant) => variant.color === entry && Number(variant.stockQty) > 0)
+                return <button aria-label={`${entry}${colorHasStock ? '' : ', out of stock'}`} aria-pressed={entry === color} className={`h-6 w-6 rounded-full border-2 transition-transform ${entry === color ? 'scale-110 border-[#b89b6e]' : 'border-transparent hover:scale-110'} disabled:cursor-not-allowed disabled:opacity-40`} disabled={!colorHasStock} key={entry} onClick={() => selectColor(entry)} style={{ backgroundColor: colorSwatches[key] || '#ccc', boxShadow: lightColors.has(key) ? 'inset 0 0 0 1px #bbb' : undefined }} title={colorHasStock ? entry : `${entry} — Out of Stock`} type="button" />
               })}
             </div>
 
             <p className="mb-[7px] flex items-center justify-between text-[0.62rem] uppercase tracking-[0.12em] text-[#999]"> <span>SIZE: <strong className="text-[#2a2520]">{size}</strong></span><span className="cursor-pointer text-[0.65rem] normal-case tracking-normal underline">Size guide</span></p>
             <div aria-label="Available sizes" className="mb-[5px] flex flex-wrap gap-[5px]">
-              {sizes.map((entry) => <button aria-pressed={entry === size} className={`h-8 min-w-[38px] rounded-full border px-2 text-[0.68rem] transition-colors ${entry === size ? 'border-[#b89b6e] bg-[#b89b6e] text-white' : 'border-[#e0dbd2] bg-white hover:border-[#b89b6e]'}`} key={entry} onClick={() => setSize(entry)} type="button">{entry}</button>)}
+              {sizes.map((entry) => {
+                const inStock = !hasVariantCatalog || variants.some((variant) => variant.color === color && variant.size === entry && Number(variant.stockQty) > 0)
+                return <button aria-label={`${entry}${inStock ? '' : ', out of stock'}`} aria-pressed={entry === size} className={`h-8 min-w-[38px] rounded-full border px-2 text-[0.68rem] transition-colors ${entry === size ? 'border-[#b89b6e] bg-[#b89b6e] text-white' : 'border-[#e0dbd2] bg-white hover:border-[#b89b6e]'} disabled:cursor-not-allowed disabled:opacity-40`} disabled={!inStock} key={entry} onClick={() => { setSize(entry); setQuantity(1) }} title={inStock ? entry : `${entry} — Out of Stock`} type="button">{entry}</button>
+              })}
             </div>
             {chosenVariant && chosenVariant.stockQty <= 0 && <p className="mb-2 text-xs text-red-700">Out of Stock</p>}
             <div className="mb-5 mt-4 flex items-stretch gap-[7px]">
               <div className="flex h-[42px] overflow-hidden rounded-full border border-[#e0dbd2] bg-white">
                 <button aria-label="Decrease quantity" className="w-[34px]" disabled={quantity <= 1} onClick={() => setQuantity((value) => Math.max(1, value - 1))} type="button">−</button>
                 <span aria-label="Quantity" className="grid w-[34px] place-items-center border-x border-[#e0dbd2] text-[0.82rem]">{quantity}</span>
-                <button aria-label="Increase quantity" className="w-[34px]" disabled={quantity >= 10} onClick={() => setQuantity((value) => Math.min(10, value + 1))} type="button">+</button>
+                <button aria-label="Increase quantity" className="w-[34px]" disabled={quantity >= quantityLimit} onClick={() => setQuantity((value) => Math.min(quantityLimit, value + 1))} type="button">+</button>
               </div>
               <button className="h-[42px] flex-1 rounded-full bg-[#b89b6e] text-[0.7rem] uppercase tracking-[0.13em] text-white transition-colors hover:bg-[#a0855a] disabled:cursor-not-allowed disabled:bg-[#e0dbd2] disabled:text-[#999]" disabled={!canAddToCart || busy} onClick={() => { void addToCart() }} type="button">{canAddToCart ? (busy ? 'Please wait…' : 'Add to Cart') : 'Out of Stock'}</button>
               <button aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={favorite} className={`grid h-[42px] w-[42px] shrink-0 place-items-center rounded-full border bg-white ${favorite ? 'border-[#b89b6e] text-[#b89b6e]' : 'border-[#e0dbd2] text-[#999]'}`} disabled={busy} onClick={() => { void toggleFavorite() }} type="button"><svg aria-hidden="true" className="h-4 w-4" fill={favorite ? 'currentColor' : 'none'} viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg></button>
