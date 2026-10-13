@@ -76,7 +76,10 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
       ])
       if (!active) return
       const profileError = profileResult.status === 'rejected' ? profileResult.reason : null
-      const demoProfile = isEndpointUnavailable(profileError) ? getMockAccountSession()?.profile : null
+      const canUseDemoProfile = isEndpointUnavailable(profileError)
+        || profileError?.status === 401
+        || profileError?.code === 'UNAUTHORIZED'
+      const demoProfile = canUseDemoProfile ? getMockAccountSession()?.profile : null
       const headerData = {
         user: profileResult.status === 'fulfilled' ? profileResult.value?.data || null : demoProfile || null,
         cartCount: cartResult.status === 'fulfilled' ? Number(cartResult.value?.data?.cartSummary?.totalItems || 0) : 0,
