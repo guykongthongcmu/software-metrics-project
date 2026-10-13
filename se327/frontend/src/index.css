@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-@import "tailwindcss";
+@import "tailwindcss" source("../");
 
 @theme inline {
   --font-sans: var(--font-store-ui);
@@ -11,6 +11,8 @@
   --color-accent-soft: var(--ui-accent-soft);
   --color-panel: var(--ui-panel);
   --color-line: var(--ui-line);
+  --font-inter: var(--font-store-body);
+  --color-navblue: #2356c9;
 }
 
 :root {
@@ -93,6 +95,34 @@ a {
     gap: 8px 12px;
   }
 }
+
+  .storefront-desktop-nav {
+    display: none;
+  }
+
+  .storefront-mobile-toggle {
+    display: grid;
+  }
+
+  .storefront-mobile-nav {
+    display: block;
+  }
+
+  .storefront-category-toggle {
+    display: grid;
+  }
+
+  @media (min-width: 1024px) {
+    .storefront-desktop-nav {
+      display: flex;
+    }
+
+    .storefront-mobile-toggle,
+    .storefront-mobile-nav,
+    .storefront-category-toggle {
+      display: none;
+    }
+  }
 
 button,
 input,

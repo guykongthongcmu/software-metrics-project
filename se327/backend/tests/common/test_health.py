@@ -43,7 +43,7 @@ class NotFoundTests(SimpleTestCase):
         self.assertEqual(res.json()['code'], 'NOT_FOUND')
 
 
-@override_settings(ROOT_URLCONF='common.tests', CORS_ALLOWED_ORIGINS=[ALLOWED], DEBUG=True)
+@override_settings(ROOT_URLCONF='tests.common.test_health', CORS_ALLOWED_ORIGINS=[ALLOWED], DEBUG=True)
 class ServerErrorTests(SimpleTestCase):
     def setUp(self):
         self.client.raise_request_exception = False
