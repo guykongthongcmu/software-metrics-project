@@ -50,6 +50,18 @@ describe('ProductCard', () => {
     expect(screen.queryByText(/undefined USD/)).toBeNull()
   })
 
+  it('renders distinct swatches for catalogue colors including lilac and mocha', () => {
+    renderCard({
+      productId: 12, name: 'Colour edit', image: '/colour.jpg', price: 40,
+      colors: ['Lilac', 'Mocha', 'Dusty Rose', 'Powder Blue'], category: 'Accessories', inStock: true,
+    })
+
+    expect(screen.getByTitle('Lilac').style.backgroundColor).toBe('rgb(200, 162, 200)')
+    expect(screen.getByTitle('Mocha').style.backgroundColor).toBe('rgb(139, 111, 92)')
+    expect(screen.getByTitle('Dusty Rose').style.backgroundColor).toBe('rgb(192, 128, 129)')
+    expect(screen.getByTitle('Powder Blue').style.backgroundColor).toBe('rgb(176, 213, 232)')
+  })
+
   it('supports alternate color field, numeric discounts and favorite toggling', () => {
     const onFavoriteUpdate = vi.fn()
     window.addEventListener('storefront:favorites-updated', onFavoriteUpdate)
