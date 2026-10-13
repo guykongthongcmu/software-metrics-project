@@ -282,13 +282,38 @@ class CreateTests(AdminProductCase):
         self.assertEqual((res.status_code, res.json()['code']), (409, 'DUPLICATE_VARIANT'))
         self.assertEqual(Product.objects.count(), 0)
 
-    def test_create_unknown_constraint_is_not_swallowed(self):
+    def fail_bulk_create(self, sqlstate=None):
+        cause = Exception()
+        cause.sqlstate = sqlstate
         failure = IntegrityError()
-        self.client.raise_request_exception = False
-        with mock.patch('apps.catalog.admin_products.ProductVariant.objects.bulk_create', side_effect=failure):
+        failure.__cause__ = cause
+        return mock.patch('apps.catalog.admin_products.ProductVariant.objects.bulk_create', side_effect=failure)
+
+    def test_create_foreign_key_failure_is_409(self):
+        with self.fail_bulk_create('23503'):
             res = self.create(good_payload(self.category.pk))
-        self.assertEqual(res.status_code, 500)
-        self.assertEqual(Product.objects.count(), 0)
+        self.assertEqual((res.status_code, res.json()['code']), (409, 'CATEGORY_NOT_FOUND'))
+        self.assertEqual((Product.objects.count(), self.stored_files()), (0, []))
+
+    def test_create_other_integrity_failure_is_409_not_500(self):
+        with self.fail_bulk_create():
+            res = self.create(good_payload(self.category.pk))
+        self.assertEqual((res.status_code, res.json()['code']), (409, 'CONFLICT'))
+        self.assertEqual((Product.objects.count(), self.stored_files()), (0, []))
+
+    def test_create_lone_surrogate_400(self):
+        for field in ('name', 'description'):
+            payload = good_payload(self.category.pk)
+            payload['translations'][0][field] = 'bad\ud800'
+            self.assertEqual(self.create(payload).status_code, 400, field)
+        for field in ('sku', 'colour', 'size'):
+            payload = good_payload(self.category.pk)
+            payload['variants'][0][field] = 'bad\ud800'
+            self.assertEqual(self.create(payload).status_code, 400, field)
+        payload = good_payload(self.category.pk)
+        payload['media'][0]['altText'] = 'bad\ud800'
+        self.assertEqual(self.create(payload).status_code, 400)
+        self.assertEqual((Product.objects.count(), self.stored_files()), (0, []))
 
     def test_create_rolls_back_on_unknown_category(self):
         res = self.create(good_payload(self.category.pk + 500))
@@ -541,6 +566,24 @@ class UpdateTests(AdminProductCase):
         self.assertEqual(self.put(product.pk, {'name': 'x', 'lang': 'fr'}).json()['code'], 'INVALID_LANGUAGE')
         self.assertEqual(self.put(product.pk, {'name': 'x', 'lang': 5}).json()['code'], 'INVALID_LANGUAGE')
 
+    def test_update_lone_surrogate_400(self):
+        product = make_product('Tee')
+        raw = '{"%s": "bad\\ud800"%s}'
+        for body in (raw % ('name', ''), raw % ('description', ''), raw % ('sku', ', "stock": 1')):
+            res = self.client.put(f'{BASE}/{product.pk}', body, content_type='application/json')
+            self.assertEqual(res.status_code, 400, body)
+        self.assertEqual(product.translations.get().name, 'Tee')
+
+    def test_update_integrity_failure_is_409(self):
+        product = make_product('Tee')
+        cause = Exception()
+        cause.sqlstate = '23503'
+        failure = IntegrityError()
+        failure.__cause__ = cause
+        with mock.patch('apps.catalog.admin_products.ProductCategory.objects.update_or_create', side_effect=failure):
+            res = self.put(product.pk, {'category_id': make_category('New').pk})
+        self.assertEqual((res.status_code, res.json()['code']), (409, 'CATEGORY_NOT_FOUND'))
+
     def test_update_404_and_bad_id(self):
         self.assertEqual(self.put(999, {'name': 'x'}).json()['code'], 'PRODUCT_NOT_FOUND')
         self.assertEqual(self.put('abc', {'name': 'x'}).json()['code'], 'INVALID_PRODUCT_ID')
@@ -554,15 +597,23 @@ class DeleteTests(AdminProductCase):
         self.assertEqual(res.json()['data'], {'productId': product.pk, 'deleted': True, 'mode': 'SOFT'})
         product.refresh_from_db()
         self.assertFalse(product.is_active)
-        self.assertFalse(product.variants.filter(is_active=True).exists())
+        self.assertEqual(product.variants.filter(is_active=True).count(), 2)
         self.assertEqual(self.client.delete(f'{BASE}/{product.pk}').status_code, 200)
 
-    def test_soft_delete_deactivates_variants_and_hides_from_storefront(self):
+    def test_soft_delete_hides_from_storefront(self):
         product = make_product('Tee')
         self.assertEqual(self.client.get('/api/client/products').json()['data']['pagination']['totalItems'], 1)
         self.client.delete(f'{BASE}/{product.pk}?mode=soft')
         self.assertEqual(self.client.get('/api/client/products').json()['data']['pagination']['totalItems'], 0)
         self.assertEqual(self.client.get(BASE).json()['data']['totalItems'], 1)
+
+    def test_soft_delete_then_reactivate_is_purchasable(self):
+        product = make_product('Tee')
+        self.client.delete(f'{BASE}/{product.pk}')
+        res = self.client.put(f'{BASE}/{product.pk}', {'isActive': True}, content_type='application/json')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(self.client.get('/api/client/products').json()['data']['pagination']['totalItems'], 1)
+        self.assertTrue(res.json()['data']['variants'][0]['isActive'])
 
     def test_hard_delete_removes_rows_and_files(self):
         category = make_category('Tops')

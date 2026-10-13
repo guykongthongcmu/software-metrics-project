@@ -1,6 +1,8 @@
 from pathlib import Path
 from unittest import mock
 
+from apps.catalog.admin_base import AdminError
+from apps.catalog.admin_images import parse_options
 from apps.catalog.models import ProductMedia
 from common import storage
 from tests.catalog.test_admin_products import JPEG, PNG, AdminProductCase, image
@@ -108,6 +110,11 @@ class AddImageTests(AdminProductCase):
         ):
             self.assertEqual(self.upload(product.pk, data).status_code, 400, data)
         self.assertEqual((ProductMedia.objects.count(), self.stored_files()), (0, []))
+
+    def test_alt_text_lone_surrogate_rejected(self):
+        # the multipart test client cannot send one, so check the parser directly
+        with self.assertRaises(AdminError):
+            parse_options({'altText': 'a\ud800b'})
 
     def test_add_image_blank_options_use_defaults(self):
         product = make_product('Tee', media=False)

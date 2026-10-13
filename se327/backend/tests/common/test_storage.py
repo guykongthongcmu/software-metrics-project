@@ -64,6 +64,16 @@ class SaveTests(StorageCase):
             with self.assertRaises(storage.StorageError):
                 storage.save_image(upload(), 'products')
 
+    def test_partial_write_is_removed(self):
+        class Failing(SimpleUploadedFile):
+            def chunks(self, chunk_size=None):
+                yield JPEG
+                raise OSError('disk full')
+
+        with self.assertRaises(storage.StorageError):
+            storage.save_image(Failing('a.jpg', JPEG), 'products')
+        self.assertEqual([p for p in Path(self.tmp.name).rglob('*') if p.is_file()], [])
+
     def test_default_url_and_root(self):
         with mock.patch.dict('os.environ', {}, clear=True):
             self.assertEqual(storage.media_url(), '/media/')
