@@ -47,6 +47,18 @@ jobs:
           coverage run --source=. --omit=".venv/*,*/migrations/*,manage.py" manage.py test
           coverage xml -o coverage.xml
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: se327/frontend/package-lock.json
+
+      - name: Run frontend tests with coverage
+        working-directory: se327/frontend
+        run: |
+          npm ci --ignore-scripts
+          npm run test:coverage
+
       - name: SonarQube scan
         uses: SonarSource/sonarqube-scan-action@d209202bc7d53ff1cc128f7f907dac145c9d6ae9 # v8.3.0
         env:
