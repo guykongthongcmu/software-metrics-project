@@ -11,6 +11,7 @@ urlpatterns = [
     re_path(r'^api/admin/', include('apps.catalog.admin_urls')),
     re_path(r'^api/client/', include('apps.cart.favourites_urls')),
     re_path(r'^api/client/', include('apps.cart.urls')),
+    re_path(r'^api/client/', include('apps.orders.urls')),
     re_path(r'^api/auth/logout$', LogoutView.as_view()),
     re_path(r'^', include('apps.campaigns.urls')),
     re_path(r'^api/auth/', include('apps.accounts.urls')),
