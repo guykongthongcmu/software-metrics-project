@@ -28,6 +28,7 @@ function getAccountPage(route) {
   }
 }
 import HomePage from './pages/webstore/HomePage.jsx'
+import AllProductsPage from './pages/webstore/AllProductsPage.jsx'
 import ProductDetailPage from './pages/webstore/ProductDetailPage.jsx'
 
 function StorefrontPlaceholder({ title }) {
@@ -55,6 +56,7 @@ function NotFoundPage() {
 function getStorefrontPage(route) {
   if (route.path === '/login') return <LoginPage />
   if (route.path === '/') return <HomePage />
+  if (route.path === '/products') return <AllProductsPage />
   if (route.path === '/about') return <AboutPage />
   if (route.path === '/contact') return <ContactPage />
   if (route.path === '/products/:id') return <ProductDetailPage />
