@@ -136,7 +136,64 @@ describe('ProductDetailPage', () => {
     }, { redirectOn401: false }))
     expect(await screen.findByText('Premium Linen Shirt added to cart')).toBeTruthy()
     expect(onCartUpdate.mock.calls[0][0].detail.count).toBe(4)
+    const toast = screen.getByText('Premium Linen Shirt added to cart')
+    expect(toast.tagName).toBe('OUTPUT')
+    expect(toast.parentElement).toBe(document.body)
+    expect(toast.style.bottom).toBe('28px')
+    expect(toast.style.left).toBe('50%')
+    expect(toast.style.transform).toContain('translateX(-50%)')
     window.removeEventListener('storefront:cart-updated', onCartUpdate)
+  })
+
+  it('animates the product image into the cart, bounces the cart icon, and shows the toast', async () => {
+    setupApi({ favorites: { data: { products: [] } } })
+    const cartIcon = document.createElement('a')
+    cartIcon.className = 'cart-link'
+    cartIcon.getBoundingClientRect = () => ({ left: 400, top: 10, width: 40, height: 40 })
+    document.body.appendChild(cartIcon)
+
+    const previousAnimate = Element.prototype.animate
+    const animate = vi.fn(() => ({ set onfinish(callback) { callback() } }))
+    Object.defineProperty(Element.prototype, 'animate', { configurable: true, value: animate })
+    try {
+      renderDetail()
+      await screen.findByRole('heading', { name: product.name })
+      const mainImage = screen.getByRole('img', { name: product.name })
+      mainImage.getBoundingClientRect = () => ({ left: 20, top: 30, width: 300, height: 400 })
+      fireEvent.click(screen.getByRole('button', { name: 'Add to Cart' }))
+
+      expect(await screen.findByText('Premium Linen Shirt added to cart')).toBeTruthy()
+      expect(animate).toHaveBeenCalledWith(expect.arrayContaining([
+        expect.objectContaining({ transform: 'translate(0,0) scale(1) rotate(0deg)' }),
+      ]), expect.objectContaining({ duration: 700 }))
+      expect(cartIcon.classList.contains('cart-bounce')).toBe(true)
+      expect(document.querySelector('body > div[aria-hidden="true"]')).toBeNull()
+    } finally {
+      cartIcon.remove()
+      if (previousAnimate) Object.defineProperty(Element.prototype, 'animate', { configurable: true, value: previousAnimate })
+      else delete Element.prototype.animate
+    }
+  })
+
+  it('shows the toast if the browser cannot run the cart animation', async () => {
+    setupApi({ favorites: { data: { products: [] } } })
+    const cartIcon = document.createElement('a')
+    cartIcon.className = 'cart-link'
+    document.body.appendChild(cartIcon)
+    const previousAnimate = Element.prototype.animate
+    Object.defineProperty(Element.prototype, 'animate', { configurable: true, value: () => { throw new Error('Animation unavailable') } })
+    try {
+      renderDetail()
+      await screen.findByRole('heading', { name: product.name })
+      fireEvent.click(screen.getByRole('button', { name: 'Add to Cart' }))
+      expect(await screen.findByText('Premium Linen Shirt added to cart')).toBeTruthy()
+      expect(document.querySelector('body > div[aria-hidden="true"]')).toBeNull()
+      expect(cartIcon.classList.contains('cart-bounce')).toBe(false)
+    } finally {
+      cartIcon.remove()
+      if (previousAnimate) Object.defineProperty(Element.prototype, 'animate', { configurable: true, value: previousAnimate })
+      else delete Element.prototype.animate
+    }
   })
 
   it('uses a zero badge count when the cart response has no summary', async () => {
