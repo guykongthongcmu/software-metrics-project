@@ -117,6 +117,13 @@ class AdminSigninTests(TestCase):
             self.assertEqual(res.status_code, 400)
             self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
 
+    def test_lone_surrogate_400_not_500(self):
+        for body in ({'email': 'bo\ud800ss@example.com', 'password': 'adminpass1'},
+                     {'email': 'boss@example.com', 'password': 'admin\ud800pass1'}):
+            res = self.post(body)
+            self.assertEqual(res.status_code, 400)
+            self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
     def test_non_object_body_400(self):
         self.assertEqual(self.post(['a']).status_code, 400)
 
