@@ -1,3 +1,4 @@
+import hashlib
 import re
 
 from django.db import IntegrityError, transaction
@@ -13,11 +14,24 @@ SLUG_FALLBACK = 'category'
 
 def slugify(name):
     slug = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
-    return slug or SLUG_FALLBACK
+    if slug:
+        return slug
+    # no latin letters or digits, so keep the slug stable and distinct per name
+    digest = hashlib.sha1(name.lower().encode('utf-8')).hexdigest()[:8]
+    return f'{SLUG_FALLBACK}-{digest}'
 
 
 def parse_category_id(raw):
     return parse_id(raw, 'INVALID_CATEGORY_ID', 'categoryId must be a positive integer')
+
+
+def is_encodable(text):
+    # a lone surrogate parses from JSON but cannot be stored
+    try:
+        text.encode('utf-8')
+    except UnicodeEncodeError:
+        return False
+    return True
 
 
 def clean_name(body):
@@ -27,7 +41,7 @@ def clean_name(body):
     name = name.strip()
     if not name or len(name) > NAME_MAX:
         raise AdminError(400, 'VALIDATION_ERROR', f'categoryName must be 1 to {NAME_MAX} characters')
-    if '\x00' in name:
+    if '\x00' in name or not is_encodable(name):
         raise AdminError(400, 'VALIDATION_ERROR', 'categoryName contains invalid characters')
     return name
 
