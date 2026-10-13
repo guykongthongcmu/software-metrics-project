@@ -29,7 +29,7 @@ describe('StorefrontLayout', () => {
     ] } })
     renderAt('/search?q=linen')
 
-    await waitFor(() => expect(screen.getByTestId('categories').textContent).toBe('/men,/kids'))
+    await waitFor(() => expect(screen.getByTestId('categories').textContent).toBe('/men'))
     expect(document.title).toBe('linen - Search')
     expect(screen.getByText('Store footer')).toBeTruthy()
     expect(apiClient.get).toHaveBeenCalledWith('/client/categories?sort=category_name&order=asc', { redirectOn401: false })

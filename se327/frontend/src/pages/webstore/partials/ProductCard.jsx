@@ -9,11 +9,25 @@ const colorSwatches = {
 }
 const lightColors = new Set(['white', 'ivory', 'cream'])
 
-/** @param {{product: object}} props */
+/**
+ * @typedef {object} ProductCardProduct
+ * @property {number|string} productId
+ * @property {string} name
+ * @property {string} [image]
+ * @property {number|string} [price]
+ * @property {number|string|null} [originalPrice]
+ * @property {number|{type?: string, value?: number|string}|null} [discount]
+ * @property {string[]} [color]
+ * @property {string[]} [colors]
+ * @property {string|{name?: string}} [category]
+ * @property {boolean} [inStock]
+ */
+
+/** @param {{product: ProductCardProduct}} props */
 export default function ProductCard({ product }) {
   const { favoriteIds, toggleFavorite } = useFavorites()
   const currentFavorite = favoriteIds.has(Number(product.productId))
-  const discount = product.discount?.value ?? product.discount
+  const discount = typeof product.discount === 'object' ? product.discount?.value : product.discount
   const colors = product.color || product.colors || []
 
   function onToggleFavorite(event) {
