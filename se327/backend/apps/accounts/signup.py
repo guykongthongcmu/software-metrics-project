@@ -14,6 +14,8 @@ from .models import EmailVerificationToken, User
 
 EMAIL_REGEX = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
 MIN_PASSWORD_LENGTH = 8
+# column sizes from the User model
+FIELD_LIMITS = {'email': 255, 'first_name': 100, 'last_name': 100, 'phone_number': 30}
 TOKEN_BYTES = 32
 SIGNUP_FIELDS = ('email', 'password', 'first_name', 'last_name', 'DOB', 'phone_number')
 
@@ -86,6 +88,11 @@ def sign_up(body):
     missing = [name for name in SIGNUP_FIELDS if payload[name] in (None, '')]
     if missing:
         raise ApiError('MISSING_REQUIRED_FIELDS', 'missing required fields', 400, {'missingFields': missing})
+
+    too_long = [name for name, limit in FIELD_LIMITS.items()
+                if len(payload[name]) > limit or '\x00' in payload[name]]
+    if too_long:
+        raise ApiError('INVALID_FIELD_LENGTH', 'a field is too long or has invalid characters', 400, {'fields': too_long})
 
     check_email_format(payload['email'])
     if not isinstance(payload['password'], str) or len(payload['password']) < MIN_PASSWORD_LENGTH:

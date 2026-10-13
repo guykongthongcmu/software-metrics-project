@@ -152,6 +152,17 @@ class SignupTests(SignupBase):
         self.assertEqual(res.status_code, 400)
         self.assertEqual(res.json()['code'], 'INVALID_EMAIL_FORMAT')
 
+    def test_over_long_fields_are_a_400(self):
+        for field, value in (('first_name', 'a' * 101), ('phone_number', '1' * 31), ('last_name', 'bad\x00name')):
+            with self.subTest(field=field):
+                res = self.signup(**{field: value})
+                self.assertEqual(res.status_code, 400)
+                self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_over_long_email_is_a_400(self):
+        res = self.signup(email='a' * 250 + '@x.com')
+        self.assertEqual(res.status_code, 400)
+
     def test_password_too_short(self):
         res = self.signup(password='short12')
         self.assertEqual(res.status_code, 400)
