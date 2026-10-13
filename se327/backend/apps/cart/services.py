@@ -24,7 +24,7 @@ def parse_positive_int(raw, code, message):
         raise CartError(400, code, message)
     if isinstance(raw, str):
         raw = raw.strip()
-        if not raw.isdigit():
+        if not (raw.isascii() and raw.isdigit()):
             raise CartError(400, code, message)
         raw = int(raw)
     if not isinstance(raw, int) or raw <= 0:

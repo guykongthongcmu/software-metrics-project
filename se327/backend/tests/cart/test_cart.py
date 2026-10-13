@@ -206,12 +206,12 @@ class UpdateItemTests(CartTestCase):
         self.assertEqual(CartItem.objects.get().quantity, 1)
 
     def test_bad_quantity(self):
-        for value in (0, -1, 'a', None):
+        for value in (0, -1, 'a', None, '²'):
             res = self.put(self.item_id, value)
             self.assertEqual(res.json()['code'], 'INVALID_QUANTITY', value)
 
     def test_bad_item_id(self):
-        for value in ('abc', '0', '-3'):
+        for value in ('abc', '0', '-3', '²'):
             res = self.put(value, 1)
             self.assertEqual(res.status_code, 400)
             self.assertEqual(res.json()['code'], 'INVALID_ITEM_ID')
