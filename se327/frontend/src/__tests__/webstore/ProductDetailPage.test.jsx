@@ -227,7 +227,7 @@ describe('ProductDetailPage', () => {
       return detailRequest.promise
     })
     const view = renderDetail()
-    expect(screen.getAllByRole('status')[1].textContent).toContain('Loading product')
+    expect(screen.getByText('Loading product…')).toBeTruthy()
     view.unmount()
     detailRequest.resolve({ data: product })
     variantsRequest.resolve({ data: variants })
@@ -237,6 +237,7 @@ describe('ProductDetailPage', () => {
       detailRequest.promise, variantsRequest.promise, imagesRequest.promise, favoritesRequest.promise,
     ])
     await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByRole('heading', { name: product.name })).toBeNull()
   })
 
   it('ignores rejected requests after unmount', async () => {
@@ -254,6 +255,7 @@ describe('ProductDetailPage', () => {
     rejectFavorites(new Error('offline'))
     await Promise.allSettled([detailRequest, favoritesRequest])
     await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(screen.queryByRole('heading', { name: product.name })).toBeNull()
   })
 
   it('renders safe fallbacks for missing product image, options, description, and price', async () => {
@@ -317,7 +319,7 @@ describe('ProductDetailPage', () => {
     expect(await screen.findByText('Cart is unavailable')).toBeTruthy()
   })
 
-  it('shows the page error if a recommendation response is malformed', async () => {
+  it('keeps the product visible if the recommendation response is malformed', async () => {
     setupApi()
     apiClient.get.mockImplementation((path) => {
       if (path.includes('/recommendations')) return null
@@ -327,7 +329,8 @@ describe('ProductDetailPage', () => {
       return Promise.resolve({ data: product })
     })
     renderDetail()
-    expect(await screen.findByRole('alert')).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: product.name })).toBeTruthy()
+    expect(screen.queryByText('You May Also Like')).toBeNull()
   })
 
   it('shows a generic cart connection error for non-API failures and supports both accordions', async () => {

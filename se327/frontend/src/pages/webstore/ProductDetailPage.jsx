@@ -21,6 +21,54 @@ function unique(values) {
   return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))]
 }
 
+function initialVariantSelection(item, variants) {
+  const availableColors = unique(variants.map((entry) => entry.color))
+  const firstAvailableVariant = variants.find((entry) => Number(entry.stockQty) > 0)
+  const initialColor = firstAvailableVariant?.color || availableColors[0] || item.color?.[0] || ''
+  const initialSize = firstAvailableVariant?.size
+    || unique(variants.filter((entry) => entry.color === initialColor).map((entry) => entry.size))[0]
+    || item.size?.[0] || ''
+  return { color: initialColor, size: initialSize }
+}
+
+async function loadProductData(id) {
+  const query = '?lang=EN'
+  const [detailResult, variantResult, imageResult] = await Promise.allSettled([
+    apiClient.get(`/client/products/${encodeURIComponent(id)}${query}`, { redirectOn401: false }),
+    apiClient.get(`/client/products/${encodeURIComponent(id)}/variants${query}`, { redirectOn401: false }),
+    apiClient.get(`/client/products/${encodeURIComponent(id)}/images`, { redirectOn401: false }),
+  ])
+  if (detailResult.status !== 'fulfilled' || !detailResult.value?.data) {
+    throw new Error('Product details unavailable')
+  }
+
+  const item = detailResult.value.data
+  const variants = variantResult.status === 'fulfilled' && Array.isArray(variantResult.value?.data)
+    ? variantResult.value.data : []
+  const media = imageResult.status === 'fulfilled' && Array.isArray(imageResult.value?.data)
+    ? imageResult.value.data : []
+  const imageUrls = unique(media.map((entry) => entry.publicUrl).filter(Boolean))
+  const images = imageUrls.length ? imageUrls : [item.image].filter(Boolean)
+  const selection = initialVariantSelection(item, variants)
+  const params = new URLSearchParams({ lang: 'EN', limit: '4', excludeProductIds: String(item.productId) })
+  if (item.category?.slug) params.set('category', item.category.slug)
+
+  let recommendations = []
+  try {
+    const result = await apiClient.get(`/client/products/recommendations?${params}`, { redirectOn401: false })
+    const products = result?.data?.products
+    if (Array.isArray(products)) {
+      recommendations = products
+        .filter((entry) => Number(entry.productId) !== Number(item.productId))
+        .slice(0, 4)
+    }
+  } catch {
+    recommendations = []
+  }
+
+  return { item, variants, images, ...selection, recommendations }
+}
+
 function Accordion({ title, children }) {
   const [open, setOpen] = useState(false)
   return (
@@ -53,65 +101,37 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     let active = true
-    const query = `?lang=EN`
-    Promise.allSettled([
-      apiClient.get(`/client/products/${encodeURIComponent(id)}${query}`, { redirectOn401: false }),
-      apiClient.get(`/client/products/${encodeURIComponent(id)}/variants${query}`, { redirectOn401: false }),
-      apiClient.get(`/client/products/${encodeURIComponent(id)}/images`, { redirectOn401: false }),
-    ]).then(async ([detailResult, variantResult, imageResult]) => {
-      if (!active) return
-      if (detailResult.status !== 'fulfilled' || !detailResult.value?.data) {
-        setErrorId(id)
-        setError('This product could not be loaded. Please try again later.')
+    async function loadProduct() {
+      try {
+        const data = await loadProductData(id)
+        if (!active) return
+        setProduct(data.item)
+        setVariants(data.variants)
+        setImages(data.images)
+        setSelectedImage(data.images[0] || '')
+        setColor(data.color)
+        setSize(data.size)
+        setRecommendations(data.recommendations)
+        setError('')
+        setErrorId(null)
         setLoadedId(id)
-        return
-      }
-      const item = detailResult.value.data
-      setError('')
-      setErrorId(null)
-      const nextVariants = variantResult.status === 'fulfilled' && Array.isArray(variantResult.value?.data)
-        ? variantResult.value.data : []
-      const media = imageResult.status === 'fulfilled' && Array.isArray(imageResult.value?.data)
-        ? imageResult.value.data : []
-      const nextImages = unique(media.map((entry) => entry.publicUrl).filter(Boolean))
-      const urls = nextImages.length ? nextImages : [item.image].filter(Boolean)
-      setProduct(item)
-      setVariants(nextVariants)
-      setImages(urls)
-      setSelectedImage(urls[0] || '')
-      const availableColors = unique(nextVariants.map((entry) => entry.color))
-      const firstAvailableVariant = nextVariants.find((entry) => Number(entry.stockQty) > 0)
-      const initialColor = firstAvailableVariant?.color || availableColors[0] || item.color?.[0] || ''
-      const initialSize = firstAvailableVariant?.size
-        || unique(nextVariants.filter((entry) => entry.color === initialColor).map((entry) => entry.size))[0]
-        || item.size?.[0] || ''
-      setColor(initialColor)
-      setSize(initialSize)
-
-      const category = item.category?.slug
-      const params = new URLSearchParams({ lang: 'EN', limit: '4', excludeProductIds: String(item.productId) })
-      if (category) params.set('category', category)
-      const result = await apiClient.get(`/client/products/recommendations?${params}`, { redirectOn401: false }).catch(() => null)
-      if (active) {
-        const currentProductId = Number(item.productId)
-        const recommended = Array.isArray(result?.data?.products) ? result.data.products : []
-        setRecommendations(recommended
-          .filter((entry) => Number(entry.productId) !== currentProductId)
-          .slice(0, 4))
-      }
-      if (active) setLoadedId(id)
-    }).catch(() => {
-      if (active) {
+      } catch {
+        if (!active) return
         setErrorId(id)
         setError('This product could not be loaded. Please try again later.')
         setLoadedId(id)
       }
-    })
-    apiClient.get('/client/favorites?lang=EN', { redirectOn401: false })
-      .then((payload) => {
+    }
+    async function loadFavorite() {
+      try {
+        const payload = await apiClient.get('/client/favorites?lang=EN', { redirectOn401: false })
         if (active) setFavorite((payload?.data?.products || []).some((item) => Number(item.productId) === Number(id)))
-      })
-      .catch(() => { if (active) setFavorite(false) })
+      } catch {
+        if (active) setFavorite(false)
+      }
+    }
+    void loadProduct()
+    void loadFavorite()
     return () => { active = false }
   }, [id])
 
@@ -126,9 +146,12 @@ export default function ProductDetailPage() {
   const hasVariantCatalog = variants.length > 0
   const canAddToCart = Boolean(product?.inStock && (!hasVariantCatalog || (chosenVariant && variantStock > 0)))
   const displayedPrice = chosenVariant?.price ?? product?.price
-  const displayedOriginalPrice = chosenVariant
-    ? (Number(chosenVariant.compareAtPrice) > Number(chosenVariant.price) ? chosenVariant.compareAtPrice : null)
-    : product?.originalPrice
+  let displayedOriginalPrice = product?.originalPrice
+  if (chosenVariant) {
+    displayedOriginalPrice = Number(chosenVariant.compareAtPrice) > Number(chosenVariant.price)
+      ? chosenVariant.compareAtPrice
+      : null
+  }
   const quantityLimit = chosenVariant ? Math.min(10, Math.max(1, variantStock || 1)) : 10
 
   function selectColor(nextColor) {
@@ -179,11 +202,15 @@ export default function ProductDetailPage() {
     }
   }
 
-  if (loadedId !== id) return <main className="min-h-[55vh] bg-[#f5f0e8] px-5 py-12 text-sm text-[#777]" role="status">Loading product…</main>
+  if (loadedId !== id) return <output className="block min-h-[55vh] bg-[#f5f0e8] px-5 py-12 text-sm text-[#777]">Loading product…</output>
   if ((error && errorId === id) || !product) return <main className="min-h-[55vh] bg-[#f5f0e8] px-5 py-12"><p className="mx-auto max-w-6xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{errorId === id ? error : 'This product could not be loaded.'}</p><Link className="mx-auto mt-5 block max-w-6xl text-sm underline" to="/products">Back to products</Link></main>
 
   const category = product.category
   const imageList = images.length ? images : [product.image]
+  let addToCartLabel = 'Add to Cart'
+  if (!canAddToCart) addToCartLabel = 'Out of Stock'
+  else if (busy) addToCartLabel = 'Please wait…'
+  const favoriteLabel = favorite ? 'Remove from favorites' : 'Add to favorites'
   return (
     <main className="bg-[#f5f0e8] text-[#2a2520]">
       <div className="w-full px-3 md:px-4 lg:px-12">
@@ -228,8 +255,8 @@ export default function ProductDetailPage() {
                 <span aria-label="Quantity" className="grid w-[34px] place-items-center border-x border-[#e0dbd2] text-[0.82rem]">{quantity}</span>
                 <button aria-label="Increase quantity" className="w-[34px]" disabled={quantity >= quantityLimit} onClick={() => setQuantity((value) => Math.min(quantityLimit, value + 1))} type="button">+</button>
               </div>
-              <button className="h-[42px] flex-1 rounded-full bg-[#b89b6e] text-[0.7rem] uppercase tracking-[0.13em] text-white transition-colors hover:bg-[#a0855a] disabled:cursor-not-allowed disabled:bg-[#e0dbd2] disabled:text-[#999]" disabled={!canAddToCart || busy} onClick={() => { void addToCart() }} type="button">{canAddToCart ? (busy ? 'Please wait…' : 'Add to Cart') : 'Out of Stock'}</button>
-              <button aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={favorite} className={`grid h-[42px] w-[42px] shrink-0 place-items-center rounded-full border bg-white ${favorite ? 'border-[#b89b6e] text-[#b89b6e]' : 'border-[#e0dbd2] text-[#999]'}`} disabled={busy} onClick={() => { void toggleFavorite() }} type="button"><svg aria-hidden="true" className="h-4 w-4" fill={favorite ? 'currentColor' : 'none'} viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg></button>
+              <button className="h-[42px] flex-1 rounded-full bg-[#b89b6e] text-[0.7rem] uppercase tracking-[0.13em] text-white transition-colors hover:bg-[#a0855a] disabled:cursor-not-allowed disabled:bg-[#e0dbd2] disabled:text-[#999]" disabled={!canAddToCart || busy} onClick={() => { void addToCart() }} type="button">{addToCartLabel}</button>
+              <button aria-label={favoriteLabel} aria-pressed={favorite} className={`grid h-[42px] w-[42px] shrink-0 place-items-center rounded-full border bg-white ${favorite ? 'border-[#b89b6e] text-[#b89b6e]' : 'border-[#e0dbd2] text-[#999]'}`} disabled={busy} onClick={() => { void toggleFavorite() }} type="button"><svg aria-hidden="true" className="h-4 w-4" fill={favorite ? 'currentColor' : 'none'} viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg></button>
             </div>
             {cartMessage && <p aria-live="polite" className="mb-3 text-sm text-[#776242]">{cartMessage}</p>}
             <div className="mt-2 border-t border-[#e0dbd2]"><Accordion title="Details and Care">{product.detail || 'Please refer to the product label for care instructions.'}</Accordion><Accordion title="Delivery and Returns">{deliveryText}</Accordion></div>
