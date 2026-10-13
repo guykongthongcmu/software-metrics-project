@@ -120,7 +120,7 @@ export default function CategoryLandingPage({ category }) {
       const visible = await categoryIsVisible(slug)
       if (!active) return
       if (!visible) {
-        navigate('/products', { replace: true })
+        await navigate('/products', { replace: true })
         return
       }
 
