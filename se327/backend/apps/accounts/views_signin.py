@@ -31,6 +31,25 @@ class UserSigninView(APIView):
         return response
 
 
+class AdminSigninView(APIView):
+    def post(self, request):
+        try:
+            admin = signin.admin_sign_in(body_of(request))
+        except ApiError as exc:
+            return error_from(exc)
+        token, expires = create_session(admin, Session.SubjectType.ADMIN)
+        response = success_response('signed in successfully', {
+            'role': 'admin',
+            'admin_id': admin.admin_id,
+            'email': admin.email,
+            'name': admin.display_name,
+            'redirectTo': '/dashboard',
+            'session': {'expiresAt': expires.isoformat()},
+        })
+        set_session_cookie(response, token, expires)
+        return response
+
+
 class UserProfileView(APIView):
     permission_classes = [IsCustomer]
 

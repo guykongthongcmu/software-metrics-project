@@ -2,7 +2,7 @@ from functools import lru_cache
 
 from django.contrib.auth.hashers import check_password, make_password
 
-from .models import User
+from .models import Admin, User
 from .signup import FIELD_LIMITS, ApiError, check_email_format, clean_email
 
 MAX_PASSWORD_LENGTH = 1000
@@ -67,3 +67,11 @@ def customer_profile(user):
         'email_verified': user.email_verified_at is not None,
         'created_at': user.created_at.isoformat(),
     }
+
+
+def admin_sign_in(body):
+    admin = authenticate(Admin, body)
+    # checked after the password so the status is not shown to someone without it
+    if not admin.is_active:
+        raise ApiError('ACCOUNT_INACTIVE', 'admin account is inactive', 403)
+    return admin
