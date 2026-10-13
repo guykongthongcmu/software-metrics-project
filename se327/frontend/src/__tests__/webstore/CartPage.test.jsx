@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { ApiError, apiClient } from '../../lib/apiClient.js'
 import CartPage from '../../pages/webstore/CartPage.jsx'
+import { FavoritesProvider } from '../../pages/webstore/partials/FavoritesContext.jsx'
 
 vi.mock('../../lib/apiClient.js', async (importOriginal) => {
   const actual = await importOriginal()
@@ -47,7 +48,7 @@ function renderCart() {
     <MemoryRouter initialEntries={['/cart']}>
       <LocationProbe />
       <Routes>
-        <Route path="/cart" element={<CartPage />} />
+        <Route path="/cart" element={<FavoritesProvider><CartPage /></FavoritesProvider>} />
         <Route path="/login" element={<p>Login page</p>} />
         <Route path="/checkout" element={<p>Checkout page</p>} />
       </Routes>
@@ -98,6 +99,31 @@ describe('CartPage', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/client/cart?lang=EN', { redirectOn401: false })
     expect(apiClient.get).toHaveBeenCalledWith('/client/products/recommendations?limit=4&context=cart&lang=EN', { redirectOn401: false })
     window.removeEventListener('storefront:cart-updated', onCartUpdate)
+  })
+
+  it('keeps heart, remove, and price columns aligned across different price widths', async () => {
+    const higherPricedItem = {
+      ...secondItem,
+      itemId: 10,
+      productId: 61,
+      name: 'Leather Weekender',
+      price: 1980,
+      originalPrice: 2450,
+    }
+    setupApi({ cart: { data: { items: [firstItem, higherPricedItem], cartSummary: { subtotal: 2160, totalItems: 3 } } } })
+    renderCart()
+
+    await screen.findByRole('link', { name: 'View Leather Weekender' })
+    const rows = screen.getAllByRole('article')
+    expect(rows).toHaveLength(2)
+
+    rows.forEach((row) => {
+      expect(row.children[2].className).toContain('w-[72px]')
+      expect(row.children[2].className).toContain('max-[575px]:w-16')
+      expect(row.children[3].className).toContain('w-[110px]')
+      expect(row.children[3].className).toContain('max-[575px]:w-20')
+    })
+    expect(screen.getByText('$1980.00')).toBeTruthy()
   })
 
   it('uses safe fallbacks for malformed item fields and invalid prices', async () => {
@@ -229,15 +255,18 @@ describe('CartPage', () => {
   it('ignores pending cart and recommendation responses after unmount', async () => {
     let resolveCart
     let resolveRecs
+    let resolveFavorites
     apiClient.get.mockImplementation((path) => new Promise((resolve) => {
-      if (path.includes('/recommendations')) resolveRecs = resolve
+      if (path.includes('/favorites')) resolveFavorites = resolve
+      else if (path.includes('/recommendations')) resolveRecs = resolve
       else resolveCart = resolve
     }))
     const view = renderCart()
     view.unmount()
     resolveCart({ data: { items: [firstItem], cartSummary: { subtotal: 90, totalItems: 1 } } })
     resolveRecs({ data: { products: recommendations } })
-    await Promise.all([apiClient.get.mock.results[0].value, apiClient.get.mock.results[1].value])
+    resolveFavorites({ data: { products: [] } })
+    await Promise.all(apiClient.get.mock.results.map(({ value }) => value))
     expect(screen.queryByRole('heading', { name: 'Your cart' })).toBeNull()
   })
 
