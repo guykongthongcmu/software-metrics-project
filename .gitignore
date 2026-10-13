@@ -69,3 +69,6 @@ __pycache__/
 # Coverage reports
 .coverage
 coverage.xml
+
+# Uploaded campaign banners
+se327/backend/media/
