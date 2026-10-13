@@ -13,6 +13,11 @@ import ForgotPasswordPage from './pages/account/ForgotPasswordPage.jsx'
 import ForgotPasswordSuccessPage from './pages/account/ForgotPasswordSuccessPage.jsx'
 import ResetPasswordPage from './pages/account/ResetPasswordPage.jsx'
 import ProfilePage from './pages/account/ProfilePage.jsx'
+import HomePage from './pages/webstore/HomePage.jsx'
+import AllProductsPage from './pages/webstore/AllProductsPage.jsx'
+import ProductDetailPage from './pages/webstore/ProductDetailPage.jsx'
+import SearchPage from './pages/webstore/SearchPage.jsx'
+import CartPage from './pages/webstore/CartPage.jsx'
 
 function getAccountPage(route) {
   switch (route.path) {
@@ -27,11 +32,6 @@ function getAccountPage(route) {
     default: return <StorefrontPlaceholder title={route.title} />
   }
 }
-import HomePage from './pages/webstore/HomePage.jsx'
-import AllProductsPage from './pages/webstore/AllProductsPage.jsx'
-import ProductDetailPage from './pages/webstore/ProductDetailPage.jsx'
-import SearchPage from './pages/webstore/SearchPage.jsx'
-
 function StorefrontPlaceholder({ title }) {
   const location = useLocation()
   const categoryRoute = storefrontRoutes.find((entry) => entry.path === location.pathname)
@@ -62,6 +62,7 @@ function getStorefrontPage(route) {
   if (route.path === '/contact') return <ContactPage />
   if (route.path === '/search') return <SearchPage />
   if (route.path === '/products/:id') return <ProductDetailPage />
+  if (route.path === '/cart') return <CartPage />
   return <StorefrontPlaceholder title={route.title} />
 }
 

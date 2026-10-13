@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { apiClient } from '../../lib/apiClient.js'
 import SignupDatePicker from './SignupDatePicker.jsx'
 import SignupProgress from './SignupProgress.jsx'
 
@@ -22,8 +23,10 @@ export default function SignupInfoPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const email = new URLSearchParams(location.search).get('email') || ''
-  const [form, setForm] = useState({ name: '', surname: '', dob: '', password: '', passwordConfirm: '', mobile: '', terms: false })
+  const [form, setForm] = useState({ name: '', surname: '', dob: '', password: '', passwordConfirm: '', countryCode: '+66', mobile: '', terms: false })
   const [visiblePasswords, setVisiblePasswords] = useState({ password: false, passwordConfirm: false })
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const mobileDigits = form.mobile.replace(/[\s-]/g, '')
   const mobileIsValid = mobileDigits.length === 0 || /^\d+$/.test(mobileDigits)
   const passwordsMatch = form.password === form.passwordConfirm
@@ -37,12 +40,30 @@ export default function SignupInfoPage() {
     setVisiblePasswords((current) => ({ ...current, [field]: !current[field] }))
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
+    setError('')
     const dateInput = event.currentTarget.elements.namedItem('dob')
     dateInput.setCustomValidity(form.dob && !isValidDateOfBirth(form.dob) ? 'Please enter a valid date of birth.' : '')
     if (!email || !form.name || !form.surname || !isValidDateOfBirth(form.dob) || !canContinue) return
-    void navigate('/auth/signup-confirm')
+    const [, day, month, year] = form.dob.match(/^(\d{2})\/(\d{2})\/(\d{4})$/) || []
+    const phoneDigits = mobileDigits.replace(/^0/, '')
+    setIsSubmitting(true)
+    try {
+      await apiClient.post('/auth/signup', {
+        email,
+        password: form.password,
+        first_name: form.name.trim(),
+        last_name: form.surname.trim(),
+        DOB: `${year}-${month}-${day}`,
+        phone_number: `${form.countryCode}${phoneDigits}`,
+      })
+      void navigate('/auth/signup-confirm')
+    } catch (requestError) {
+      setError(requestError?.message || 'Could not create your account. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -57,6 +78,7 @@ export default function SignupInfoPage() {
 
         <form className="signup-form signup-info-form" onSubmit={handleSubmit}>
           <input name="email" type="hidden" value={email} />
+          {error && <p className="signup-error-text visible" role="alert">{error}</p>}
 
           <div className="signup-form-row">
             <div className="signup-form-group">
@@ -97,7 +119,7 @@ export default function SignupInfoPage() {
             <div className="signup-mobile-group">
               <div className="signup-mobile-inputs">
                 <div className="signup-country-code-wrapper">
-                  <select aria-label="Country code" name="country_code" defaultValue="+66"><option value="+66">+66</option></select>
+                <select aria-label="Country code" name="country_code" onChange={(event) => update('countryCode', event.target.value)} value={form.countryCode}><option value="+66">+66</option></select>
                 </div>
                 <input className={mobileIsValid ? '' : 'error'} id="signup-mobile" name="mobile" onChange={(event) => update('mobile', event.target.value)} placeholder="XXX - XXX - XXXX" required type="tel" value={form.mobile} />
               </div>
@@ -113,7 +135,7 @@ export default function SignupInfoPage() {
             </label>
           </div>
 
-          <button className="signup-next-button signup-continue-button" disabled={!canContinue} id="continue-btn" type="submit">CONTINUE</button>
+          <button className="signup-next-button signup-continue-button" disabled={!canContinue || isSubmitting} id="continue-btn" type="submit">{isSubmitting ? 'CREATING…' : 'CONTINUE'}</button>
         </form>
 
         <SignupLoginLink />

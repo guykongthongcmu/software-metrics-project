@@ -1,9 +1,13 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { apiClient } from '../../lib/apiClient.js'
 import SignupPage from '../../pages/account/SignupPage.jsx'
 
+vi.mock('../../lib/apiClient.js', () => ({ apiClient: { post: vi.fn() } }))
+
 afterEach(cleanup)
+beforeEach(() => apiClient.post.mockReset())
 
 function CurrentAddress() {
   const location = useLocation()
@@ -34,11 +38,14 @@ describe('SignupPage', () => {
     expect(document.querySelectorAll('.signup-progress-step.active')).toHaveLength(1)
   })
 
-  it('continues to the information step with the email in the query string', () => {
+  it('checks email availability before continuing to the information step', async () => {
+    apiClient.post.mockResolvedValue({ data: { email: 'member@example.com' } })
     renderSignup()
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'member@example.com' } })
     fireEvent.submit(screen.getByRole('button', { name: 'NEXT' }).closest('form'))
 
-    expect(screen.getByTestId('address').textContent).toBe('/auth/signup-info?email=member%40example.com')
+    expect(apiClient.post).toHaveBeenCalledWith('/auth/check-email', { email: 'member@example.com' })
+    await waitFor(() => expect(screen.getByTestId('address').textContent).toBe('/auth/signup-info?email=member%40example.com'))
   })
+
 })

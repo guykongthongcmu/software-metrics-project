@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
-import { createMockPasswordResetToken, isEndpointUnavailable } from './mockAccountSession.js'
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate()
@@ -17,16 +16,6 @@ export default function ForgotPasswordPage() {
       await apiClient.post('/auth/forgot-password', { email: email.trim() })
       void navigate('/forgot-password-success')
     } catch (requestError) {
-      if (isEndpointUnavailable(requestError)) {
-        try {
-          const token = createMockPasswordResetToken(email)
-          void navigate(`/forgot-password-success?demo=1&token=${encodeURIComponent(token)}`)
-          return
-        } catch {
-          setError('Could not create a demo reset link in this browser.')
-          return
-        }
-      }
       setError(requestError?.message || 'Could not connect to server')
     } finally {
       setIsSubmitting(false)

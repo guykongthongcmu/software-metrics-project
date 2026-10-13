@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
-import { endMockAccountSession, getMockAccountSession, isEndpointUnavailable, isFrontendSignedOut, markFrontendSignedOut } from './mockAccountSession.js'
 
 function formatProfileDate(value) {
   if (!value) return 'Not provided'
@@ -15,9 +14,10 @@ function formatProfileDate(value) {
 
 export default function ProfilePage() {
   const navigate = useNavigate()
-  const [profile, setProfile] = useState(() => isFrontendSignedOut() ? null : getMockAccountSession()?.profile || null)
+  const [profile, setProfile] = useState(null)
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(() => !isFrontendSignedOut() && !getMockAccountSession()?.profile)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSigningOut, setIsSigningOut] = useState(false)
   const initials = useMemo(() => (profile?.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'CC', [profile?.name])
   const emailVerified = Boolean(profile?.email_verified)
   const joinedLabel = formatProfileDate(profile?.created_at)
@@ -28,28 +28,13 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let active = true
-    if (isFrontendSignedOut()) {
-      void navigate('/login', { replace: true })
-      return () => { active = false }
-    }
-    const demoSession = getMockAccountSession()
-    if (demoSession?.profile) return () => { active = false }
     void apiClient.get('/auth/user/profile', { redirectOn401: false })
       .then((result) => {
         if (active) setProfile(result?.data || null)
       })
       .catch((requestError) => {
         if (!active) return
-        if (isEndpointUnavailable(requestError)) {
-          void navigate('/login', { replace: true })
-          return
-        }
         if (requestError?.status === 401 || requestError?.code === 'UNAUTHORIZED') {
-          const currentDemoSession = getMockAccountSession()
-          if (currentDemoSession?.profile) {
-            setProfile(currentDemoSession.profile)
-            return
-          }
           void navigate('/login', { replace: true })
           return
         }
@@ -59,14 +44,24 @@ export default function ProfilePage() {
     return () => { active = false }
   }, [navigate])
 
-  function handleSignOut() {
-    endMockAccountSession()
-    markFrontendSignedOut()
-    window.dispatchEvent(new Event('storefront:refresh-header'))
-    void navigate('/', { replace: true })
+  async function handleSignOut() {
+    setError('')
+    setIsSigningOut(true)
+    try {
+      await apiClient.post('/auth/logout', {}, { redirectOn401: false })
+      window.dispatchEvent(new Event('storefront:refresh-header'))
+      void navigate('/', { replace: true })
+    } catch (requestError) {
+      if (requestError?.status === 401 || requestError?.code === 'UNAUTHORIZED') {
+        void navigate('/login', { replace: true })
+        return
+      }
+      setError(requestError?.message || 'Could not sign out. Please try again.')
+    } finally {
+      setIsSigningOut(false)
+    }
   }
 
-  if (isFrontendSignedOut()) return null
   if (isLoading) return <main aria-busy="true" className="flex flex-1 items-center justify-center px-6 py-16 text-sm text-muted">Loading your profile…</main>
   if (!profile) {
     return <main className="flex flex-1 items-center justify-center px-6 py-16"><p className="text-sm text-[#c0392b]" role="alert">{error || 'Could not load your profile'}</p></main>
@@ -89,7 +84,7 @@ export default function ProfilePage() {
             <ProfileStat label="Phone" value={profilePhone} />
             <ProfileStat label="Birthday" value={birthdayLabel} />
           </div>
-          <button className="mt-6 w-full rounded-2xl bg-[#1f1a17] px-[18px] py-3.5 font-semibold tracking-[0.04em] text-white transition duration-200 hover:-translate-y-px hover:bg-[#322821]" onClick={handleSignOut} type="button">Logout</button>
+          <button className="mt-6 w-full rounded-2xl bg-[#1f1a17] px-[18px] py-3.5 font-semibold tracking-[0.04em] text-white transition duration-200 hover:-translate-y-px hover:bg-[#322821] disabled:cursor-wait disabled:opacity-60" disabled={isSigningOut} onClick={() => { void handleSignOut() }} type="button">{isSigningOut ? 'Signing out…' : 'Logout'}</button>
         </aside>
 
         <section className="rounded-[28px] border border-[#8c7e731f] bg-[#fffdfa] p-7 shadow-[0_18px_36px_rgba(111,89,72,0.08)] max-[640px]:rounded-[22px] max-[640px]:p-[22px]">

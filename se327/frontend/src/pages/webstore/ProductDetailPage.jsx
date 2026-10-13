@@ -1,15 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiError, apiClient } from '../../lib/apiClient.js'
 import ProductCard from './partials/ProductCard.jsx'
-
-const colorSwatches = {
-  white: '#FFFFFF', black: '#222222', grey: '#888888', gray: '#888888', navy: '#1B2A4A',
-  blue: '#4A6FA5', red: '#C0392B', green: '#2E7D32', beige: '#E8DCC8', khaki: '#C3B091',
-  brown: '#795548', pink: '#F06292', purple: '#7B1FA2', yellow: '#F9A825', orange: '#E65100',
-  cream: '#FFFDD0', ivory: '#FFFFF0', natural: '#E8DCC8',
-}
-const lightColors = new Set(['white', 'ivory', 'cream'])
+import { getColorSwatch, isLightColor } from './partials/colorSwatches.js'
 const deliveryText = 'Free standard delivery on orders over $100. Returns accepted within 30 days.'
 
 function money(value) {
@@ -35,6 +29,49 @@ function getCartButtonLabel(canAddToCart, busy) {
   if (!canAddToCart) return 'Out of Stock'
   if (busy) return 'Please wait…'
   return 'Add to Cart'
+}
+
+function flyToCart(originElement, onComplete) {
+  const cartIcon = document.querySelector('.cart-link')
+  if (!cartIcon || !originElement) {
+    onComplete()
+    return
+  }
+
+  const origin = originElement.getBoundingClientRect()
+  const target = cartIcon.getBoundingClientRect()
+  const fabric = document.createElement('div')
+  fabric.setAttribute('aria-hidden', 'true')
+  fabric.innerHTML = '<svg viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg" width="40" height="50"><rect x="4" y="2" width="32" height="42" rx="3" fill="#c4b49a" opacity="0.9"/><line x1="4" y1="10" x2="36" y2="10" stroke="#a09070" stroke-width="1.5"/><line x1="4" y1="18" x2="36" y2="18" stroke="#a09070" stroke-width="1"/><line x1="4" y1="26" x2="36" y2="26" stroke="#a09070" stroke-width="1"/><line x1="14" y1="2" x2="14" y2="44" stroke="#a09070" stroke-width="0.8" opacity="0.5"/><line x1="26" y1="2" x2="26" y2="44" stroke="#a09070" stroke-width="0.8" opacity="0.5"/></svg>'
+
+  const startX = origin.left + origin.width / 2 - 20
+  const startY = origin.top + origin.height / 2 - 25
+  const endX = target.left + target.width / 2 - 20
+  const endY = target.top + target.height / 2 - 25
+  const middleX = (startX + endX) / 2 - 40
+  const middleY = Math.min(startY, endY) - 80
+  Object.assign(fabric.style, {
+    position: 'fixed', left: `${startX}px`, top: `${startY}px`, width: '40px', height: '50px',
+    zIndex: '9999', pointerEvents: 'none', transformOrigin: 'center center',
+  })
+  document.body.appendChild(fabric)
+
+  try {
+    const animation = fabric.animate([
+      { transform: 'translate(0,0) scale(1) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${middleX - startX}px,${middleY - startY}px) scale(0.9) rotate(-15deg)`, opacity: 1, offset: 0.45 },
+      { transform: `translate(${endX - startX}px,${endY - startY}px) scale(0.2) rotate(10deg)`, opacity: 0 },
+    ], { duration: 700, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'forwards' })
+    animation.onfinish = () => {
+      fabric.remove()
+      cartIcon.classList.add('cart-bounce')
+      window.setTimeout(() => cartIcon.classList.remove('cart-bounce'), 400)
+      onComplete()
+    }
+  } catch {
+    fabric.remove()
+    onComplete()
+  }
 }
 
 function initialVariantSelection(item, variants) {
@@ -104,9 +141,8 @@ function VariantSelectors({ colors, variants, color, sizes, size, selectColor, s
       <p className="mb-[7px] text-[0.62rem] uppercase tracking-[0.12em] text-[#999]">COLOR: <strong className="text-[#2a2520]">{color}</strong></p>
       <div aria-label="Available colors" className="mb-4 flex gap-[7px]">
         {colors.map((entry) => {
-          const key = entry.toLowerCase()
           const colorHasStock = !hasVariantCatalog || variants.some((variant) => variant.color === entry && Number(variant.stockQty) > 0)
-          return <button aria-label={`${entry}${colorHasStock ? '' : ', out of stock'}`} aria-pressed={entry === color} className={`h-6 w-6 rounded-full border-2 transition-transform ${entry === color ? 'scale-110 border-[#b89b6e]' : 'border-transparent hover:scale-110'} disabled:cursor-not-allowed disabled:opacity-40`} disabled={!colorHasStock} key={entry} onClick={() => selectColor(entry)} style={{ backgroundColor: colorSwatches[key] || '#ccc', boxShadow: lightColors.has(key) ? 'inset 0 0 0 1px #bbb' : undefined }} title={colorHasStock ? entry : `${entry} — Out of Stock`} type="button" />
+          return <button aria-label={`${entry}${colorHasStock ? '' : ', out of stock'}`} aria-pressed={entry === color} className={`h-6 w-6 rounded-full border-2 transition-transform ${entry === color ? 'scale-110 border-[#b89b6e]' : 'border-transparent hover:scale-110'} disabled:cursor-not-allowed disabled:opacity-40`} disabled={!colorHasStock} key={entry} onClick={() => selectColor(entry)} style={{ backgroundColor: getColorSwatch(entry), boxShadow: isLightColor(entry) ? 'inset 0 0 0 1px #bbb' : undefined }} title={colorHasStock ? entry : `${entry} — Out of Stock`} type="button" />
         })}
       </div>
 
@@ -118,6 +154,42 @@ function VariantSelectors({ colors, variants, color, sizes, size, selectColor, s
         })}
       </div>
     </>
+  )
+}
+
+function CartToast({ message, onDismiss }) {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    let firstFrame = 0
+    let secondFrame = 0
+    firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => setVisible(true))
+    })
+    const hideTimer = window.setTimeout(() => setVisible(false), 2500)
+    const dismissTimer = window.setTimeout(() => onDismiss(null), 2850)
+    return () => {
+      window.cancelAnimationFrame(firstFrame)
+      window.cancelAnimationFrame(secondFrame)
+      window.clearTimeout(hideTimer)
+      window.clearTimeout(dismissTimer)
+    }
+  }, [message, onDismiss])
+
+  return createPortal(
+    <output
+      aria-live="polite"
+      className="pointer-events-none fixed z-[9998] max-w-[calc(100vw-2rem)] rounded-full bg-[#2a2520] px-[22px] py-2.5 text-center text-[0.78rem] tracking-[0.06em] text-white"
+      style={{
+        bottom: '28px',
+        left: '50%',
+        opacity: visible ? 1 : 0,
+        transform: `translateX(-50%) translateY(${visible ? '0' : '20px'})`,
+        transition: 'opacity .3s, transform .3s',
+      }}
+    >
+      {message}
+    </output>,
+    document.body,
   )
 }
 
@@ -137,6 +209,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1)
   const [favorite, setFavorite] = useState(false)
   const [cartMessage, setCartMessage] = useState('')
+  const [toast, setToast] = useState(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -237,17 +310,19 @@ export default function ProductDetailPage() {
       }, { redirectOn401: false })
       const totalItems = Number(result?.data?.cartSummary?.totalItems || 0)
       window.dispatchEvent(new CustomEvent('storefront:cart-updated', { detail: { count: totalItems } }))
-      setCartMessage(`${product.name} added to cart`)
+      flyToCart(document.getElementById('pdMainImg'), () => {
+        setToast((current) => ({ id: (current?.id || 0) + 1, message: `${product.name} added to cart` }))
+      })
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
-      else setCartMessage(requestError instanceof ApiError ? requestError.message : 'Could not connect to server.')
+      else setToast((current) => ({ id: (current?.id || 0) + 1, message: requestError instanceof ApiError ? requestError.message : 'Could not connect to server.' }))
     } finally {
       setBusy(false)
     }
   }
 
   function handleAddToCart() {
-    addToCart().catch(() => setCartMessage('Could not connect to server.'))
+    addToCart().catch(() => setToast((current) => ({ id: (current?.id || 0) + 1, message: 'Could not connect to server.' })))
   }
 
   function handleToggleFavorite() {
@@ -275,7 +350,7 @@ export default function ProductDetailPage() {
             <div className="flex w-14 shrink-0 flex-col gap-1.5 overflow-y-auto max-[767px]:w-11 max-[575px]:w-9">
               {imageList.map((image, index) => <button aria-label={`Show image ${index + 1}`} aria-pressed={selectedImage === image} className={`h-[68px] w-14 shrink-0 border-2 bg-[#edeae3] p-1 transition-opacity max-[767px]:h-[54px] max-[767px]:w-11 max-[575px]:h-[44px] max-[575px]:w-9 ${selectedImage === image ? 'border-[#b89b6e] opacity-100' : 'border-transparent opacity-60 hover:opacity-90'}`} key={`${image}-${index}`} onClick={() => setSelectedImage(image)} type="button"><img alt="" className="h-full w-full object-contain" loading="lazy" src={image} /></button>)}
             </div>
-            <div className="flex min-w-0 flex-1 items-center justify-center overflow-hidden bg-[#edeae3] p-[clamp(12px,2vw,24px)]"><img alt={product.name} className="h-full w-full object-contain transition-opacity" src={selectedImage || product.image} /></div>
+            <div className="flex min-w-0 flex-1 items-center justify-center overflow-hidden bg-[#edeae3] p-[clamp(12px,2vw,24px)]"><img alt={product.name} className="h-full w-full object-contain transition-opacity" id="pdMainImg" src={selectedImage || product.image} /></div>
           </section>
 
           <section className="min-[992px]:translate-x-3 min-[992px]:pl-6 min-[992px]:pr-1 max-[991px]:mt-5">
@@ -295,6 +370,7 @@ export default function ProductDetailPage() {
               <button aria-label={favoriteLabel} aria-pressed={favorite} className={`grid h-[42px] w-[42px] shrink-0 place-items-center rounded-full border bg-white ${favorite ? 'border-[#b89b6e] text-[#b89b6e]' : 'border-[#e0dbd2] text-[#999]'}`} disabled={busy} onClick={handleToggleFavorite} type="button"><svg aria-hidden="true" className="h-4 w-4" fill={favorite ? 'currentColor' : 'none'} viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg></button>
             </div>
             {cartMessage && <p aria-live="polite" className="mb-3 text-sm text-[#776242]">{cartMessage}</p>}
+            {toast && <CartToast key={toast.id} message={toast.message} onDismiss={setToast} />}
             <div className="mt-2 border-t border-[#e0dbd2]"><Accordion title="Details and Care">{product.detail || 'Please refer to the product label for care instructions.'}</Accordion><Accordion title="Delivery and Returns">{deliveryText}</Accordion></div>
           </section>
         </div>

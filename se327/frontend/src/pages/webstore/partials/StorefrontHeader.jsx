@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { apiClient } from '../../../lib/apiClient.js'
-import { getMockAccountSession, isEndpointUnavailable, isFrontendSignedOut } from '../../account/mockAccountSession.js'
 import CategoryMenu from './CategoryMenu.jsx'
 
 const iconPaths = {
@@ -14,7 +13,7 @@ const iconPaths = {
 /** @param {{label: string, to: string, kind: string, count?: number}} props */
 function IconLink({ label, to, kind, count }) {
   return (
-    <Link aria-label={label} className="relative grid h-10 w-10 place-items-center text-stone-900 transition-colors hover:text-stone-500" to={to}>
+    <Link aria-label={label} className={`relative grid h-10 w-10 place-items-center text-stone-900 transition-colors hover:text-stone-500 ${kind === 'cart' ? 'cart-link' : ''}`} to={to}>
       <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.55" viewBox="0 0 24 24">{iconPaths[kind]}</svg>
       {count !== undefined && <span aria-label={`${count} ${label.toLowerCase()}`} className="absolute -right-2.5 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-medium leading-none text-white">{count}</span>}
     </Link>
@@ -69,26 +68,14 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
   useEffect(() => {
     let active = true
     const loadHeaderData = async () => {
-const demoSession = getMockAccountSession()
-const frontendSignedOut = isFrontendSignedOut()
-
-const [profileResult, cartResult, favoritesResult] = await Promise.allSettled([
-  demoSession
-    ? Promise.resolve({ data: demoSession.profile })
-    : frontendSignedOut
-      ? Promise.resolve(null)
-      : apiClient.get('/auth/user/profile', { redirectOn401: false }),
-  apiClient.get('/client/cart?lang=EN', { redirectOn401: false }),
-  apiClient.get('/client/favorites?lang=EN', { redirectOn401: false }),
-])
+      const [profileResult, cartResult, favoritesResult] = await Promise.allSettled([
+        apiClient.get('/auth/user/profile', { redirectOn401: false }),
+        apiClient.get('/client/cart?lang=EN', { redirectOn401: false }),
+        apiClient.get('/client/favorites?lang=EN', { redirectOn401: false }),
+      ])
       if (!active) return
-      const profileError = profileResult.status === 'rejected' ? profileResult.reason : null
-      const canUseDemoProfile = isEndpointUnavailable(profileError)
-        || profileError?.status === 401
-        || profileError?.code === 'UNAUTHORIZED'
-      const demoProfile = canUseDemoProfile ? getMockAccountSession()?.profile : null
       const headerData = {
-        user: isFrontendSignedOut() ? null : profileResult.status === 'fulfilled' ? profileResult.value?.data || null : demoProfile || null,
+        user: profileResult.status === 'fulfilled' ? profileResult.value?.data || null : null,
         cartCount: cartResult.status === 'fulfilled' ? Number(cartResult.value?.data?.cartSummary?.totalItems || 0) : 0,
         favoriteCount: favoritesResult.status === 'fulfilled' ? Number(favoritesResult.value?.data?.favoritesCount || 0) : 0,
       }

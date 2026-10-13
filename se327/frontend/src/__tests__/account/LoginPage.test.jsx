@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
-import { getMockAccountSession } from '../../pages/account/mockAccountSession.js'
 import LoginPage from '../../pages/account/LoginPage.jsx'
 
 vi.mock('../../lib/apiClient.js', () => ({ apiClient: { post: vi.fn() } }))
@@ -77,23 +76,22 @@ describe('LoginPage', () => {
     expect((await screen.findByRole('alert')).textContent).toBe(message)
   })
 
-  it('starts a browser demo session when the sign-in endpoint is unavailable', async () => {
+  it('does not create a local session when the sign-in endpoint is unavailable', async () => {
     apiClient.post.mockRejectedValue({ status: 404, code: 'NOT_FOUND' })
     renderLogin()
     fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: ' Demo@Example.com ' } })
     fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'password123' } })
     submitLogin()
-    await waitFor(() => expect(screen.getByText('Storefront home')).toBeTruthy())
-    expect(getMockAccountSession().profile.email).toBe('demo@example.com')
+    expect((await screen.findByRole('alert')).textContent).toBe('Sign in failed. Please try again.')
+    expect(screen.queryByText('Storefront home')).toBeNull()
   })
 
-  it('accepts only safe internal redirect paths and displays demo reset status', async () => {
+  it('accepts only safe internal redirect paths', async () => {
     apiClient.post.mockResolvedValue({ data: { redirectTo: '//example.com' } })
-    render(<MemoryRouter initialEntries={['/login?reset=demo']}><Routes>
+    render(<MemoryRouter initialEntries={['/login']}><Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<p>Storefront home</p>} />
     </Routes></MemoryRouter>)
-    expect(screen.getByRole('status').textContent).toBe('Demo password reset complete.')
     fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: 'member@example.com' } })
     fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'password123' } })
     submitLogin()
