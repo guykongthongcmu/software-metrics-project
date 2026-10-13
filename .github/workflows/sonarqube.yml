@@ -44,7 +44,7 @@ jobs:
       - name: Run tests with coverage
         working-directory: se327/backend
         run: |
-          coverage run --source=. --omit=".venv/*,*/migrations/*,manage.py" manage.py test
+          coverage run --source=. --omit=".venv/*,*/migrations/*,manage.py,tests/*" manage.py test
           coverage xml -o coverage.xml
 
       - uses: actions/setup-node@v4

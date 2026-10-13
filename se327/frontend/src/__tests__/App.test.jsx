@@ -3,14 +3,24 @@ import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import App from '../App.jsx'
 
-vi.mock('../lib/apiClient.js', () => ({ apiClient: { get: vi.fn().mockResolvedValue({ data: { categories: [] } }) } }))
+vi.mock('../lib/apiClient.js', () => ({
+  apiClient: {
+    get: vi.fn((path) => Promise.resolve(
+      path.includes('/new-arrivals') ? { data: { products: [] } }
+        : path.includes('/campaigns') ? { data: { campaigns: [] } }
+          : { data: { categories: [] } },
+    )),
+  },
+}))
 vi.stubGlobal('scrollTo', vi.fn())
 afterEach(cleanup)
 
 describe('App routes', () => {
-  it('renders the home storefront and its category collection section', async () => {
+  it('renders the home hero and new arrivals section', async () => {
     render(<MemoryRouter initialEntries={['/']}><App /></MemoryRouter>)
-    expect(await screen.findByRole('heading', { name: 'Shop by category' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'NEW COLLECTION' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'New Arrivals' })).toBeTruthy()
+    expect(screen.getByText('No new arrivals are available right now.')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Core & Co home' }).getAttribute('href')).toBe('/')
   })
 

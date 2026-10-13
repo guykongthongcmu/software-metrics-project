@@ -27,6 +27,7 @@ function getAccountPage(route) {
     default: return <StorefrontPlaceholder title={route.title} />
   }
 }
+import HomePage from './pages/webstore/HomePage.jsx'
 
 function StorefrontPlaceholder({ title }) {
   const location = useLocation()
@@ -52,6 +53,7 @@ function NotFoundPage() {
 
 function getStorefrontPage(route) {
   if (route.path === '/login') return <LoginPage />
+  if (route.path === '/') return <HomePage />
   if (route.path === '/about') return <AboutPage />
   if (route.path === '/contact') return <ContactPage />
   return <StorefrontPlaceholder title={route.title} />
