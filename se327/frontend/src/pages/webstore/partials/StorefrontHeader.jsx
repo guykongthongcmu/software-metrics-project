@@ -73,17 +73,14 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
     const demoSession = getMockAccountSession()
     const frontendSignedOut = isFrontendSignedOut()
 
-    const [profileResult, cartResult, favoritesResult] = await Promise.allSettled([
+    const [profileResult, cartResult] = await Promise.allSettled([
       demoSession
         ? Promise.resolve({ data: demoSession.profile })
         : frontendSignedOut
           ? Promise.resolve(null)
           : apiClient.get('/auth/user/profile', { redirectOn401: false }),
       apiClient.get('/client/cart?lang=EN', { redirectOn401: false }),
-      apiClient.get('/client/favorites?lang=EN', { redirectOn401: false }),
     ])
-        apiClient.get('/client/cart?lang=EN', { redirectOn401: false }),
-      ])
       if (!active) return
       const profileError = profileResult.status === 'rejected' ? profileResult.reason : null
       const canUseDemoProfile = isEndpointUnavailable(profileError)
