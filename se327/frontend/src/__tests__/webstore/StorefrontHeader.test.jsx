@@ -78,6 +78,21 @@ describe('StorefrontHeader', () => {
     expect(screen.getByLabelText('7 favorites')).toBeTruthy()
   })
 
+  it('accepts alternate event count fields and resets missing values to zero', async () => {
+    renderHeader()
+    expect(await screen.findByLabelText('2 cart')).toBeTruthy()
+
+    fireEvent(window, new CustomEvent('storefront:cart-updated', { detail: { totalItems: 4 } }))
+    fireEvent(window, new CustomEvent('storefront:favorites-updated', { detail: { count: 6 } }))
+    expect(await screen.findByLabelText('4 cart')).toBeTruthy()
+    expect(screen.getByLabelText('6 favorites')).toBeTruthy()
+
+    fireEvent(window, new CustomEvent('storefront:cart-updated', { detail: {} }))
+    fireEvent(window, new CustomEvent('storefront:favorites-updated', { detail: null }))
+    expect(await screen.findByLabelText('0 cart')).toBeTruthy()
+    expect(screen.getByLabelText('0 favorites')).toBeTruthy()
+  })
+
   it('reloads header data after the shared refresh event', async () => {
     renderHeader()
     expect(await screen.findByLabelText('2 cart')).toBeTruthy()
@@ -147,6 +162,14 @@ describe('StorefrontHeader', () => {
 
     fireEvent.click(within(mobileNavigation).getByRole('link', { name: 'Products' }))
 
+    expect(screen.queryByRole('navigation', { name: 'Mobile navigation' })).toBeNull()
+  })
+
+  it('closes the mobile menu from its toggle button', () => {
+    renderHeader()
+    fireEvent.click(screen.getByRole('button', { name: 'Open menu' }))
+    expect(screen.getByRole('navigation', { name: 'Mobile navigation' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Close menu' }))
     expect(screen.queryByRole('navigation', { name: 'Mobile navigation' })).toBeNull()
   })
 
