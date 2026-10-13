@@ -126,36 +126,35 @@ export default function ProductDetailPage() {
   useEffect(() => {
     let active = true
     async function loadProduct() {
-      try {
-        const data = await loadProductData(id)
-        if (!active) return
-        setProduct(data.item)
-        setVariants(data.variants)
-        setImages(data.images)
-        setSelectedImage(data.images[0] || '')
-        setColor(data.color)
-        setSize(data.size)
-        setRecommendations(data.recommendations)
-        setError('')
-        setErrorId(null)
-        setLoadedId(id)
-      } catch {
-        if (!active) return
+      const data = await loadProductData(id)
+      if (!active) return
+      setProduct(data.item)
+      setVariants(data.variants)
+      setImages(data.images)
+      setSelectedImage(data.images[0] || '')
+      setColor(data.color)
+      setSize(data.size)
+      setRecommendations(data.recommendations)
+      setError('')
+      setErrorId(null)
+      setLoadedId(id)
+    }
+    async function loadFavorite() {
+      const payload = await apiClient.get('/client/favorites?lang=EN', { redirectOn401: false })
+      if (active) setFavorite((payload?.data?.products || []).some((item) => Number(item.productId) === Number(id)))
+    }
+    function showProductLoadError() {
+      if (active) {
         setErrorId(id)
         setError('This product could not be loaded. Please try again later.')
         setLoadedId(id)
       }
     }
-    async function loadFavorite() {
-      try {
-        const payload = await apiClient.get('/client/favorites?lang=EN', { redirectOn401: false })
-        if (active) setFavorite((payload?.data?.products || []).some((item) => Number(item.productId) === Number(id)))
-      } catch {
-        if (active) setFavorite(false)
-      }
+    function clearFavorite() {
+      if (active) setFavorite(false)
     }
-    void loadProduct()
-    void loadFavorite()
+    loadProduct().catch(showProductLoadError)
+    loadFavorite().catch(clearFavorite)
     return () => { active = false }
   }, [id])
 
@@ -231,6 +230,14 @@ export default function ProductDetailPage() {
     }
   }
 
+  function handleAddToCart() {
+    addToCart().catch(() => setCartMessage('Could not connect to server.'))
+  }
+
+  function handleToggleFavorite() {
+    toggleFavorite().catch(() => setCartMessage('Could not update favorites. Please try again.'))
+  }
+
   if (loadedId !== id) return <output className="block min-h-[55vh] bg-[#f5f0e8] px-5 py-12 text-sm text-[#777]">Loading product…</output>
   if ((error && errorId === id) || !product) return <main className="min-h-[55vh] bg-[#f5f0e8] px-5 py-12"><p className="mx-auto max-w-6xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{errorId === id ? error : 'This product could not be loaded.'}</p><Link className="mx-auto mt-5 block max-w-6xl text-sm underline" to="/products">Back to products</Link></main>
 
@@ -269,8 +276,8 @@ export default function ProductDetailPage() {
                 <span aria-label="Quantity" className="grid w-[34px] place-items-center border-x border-[#e0dbd2] text-[0.82rem]">{quantity}</span>
                 <button aria-label="Increase quantity" className="w-[34px]" disabled={quantity >= quantityLimit} onClick={() => setQuantity((value) => Math.min(quantityLimit, value + 1))} type="button">+</button>
               </div>
-              <button className="h-[42px] flex-1 rounded-full bg-[#b89b6e] text-[0.7rem] uppercase tracking-[0.13em] text-white transition-colors hover:bg-[#a0855a] disabled:cursor-not-allowed disabled:bg-[#e0dbd2] disabled:text-[#999]" disabled={!canAddToCart || busy} onClick={() => { void addToCart() }} type="button">{addToCartLabel}</button>
-              <button aria-label={favoriteLabel} aria-pressed={favorite} className={`grid h-[42px] w-[42px] shrink-0 place-items-center rounded-full border bg-white ${favorite ? 'border-[#b89b6e] text-[#b89b6e]' : 'border-[#e0dbd2] text-[#999]'}`} disabled={busy} onClick={() => { void toggleFavorite() }} type="button"><svg aria-hidden="true" className="h-4 w-4" fill={favorite ? 'currentColor' : 'none'} viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg></button>
+              <button className="h-[42px] flex-1 rounded-full bg-[#b89b6e] text-[0.7rem] uppercase tracking-[0.13em] text-white transition-colors hover:bg-[#a0855a] disabled:cursor-not-allowed disabled:bg-[#e0dbd2] disabled:text-[#999]" disabled={!canAddToCart || busy} onClick={handleAddToCart} type="button">{addToCartLabel}</button>
+              <button aria-label={favoriteLabel} aria-pressed={favorite} className={`grid h-[42px] w-[42px] shrink-0 place-items-center rounded-full border bg-white ${favorite ? 'border-[#b89b6e] text-[#b89b6e]' : 'border-[#e0dbd2] text-[#999]'}`} disabled={busy} onClick={handleToggleFavorite} type="button"><svg aria-hidden="true" className="h-4 w-4" fill={favorite ? 'currentColor' : 'none'} viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0Z" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg></button>
             </div>
             {cartMessage && <p aria-live="polite" className="mb-3 text-sm text-[#776242]">{cartMessage}</p>}
             <div className="mt-2 border-t border-[#e0dbd2]"><Accordion title="Details and Care">{product.detail || 'Please refer to the product label for care instructions.'}</Accordion><Accordion title="Delivery and Returns">{deliveryText}</Accordion></div>
