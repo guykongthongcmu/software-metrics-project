@@ -13,7 +13,7 @@ const iconPaths = {
 /** @param {{label: string, to: string, kind: string, count?: number}} props */
 function IconLink({ label, to, kind, count }) {
   return (
-    <Link aria-label={label} className="relative grid h-10 w-10 place-items-center text-stone-900 transition-colors hover:text-stone-500" to={to}>
+    <Link aria-label={label} className={`relative grid h-10 w-10 place-items-center text-stone-900 transition-colors hover:text-stone-500 ${kind === 'cart' ? 'cart-link' : ''}`} to={to}>
       <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.55" viewBox="0 0 24 24">{iconPaths[kind]}</svg>
       {count !== undefined && <span aria-label={`${count} ${label.toLowerCase()}`} className="absolute -right-2.5 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-medium leading-none text-white">{count}</span>}
     </Link>
