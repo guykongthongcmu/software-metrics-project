@@ -16,6 +16,7 @@ LIST_LIMIT_DEFAULT = 20
 LIST_LIMIT_MAX = 100
 SEARCH_MAX = 150
 MEDIA_FOLDER = 'products'
+FOREIGN_KEY_VIOLATION = '23503'
 
 
 def parse_product_id(raw):
@@ -227,13 +228,16 @@ def taken_skus(skus):
 
 
 def integrity_to_error(exc):
-    """Turn a unique violation from a race into the matching 409, or hand the error back."""
-    constraint = getattr(getattr(exc.__cause__, 'diag', None), 'constraint_name', None)
+    """Turn a database constraint failure from a race into a 409."""
+    cause = exc.__cause__
+    constraint = getattr(getattr(cause, 'diag', None), 'constraint_name', None)
     if constraint == 'uq_variant_sku_ci':
         return AdminError(409, 'DUPLICATE_SKU', 'a sku is already in use')
     if constraint == 'uq_product_colour_size':
         return AdminError(409, 'DUPLICATE_VARIANT', 'colour and size pair is already used')
-    return exc
+    if getattr(cause, 'sqlstate', None) == FOREIGN_KEY_VIOLATION:
+        return AdminError(409, 'CATEGORY_NOT_FOUND', 'a category was removed while the product was saved')
+    return AdminError(409, 'CONFLICT', 'the product conflicts with a concurrent change')
 
 
 def check_references(data):
@@ -351,15 +355,18 @@ def update_product(product_id, body):
         raise storefront.CatalogError(400, 'INVALID_LANGUAGE', 'lang must be EN or TH')
     lang = storefront.parse_lang(raw_lang)
 
-    with transaction.atomic():
-        product = get_product(product_id, for_update=True)
-        if 'isActive' in data:
-            product.is_active = data['isActive']
-        product.save(update_fields=['is_active', 'updated_at'])
-        apply_translation_changes(product, data, lang)
-        if 'categoryId' in data:
-            make_primary(product, data['categoryId'])
-        apply_variant_changes(product, data)
+    try:
+        with transaction.atomic():
+            product = get_product(product_id, for_update=True)
+            if 'isActive' in data:
+                product.is_active = data['isActive']
+            product.save(update_fields=['is_active', 'updated_at'])
+            apply_translation_changes(product, data, lang)
+            if 'categoryId' in data:
+                make_primary(product, data['categoryId'])
+            apply_variant_changes(product, data)
+    except IntegrityError as exc:
+        raise integrity_to_error(exc) from exc
     return get_detail(product_id, lang)
 
 
@@ -371,8 +378,8 @@ def delete_product(product_id, params):
         product = get_product(product_id, for_update=True)
         if mode == 'SOFT':
             product.is_active = False
+            # variants stay as they are, so turning the product back on needs no extra step
             product.save(update_fields=['is_active', 'updated_at'])
-            product.variants.update(is_active=False)
         else:
             # order items keep their snapshots, their variant link just becomes null
             paths = list(product.media.filter(bucket_name=storage.BUCKET).values_list('file_path', flat=True))
