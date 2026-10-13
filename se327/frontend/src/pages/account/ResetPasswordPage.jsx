@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
-import { consumeMockPasswordResetToken, isEndpointUnavailable } from './mockAccountSession.js'
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token')?.trim() || ''
-  const isDemo = searchParams.get('demo') === '1'
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
@@ -24,14 +22,6 @@ export default function ResetPasswordPage() {
       setError('Passwords do not match.')
       return
     }
-    if (isDemo) {
-      if (!consumeMockPasswordResetToken(token)) {
-        setError('This demo reset link is invalid or has already been used.')
-        return
-      }
-      void navigate('/login?reset=demo')
-      return
-    }
     setIsSubmitting(true)
     try {
       await apiClient.post('/auth/reset-password', {
@@ -41,10 +31,6 @@ export default function ResetPasswordPage() {
       })
       void navigate('/login')
     } catch (requestError) {
-      if (isEndpointUnavailable(requestError) && consumeMockPasswordResetToken(token)) {
-        void navigate('/login?reset=demo')
-        return
-      }
       setError(requestError?.message || 'Could not reset password')
     } finally {
       setIsSubmitting(false)

@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
-import { clearFrontendSignedOut, endMockAccountSession, isEndpointUnavailable, startMockAccountSession } from './mockAccountSession.js'
 
 function getSignInError(error) {
   switch (error?.code || error?.payload?.code) {
@@ -15,39 +14,22 @@ function getSignInError(error) {
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [status, setStatus] = useState(searchParams.get('reset') === 'demo' ? 'Demo password reset complete.' : '')
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
-    setStatus('')
     setIsSubmitting(true)
     try {
       const result = await apiClient.post('/auth/user/signin', { email, password })
-      endMockAccountSession()
-      clearFrontendSignedOut()
       window.dispatchEvent(new Event('storefront:refresh-header'))
       const redirectTo = result?.data?.redirectTo
       void navigate(typeof redirectTo === 'string' && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/')
     } catch (requestError) {
-      if (isEndpointUnavailable(requestError)) {
-        try {
-          startMockAccountSession(email)
-          clearFrontendSignedOut()
-          window.dispatchEvent(new Event('storefront:refresh-header'))
-          void navigate('/')
-          return
-        } catch {
-          setError('Could not start the demo session in this browser.')
-          return
-        }
-      }
       setError(getSignInError(requestError))
     } finally {
       setIsSubmitting(false)
@@ -63,8 +45,6 @@ export default function LoginPage() {
         </header>
 
         {error && <p className="mb-6 rounded border border-[#ffcccc] bg-[#fff0f0] px-4 py-3 text-center text-[0.85rem] text-[#c00]" role="alert">{error}</p>}
-        {status && <p className="mb-6 rounded border border-[#c3a37c52] bg-white/70 px-4 py-3 text-center text-[0.85rem] text-[#8c7e73]" role="status">{status}</p>}
-
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           <div>
             <label className="mb-2 block text-[0.75rem] font-semibold tracking-[0.5px] text-[#97836d]" htmlFor="login-email">EMAIL *</label>
