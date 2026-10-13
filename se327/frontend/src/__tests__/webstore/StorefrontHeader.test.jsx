@@ -15,7 +15,7 @@ describe('StorefrontHeader', () => {
   beforeEach(() => {
     profile = null
     cartCount = 2
-    window.localStorage.setItem('core-co-mock-favorites', JSON.stringify([101, 102, 103]))
+    window.localStorage.clear()
     apiClient.get.mockImplementation((path) => {
       if (path === '/auth/user/profile') {
         return profile
@@ -24,6 +24,9 @@ describe('StorefrontHeader', () => {
       }
       if (path === '/client/cart?lang=EN') {
         return Promise.resolve({ data: { cartSummary: { totalItems: cartCount } } })
+      }
+      if (path === '/client/favorites?lang=EN') {
+        return Promise.resolve({ data: { favoritesCount: 3, products: [{ productId: 101 }, { productId: 102 }, { productId: 103 }] } })
       }
       return Promise.reject(new Error(`Unexpected API path: ${path}`))
     })
@@ -46,7 +49,7 @@ describe('StorefrontHeader', () => {
     renderHeader()
 
     expect(await screen.findByLabelText('2 cart')).toBeTruthy()
-    expect(screen.getByLabelText('3 favorites')).toBeTruthy()
+    expect(await screen.findByLabelText('3 favorites')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Account' }).getAttribute('href')).toBe('/login')
     expect(apiClient.get).toHaveBeenCalledWith('/auth/user/profile', { redirectOn401: false })
   })
@@ -65,13 +68,13 @@ describe('StorefrontHeader', () => {
     renderHeader()
 
     expect(await screen.findByLabelText('2 cart')).toBeTruthy()
-    expect(screen.getByLabelText('3 favorites')).toBeTruthy()
+    expect(await screen.findByLabelText('3 favorites')).toBeTruthy()
 
     fireEvent(window, new CustomEvent('storefront:cart-updated', { detail: { count: 5 } }))
     fireEvent(window, new CustomEvent('storefront:favorites-updated', { detail: { favoritesCount: 7 } }))
 
     expect(await screen.findByLabelText('5 cart')).toBeTruthy()
-    expect(screen.getByLabelText('7 favorites')).toBeTruthy()
+    expect(await screen.findByLabelText('7 favorites')).toBeTruthy()
   })
 
   it('accepts alternate event count fields and resets missing values to zero', async () => {
@@ -81,12 +84,12 @@ describe('StorefrontHeader', () => {
     fireEvent(window, new CustomEvent('storefront:cart-updated', { detail: { totalItems: 4 } }))
     fireEvent(window, new CustomEvent('storefront:favorites-updated', { detail: { count: 6 } }))
     expect(await screen.findByLabelText('4 cart')).toBeTruthy()
-    expect(screen.getByLabelText('6 favorites')).toBeTruthy()
+    expect(await screen.findByLabelText('6 favorites')).toBeTruthy()
 
     fireEvent(window, new CustomEvent('storefront:cart-updated', { detail: {} }))
     fireEvent(window, new CustomEvent('storefront:favorites-updated', { detail: null }))
     expect(await screen.findByLabelText('0 cart')).toBeTruthy()
-    expect(screen.getByLabelText('0 favorites')).toBeTruthy()
+    expect(await screen.findByLabelText('0 favorites')).toBeTruthy()
   })
 
   it('reloads header data after the shared refresh event', async () => {
@@ -98,8 +101,8 @@ describe('StorefrontHeader', () => {
     fireEvent(window, new Event('storefront:refresh-header'))
 
     expect(await screen.findByLabelText('6 cart')).toBeTruthy()
-    expect(screen.getByLabelText('3 favorites')).toBeTruthy()
-    expect(apiClient.get).toHaveBeenCalledTimes(2)
+    expect(await screen.findByLabelText('3 favorites')).toBeTruthy()
+    expect(apiClient.get).toHaveBeenCalledTimes(3)
   })
 
   it('uses zero counts when count requests fail', async () => {
@@ -108,7 +111,7 @@ describe('StorefrontHeader', () => {
     renderHeader()
 
     expect(await screen.findByLabelText('0 cart')).toBeTruthy()
-    expect(screen.getByLabelText('3 favorites')).toBeTruthy()
+    expect(await screen.findByLabelText('0 favorites')).toBeTruthy()
   })
 
   it('opens the language menu, changes language, and closes on selection', async () => {
@@ -218,8 +221,8 @@ describe('StorefrontHeader', () => {
     fireEvent(window, new Event('focus'))
 
     expect(await screen.findByLabelText('9 cart')).toBeTruthy()
-    expect(screen.getByLabelText('3 favorites')).toBeTruthy()
-    expect(apiClient.get).toHaveBeenCalledTimes(2)
+    expect(await screen.findByLabelText('3 favorites')).toBeTruthy()
+    expect(apiClient.get).toHaveBeenCalledTimes(3)
   })
 
   it('ignores header data that resolves after unmount', async () => {
