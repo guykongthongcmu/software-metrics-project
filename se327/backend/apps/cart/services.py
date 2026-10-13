@@ -44,6 +44,13 @@ def active_cart(user):
     return Cart.objects.filter(user=user, status=Cart.Status.ACTIVE).first()
 
 
+def lock_active_cart(user, create=False):
+    """Take the cart row lock first, the same order purchase uses, so edits and purchase cannot interleave."""
+    if create:
+        Cart.objects.get_or_create(user=user, status=Cart.Status.ACTIVE)
+    return Cart.objects.select_for_update().filter(user=user, status=Cart.Status.ACTIVE).first()
+
+
 def product_name(product_id, lang):
     row = ProductTranslation.objects.filter(product_id=product_id).annotate(
         lang_rank=Case(
@@ -143,8 +150,8 @@ def add_item(user, body, lang):
     quantity = parse_quantity(body['quantityCartItem'])
 
     with transaction.atomic():
+        cart = lock_active_cart(user, create=True)
         variant = find_variant(product_id, color, size)
-        cart, _ = Cart.objects.get_or_create(user=user, status=Cart.Status.ACTIVE)
         item = CartItem.objects.select_for_update().filter(cart=cart, product_variant=variant).first()
         new_quantity = (item.quantity if item else 0) + quantity
         if new_quantity > variant.stock_qty:
@@ -177,6 +184,7 @@ def update_item(user, item_id, body, lang):
     quantity = parse_quantity(raw)
 
     with transaction.atomic():
+        lock_active_cart(user)
         item = own_item(user, item_id)
         variant = ProductVariant.objects.get(pk=item.product_variant_id)
         if quantity > variant.stock_qty:
@@ -195,6 +203,7 @@ def remove_item(user, item_id):
     item_id = parse_item_id(item_id)
 
     with transaction.atomic():
+        lock_active_cart(user)
         item = own_item(user, item_id)
         cart = item.cart
         product_id = item.product_variant.product_id
