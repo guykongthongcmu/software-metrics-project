@@ -6,7 +6,7 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from apps.accounts.models import Admin, Session, User
+from apps.accounts.models import Admin, EmailVerificationToken, Session, User
 from apps.accounts.sessions import COOKIE_NAME, create_session
 from apps.accounts.signin import dummy_hash
 
@@ -110,11 +110,25 @@ class SigninTests(TestCase):
             self.post({'email': 'nobody@example.com', 'password': 'wrongpass1'})
         checked.assert_called_once_with('wrongpass1', dummy_hash())
 
-    def test_unverified_user_can_sign_in(self):
+    def test_unverified_correct_password_403_no_session(self):
         make_user(verified=False)
         res = self.post({'email': 'jane@example.com', 'password': 'longenough1'})
+        self.assertEqual(res.status_code, 403)
+        self.assertEqual(res.json()['code'], 'EMAIL_NOT_VERIFIED')
+        self.assertEqual(Session.objects.count(), 0)
+        self.assertNotIn(COOKIE_NAME, res.cookies)
+
+    def test_unverified_wrong_password_is_invalid_credentials(self):
+        make_user(verified=False)
+        res = self.post({'email': 'jane@example.com', 'password': 'wrongpass1'})
+        self.assertEqual(res.status_code, 401)
+        self.assertEqual(res.json()['code'], 'INVALID_CREDENTIALS')
+
+    def test_verified_user_signs_in(self):
+        make_user(verified=True)
+        res = self.post({'email': 'jane@example.com', 'password': 'longenough1'})
         self.assertEqual(res.status_code, 200)
-        self.assertIs(res.json()['data']['email_verified'], False)
+        self.assertIs(res.json()['data']['email_verified'], True)
 
     def test_admin_credentials_rejected_on_customer_route(self):
         Admin.objects.create(email='boss@example.com', password_hash=make_password('adminpass1'),
@@ -176,3 +190,28 @@ class ProfileTests(TestCase):
         self.login(admin, 'ADMIN')
         res = self.client.get('/api/auth/user/profile')
         self.assertEqual(res.status_code, 403)
+
+
+@FAST_HASH
+class VerificationFlowTests(TestCase):
+    def post(self, path, data):
+        return self.client.post(path, data, content_type='application/json')
+
+    def test_signup_verify_then_sign_in(self):
+        credentials = {'email': 'new@example.com', 'password': 'longenough1'}
+        res = self.post('/api/auth/signup', {**credentials, 'first_name': 'New', 'last_name': 'User',
+                                             'DOB': '2000-01-01', 'phone_number': '0811111111'})
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(self.post('/api/auth/user/signin', credentials).status_code, 403)
+
+        token = EmailVerificationToken.objects.get().token
+        res = self.client.get('/api/auth/verify-email', {'token': token, 'format': 'json'})
+        self.assertEqual(res.status_code, 200)
+        res = self.post('/api/auth/user/signin', credentials)
+        self.assertEqual(res.status_code, 200)
+
+    def test_resend_verification_open_for_unverified_user(self):
+        make_user(verified=False)
+        res = self.post('/api/auth/resend-verification', {'email': 'jane@example.com'})
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(EmailVerificationToken.objects.count(), 1)
