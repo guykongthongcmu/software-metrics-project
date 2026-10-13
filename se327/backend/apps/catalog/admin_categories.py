@@ -5,7 +5,7 @@ from django.db import IntegrityError, transaction
 
 from common.choices import Language
 
-from .admin_base import AdminError, parse_id
+from .admin_base import AdminError, is_encodable, parse_id
 from .models import Category, CategoryTranslation, ProductCategory
 
 NAME_MAX = 100
@@ -23,15 +23,6 @@ def slugify(name):
 
 def parse_category_id(raw):
     return parse_id(raw, 'INVALID_CATEGORY_ID', 'categoryId must be a positive integer')
-
-
-def is_encodable(text):
-    # a lone surrogate parses from JSON but cannot be stored
-    try:
-        text.encode('utf-8')
-    except UnicodeEncodeError:
-        return False
-    return True
 
 
 def clean_name(body):
