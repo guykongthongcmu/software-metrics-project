@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 
 from apps.accounts.permissions import IsAdmin
 from common.responses import error_body
+from common.storage import ImageRejected
 
 from .storefront import CatalogError
 
@@ -22,7 +23,7 @@ class AdminView(APIView):
     permission_classes = [IsAdmin]
 
     def handle_exception(self, exc):
-        if isinstance(exc, (AdminError, CatalogError)):
+        if isinstance(exc, (AdminError, CatalogError, ImageRejected)):
             body = error_body(exc.code, exc.message)
             if getattr(exc, 'details', None):
                 body['details'] = exc.details
