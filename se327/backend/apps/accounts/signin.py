@@ -50,7 +50,11 @@ def authenticate(model, body):
 
 
 def customer_sign_in(body):
-    return authenticate(User, body)
+    user = authenticate(User, body)
+    # only after the password matched, so it does not show which emails are registered
+    if user.email_verified_at is None:
+        raise ApiError('EMAIL_NOT_VERIFIED', 'email is not verified yet', 403)
+    return user
 
 
 def full_name(user):
