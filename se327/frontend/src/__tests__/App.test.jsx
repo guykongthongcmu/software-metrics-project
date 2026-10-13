@@ -1,10 +1,11 @@
-import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import App from '../App.jsx'
 
 vi.mock('../lib/apiClient.js', () => ({ apiClient: { get: vi.fn().mockResolvedValue({ data: { categories: [] } }) } }))
 vi.stubGlobal('scrollTo', vi.fn())
+afterEach(cleanup)
 
 describe('App routes', () => {
   it('renders the home storefront and its category collection section', async () => {
@@ -19,6 +20,14 @@ describe('App routes', () => {
     about.unmount()
     render(<MemoryRouter initialEntries={['/contact']}><App /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'Store Information' })).toBeTruthy()
+  })
+
+  it('renders the sign-in form at the login route', async () => {
+    render(<MemoryRouter initialEntries={['/login']}><App /></MemoryRouter>)
+    expect(await screen.findByRole('heading', { name: 'SIGN IN' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Forgot Password?' }).getAttribute('href')).toBe('/forgot-password')
+    expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeTruthy()
+    expect(screen.queryByText('© 2026 Core & Co. All rights reserved.')).toBeNull()
   })
 
   it('renders admin routes and redirects legacy admin paths', async () => {

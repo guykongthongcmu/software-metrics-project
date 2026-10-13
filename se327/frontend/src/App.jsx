@@ -5,6 +5,7 @@ import { storefrontRoutes } from './pages/webstore/routes.js'
 import StorefrontLayout from './pages/webstore/StorefrontLayout.jsx'
 import AboutPage from './pages/webstore/AboutPage.jsx'
 import ContactPage from './pages/webstore/ContactPage.jsx'
+import LoginPage from './pages/account/LoginPage.jsx'
 
 function StorefrontPlaceholder({ title }) {
   const location = useLocation()
@@ -29,6 +30,7 @@ function NotFoundPage() {
 }
 
 function getStorefrontPage(route) {
+  if (route.path === '/login') return <LoginPage />
   if (route.path === '/about') return <AboutPage />
   if (route.path === '/contact') return <ContactPage />
   return <StorefrontPlaceholder title={route.title} />
@@ -39,7 +41,7 @@ export default function App() {
     <Routes>
       <Route element={<StorefrontLayout />}>
         {storefrontRoutes.map((route) => <Route key={route.path} path={route.path} element={getStorefrontPage(route)} />)}
-        {accountRoutes.map((route) => <Route key={route.path} path={route.path} element={<StorefrontPlaceholder title={route.title} />} />)}
+        {accountRoutes.map((route) => <Route key={route.path} path={route.path} element={route.path === '/login' ? <LoginPage /> : <StorefrontPlaceholder title={route.title} />} />)}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       {adminRoutes.map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}

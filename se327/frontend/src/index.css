@@ -73,6 +73,35 @@ a {
   text-decoration: none;
 }
 
+.signin-page {
+  line-height: 1.6;
+}
+
+.signin-page a.signin-forgot-link {
+  color: #555;
+}
+
+.signin-page a.signin-forgot-link:hover {
+  color: #333;
+  text-decoration: underline;
+}
+
+.signin-page .signin-footer {
+  display: inline-flex;
+  gap: 4px;
+  color: #555;
+  text-align: center;
+}
+
+.signin-page a.signin-footer-link {
+  color: #97836d;
+  font-weight: 500;
+}
+
+.signin-page a.signin-footer-link:hover {
+  text-decoration: underline;
+}
+
 .font-admin-ui {
   font-family: var(--font-admin-ui);
 }

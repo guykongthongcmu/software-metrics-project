@@ -47,5 +47,5 @@ export default function StorefrontLayout() {
     .map((slug) => storefrontRoutes.find((route) => route.path === `/${slug}`))
     .filter(Boolean)
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [location.pathname])
-  return <div data-theme="storefront" className="min-h-screen bg-canvas text-ink"><StorefrontHeader visibleCategoryRoutes={visibleCategoryRoutes} /><Outlet /><StorefrontFooter /></div>
+  return <div data-theme="storefront" className="flex min-h-screen flex-col bg-canvas text-ink"><StorefrontHeader visibleCategoryRoutes={visibleCategoryRoutes} /><Outlet />{location.pathname !== '/login' && <StorefrontFooter />}</div>
 }
