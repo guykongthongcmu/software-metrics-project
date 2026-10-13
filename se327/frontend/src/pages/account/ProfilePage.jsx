@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
-import { endMockAccountSession, getMockAccountSession, isEndpointUnavailable } from './mockAccountSession.js'
+import { endMockAccountSession, getMockAccountSession, isEndpointUnavailable, isFrontendSignedOut, markFrontendSignedOut } from './mockAccountSession.js'
 
 function formatProfileDate(value) {
   if (!value) return 'Not provided'
@@ -15,10 +15,9 @@ function formatProfileDate(value) {
 
 export default function ProfilePage() {
   const navigate = useNavigate()
-  const [profile, setProfile] = useState(() => getMockAccountSession()?.profile || null)
+  const [profile, setProfile] = useState(() => isFrontendSignedOut() ? null : getMockAccountSession()?.profile || null)
   const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(() => !getMockAccountSession()?.profile)
-  const [isSigningOut, setIsSigningOut] = useState(false)
+  const [isLoading, setIsLoading] = useState(() => !isFrontendSignedOut() && !getMockAccountSession()?.profile)
   const initials = useMemo(() => (profile?.name || '').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join('') || 'CC', [profile?.name])
   const emailVerified = Boolean(profile?.email_verified)
   const joinedLabel = formatProfileDate(profile?.created_at)
@@ -29,6 +28,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     let active = true
+    if (isFrontendSignedOut()) {
+      navigate('/login', { replace: true })
+      return () => { active = false }
+    }
     const demoSession = getMockAccountSession()
     if (demoSession?.profile) return () => { active = false }
     apiClient.get('/auth/user/profile', { redirectOn401: false })
@@ -56,30 +59,14 @@ export default function ProfilePage() {
     return () => { active = false }
   }, [navigate])
 
-  async function handleSignOut() {
-    setError('')
-    setIsSigningOut(true)
-    try {
-      if (getMockAccountSession()) {
-        endMockAccountSession()
-        window.dispatchEvent(new Event('storefront:refresh-header'))
-        navigate('/', { replace: true })
-        return
-      }
-      await apiClient.post('/auth/logout', undefined, { redirectOn401: false })
-      window.dispatchEvent(new Event('storefront:refresh-header'))
-      navigate('/', { replace: true })
-    } catch (requestError) {
-      if (requestError?.status === 401 || requestError?.code === 'UNAUTHORIZED') {
-        navigate('/login', { replace: true })
-        return
-      }
-      setError(requestError?.message || 'Could not sign out. Please try again.')
-    } finally {
-      setIsSigningOut(false)
-    }
+  function handleSignOut() {
+    endMockAccountSession()
+    markFrontendSignedOut()
+    window.dispatchEvent(new Event('storefront:refresh-header'))
+    navigate('/', { replace: true })
   }
 
+  if (isFrontendSignedOut()) return null
   if (isLoading) return <main aria-busy="true" className="flex flex-1 items-center justify-center px-6 py-16 text-sm text-muted">Loading your profile…</main>
   if (!profile) {
     return <main className="flex flex-1 items-center justify-center px-6 py-16"><p className="text-sm text-[#c0392b]" role="alert">{error || 'Could not load your profile'}</p></main>
@@ -102,7 +89,7 @@ export default function ProfilePage() {
             <ProfileStat label="Phone" value={profilePhone} />
             <ProfileStat label="Birthday" value={birthdayLabel} />
           </div>
-          <button className="mt-6 w-full rounded-2xl bg-[#1f1a17] px-[18px] py-3.5 font-semibold tracking-[0.04em] text-white transition duration-200 hover:-translate-y-px hover:bg-[#322821] disabled:cursor-wait disabled:opacity-60" disabled={isSigningOut} onClick={handleSignOut} type="button">{isSigningOut ? 'SIGNING OUT…' : 'Logout'}</button>
+          <button className="mt-6 w-full rounded-2xl bg-[#1f1a17] px-[18px] py-3.5 font-semibold tracking-[0.04em] text-white transition duration-200 hover:-translate-y-px hover:bg-[#322821]" onClick={handleSignOut} type="button">Logout</button>
         </aside>
 
         <section className="rounded-[28px] border border-[#8c7e731f] bg-[#fffdfa] p-7 shadow-[0_18px_36px_rgba(111,89,72,0.08)] max-[640px]:rounded-[22px] max-[640px]:p-[22px]">

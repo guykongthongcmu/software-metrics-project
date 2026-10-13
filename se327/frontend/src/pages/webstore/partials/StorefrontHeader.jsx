@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { apiClient } from '../../../lib/apiClient.js'
-import { getMockAccountSession, isEndpointUnavailable } from '../../account/mockAccountSession.js'
+import { getMockAccountSession, isEndpointUnavailable, isFrontendSignedOut } from '../../account/mockAccountSession.js'
 import CategoryMenu from './CategoryMenu.jsx'
 
 const iconPaths = {
@@ -69,8 +69,14 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
   useEffect(() => {
     let active = true
     const loadHeaderData = async () => {
+      const demoSession = getMockAccountSession()
+      const frontendSignedOut = isFrontendSignedOut()
       const [profileResult, cartResult, favoritesResult] = await Promise.allSettled([
-        apiClient.get('/auth/user/profile', { redirectOn401: false }),
+        demoSession
+          ? Promise.resolve({ data: demoSession.profile })
+          : frontendSignedOut
+            ? Promise.resolve(null)
+            : apiClient.get('/auth/user/profile', { redirectOn401: false }),
         apiClient.get('/client/cart?lang=EN', { redirectOn401: false }),
         apiClient.get('/client/favorites?lang=EN', { redirectOn401: false }),
       ])
@@ -81,7 +87,7 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
         || profileError?.code === 'UNAUTHORIZED'
       const demoProfile = canUseDemoProfile ? getMockAccountSession()?.profile : null
       const headerData = {
-        user: profileResult.status === 'fulfilled' ? profileResult.value?.data || null : demoProfile || null,
+        user: isFrontendSignedOut() ? null : profileResult.status === 'fulfilled' ? profileResult.value?.data || null : demoProfile || null,
         cartCount: cartResult.status === 'fulfilled' ? Number(cartResult.value?.data?.cartSummary?.totalItems || 0) : 0,
         favoriteCount: favoritesResult.status === 'fulfilled' ? Number(favoritesResult.value?.data?.favoritesCount || 0) : 0,
       }

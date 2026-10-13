@@ -1,5 +1,6 @@
 const SESSION_KEY = 'se327:demo-account-session'
 const RESET_TOKEN_KEY = 'se327:demo-password-reset'
+const SIGNED_OUT_KEY = 'se327:frontend-signed-out'
 
 export function isEndpointUnavailable(error) {
   const code = error?.code || error?.payload?.code
@@ -39,6 +40,22 @@ export function startMockAccountSession(email) {
 
 export function endMockAccountSession() {
   window.sessionStorage.removeItem(SESSION_KEY)
+}
+
+export function markFrontendSignedOut() {
+  window.sessionStorage.setItem(SIGNED_OUT_KEY, '1')
+}
+
+export function clearFrontendSignedOut() {
+  window.sessionStorage.removeItem(SIGNED_OUT_KEY)
+}
+
+export function isFrontendSignedOut() {
+  try {
+    return window.sessionStorage.getItem(SIGNED_OUT_KEY) === '1'
+  } catch {
+    return false
+  }
 }
 
 export function createMockPasswordResetToken(email) {

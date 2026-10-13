@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
-import { endMockAccountSession, isEndpointUnavailable, startMockAccountSession } from './mockAccountSession.js'
+import { clearFrontendSignedOut, endMockAccountSession, isEndpointUnavailable, startMockAccountSession } from './mockAccountSession.js'
 
 function getSignInError(error) {
   switch (error?.code || error?.payload?.code) {
@@ -31,6 +31,7 @@ export default function LoginPage() {
     try {
       const result = await apiClient.post('/auth/user/signin', { email, password })
       endMockAccountSession()
+      clearFrontendSignedOut()
       window.dispatchEvent(new Event('storefront:refresh-header'))
       const redirectTo = result?.data?.redirectTo
       navigate(typeof redirectTo === 'string' && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/')
@@ -38,6 +39,7 @@ export default function LoginPage() {
       if (isEndpointUnavailable(requestError)) {
         try {
           startMockAccountSession(email)
+          clearFrontendSignedOut()
           window.dispatchEvent(new Event('storefront:refresh-header'))
           navigate('/')
           return
