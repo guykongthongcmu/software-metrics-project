@@ -70,6 +70,8 @@ describe('search result pagination and failures', () => {
     expect(await screen.findByText('Product 49')).toBeTruthy()
     expect(screen.getAllByText('…').length).toBeGreaterThan(0)
     expect(screen.getByRole('link', { name: 'Page 5' }).getAttribute('aria-current')).toBe('page')
+    fireEvent.click(screen.getByRole('link', { name: 'Page 6' }))
+    await waitFor(() => expect(screen.getByTestId('location').textContent).toContain('page=6'))
   })
 
   it('shows the search error for rejected requests and malformed responses', async () => {
@@ -85,6 +87,18 @@ describe('search result pagination and failures', () => {
       ? Promise.resolve(success({ categories }))
       : Promise.resolve(success({ results: [] })))
     renderSearchPage(<SearchPage />, '/search?q=malformed')
+    expect(await screen.findByRole('alert')).toBeTruthy()
+
+    cleanup()
+    let dataPage = 0
+    apiClient.get.mockImplementation((path) => {
+      if (path.startsWith('/client/categories')) return Promise.resolve(success({ categories }))
+      dataPage += 1
+      return Promise.resolve(dataPage === 1
+        ? success({ products: [], pagination: { totalPages: 2 } })
+        : success({ unexpected: [] }))
+    })
+    renderSearchPage(<SearchPage />, '/search?q=second-page-error')
     expect(await screen.findByRole('alert')).toBeTruthy()
   })
 

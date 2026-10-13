@@ -68,4 +68,14 @@ describe('search suggestions', () => {
 
     await waitFor(() => expect(screen.getByTestId('location').textContent).toContain('/search?q=linen'))
   })
+
+  it('returns to the suggestion page when the submitted query is blank', async () => {
+    renderSearchPage(<SearchPage />, '/search?q=linen')
+    const input = await screen.findByLabelText('Search products')
+    fireEvent.change(input, { target: { value: '   ' } })
+    fireEvent.submit(screen.getByRole('search'))
+
+    await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/search'))
+    expect(await screen.findByLabelText('Search products')).toBeTruthy()
+  })
 })

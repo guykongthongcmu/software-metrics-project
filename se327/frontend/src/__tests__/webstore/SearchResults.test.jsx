@@ -32,6 +32,16 @@ describe('search result filters and sorting', () => {
     expect(apiClient.get).toHaveBeenCalledWith('/client/products/search?page=1&limit=50&sort=newest&lang=EN&q=linen', { redirectOn401: false })
   })
 
+  it('falls back to imageUrl and an empty colour list for incomplete catalogue data', async () => {
+    apiClient.get.mockImplementation((path) => path.startsWith('/client/categories')
+      ? Promise.resolve(success({ categories }))
+      : Promise.resolve(pageData([makeProduct(3, { image: '', imageUrl: '/fallback.jpg', color: undefined, colors: undefined, category: undefined })])))
+    renderSearchPage(<SearchPage />, '/search?q=incomplete')
+
+    expect(await screen.findByRole('img', { name: 'Product 3' })).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Product 3' }).getAttribute('src')).toBe('/fallback.jpg')
+  })
+
   it('changes category and sort while preserving query parameters', async () => {
     renderSearchPage(<SearchPage />, '/search?q=linen&cat=all')
     await screen.findByText('Product 1')
@@ -43,6 +53,11 @@ describe('search result filters and sorting', () => {
     await waitFor(() => expect(screen.getByTestId('location').textContent).toContain('sort=price_asc'))
     expect(screen.getByTestId('location').textContent).toContain('q=linen')
     expect(apiClient.get.mock.calls.some(([path]) => path.includes('sort=price_asc'))).toBe(true)
+    fireEvent.click(screen.getByRole('button', { name: 'All (1)' }))
+    await waitFor(() => expect(screen.getByTestId('location').textContent).not.toContain('cat=women'))
+    fireEvent.click(screen.getByRole('button', { name: /Sort by: Lowest Price/ }))
+    fireEvent.click(screen.getByRole('option', { name: 'Recommended' }))
+    await waitFor(() => expect(screen.getByTestId('location').textContent).not.toContain('sort=price_asc'))
   })
 
   it('uses the category catalogue endpoint and derives category count for category searches', async () => {

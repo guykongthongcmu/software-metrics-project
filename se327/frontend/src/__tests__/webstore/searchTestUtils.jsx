@@ -23,7 +23,7 @@ export function success(data) {
 }
 
 export function renderSearchPage(component, entry = '/search', options = {}) {
-  if (options.scrollTo) vi.stubGlobal('scrollTo', options.scrollTo)
+  vi.stubGlobal('scrollTo', options.scrollTo || vi.fn())
   return render(
     <MemoryRouter initialEntries={[entry]}>
       <FavoritesProvider>
