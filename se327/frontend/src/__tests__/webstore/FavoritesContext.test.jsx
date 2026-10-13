@@ -1,76 +1,92 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { FavoritesProvider, getMockFavoriteCount, readMockFavorites, useFavorites } from '../../pages/webstore/partials/FavoritesContext.jsx'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
+import { ApiError, apiClient } from '../../lib/apiClient.js'
+import { FavoritesProvider, useFavorites } from '../../pages/webstore/partials/FavoritesContext.jsx'
 
-const KEY = 'core-co-mock-favorites'
-
-afterEach(() => cleanup())
-beforeEach(() => window.localStorage.clear())
+vi.mock('../../lib/apiClient.js', async (importOriginal) => {
+  const actual = await importOriginal()
+  return { ...actual, apiClient: { get: vi.fn(), post: vi.fn(), delete: vi.fn() } }
+})
 
 function FavoritesProbe() {
-  const { favoriteIds, toggleFavorite } = useFavorites()
+  const { favoriteIds, loaded, toggleFavorite } = useFavorites()
   return (
     <div>
-      <output>{[...favoriteIds].join(',')}</output>
-      <button onClick={() => toggleFavorite(7)} type="button">Toggle seven</button>
-      <button onClick={() => toggleFavorite('8')} type="button">Toggle eight</button>
+      <output aria-label="Favorite ids">{[...favoriteIds].join(',')}</output>
+      <output aria-label="Favorites loaded">{String(loaded)}</output>
+      <button onClick={() => { void toggleFavorite(7) }} type="button">Toggle seven</button>
+      <button onClick={() => { void toggleFavorite('8') }} type="button">Toggle eight</button>
     </div>
   )
 }
 
-describe('mock favorites storage', () => {
-  it('reads numeric favorite ids and reports their count', () => {
-    window.localStorage.setItem(KEY, JSON.stringify([1, '2', 'invalid']))
+function renderFavorites() {
+  return render(<MemoryRouter><FavoritesProvider><FavoritesProbe /></FavoritesProvider></MemoryRouter>)
+}
 
-    expect([...readMockFavorites()]).toEqual([1, 2])
-    expect(getMockFavoriteCount()).toBe(2)
+describe('FavoritesProvider', () => {
+  beforeEach(() => {
+    apiClient.get.mockReset()
+    apiClient.post.mockReset()
+    apiClient.delete.mockReset()
+    apiClient.get.mockResolvedValue({ data: { products: [{ productId: 8 }, { productId: 'invalid' }] } })
+    apiClient.post.mockResolvedValue({ data: { isFavorite: true, favoritesCount: 2 } })
+    apiClient.delete.mockResolvedValue({ data: { isFavorite: false, favoritesCount: 0 } })
   })
 
-  it.each(['not json', '{"not":"an array"}', 'null'])('falls back to an empty set for invalid saved data: %s', (saved) => {
-    window.localStorage.setItem(KEY, saved)
+  afterEach(() => cleanup())
 
-    expect(readMockFavorites().size).toBe(0)
+  it('loads favorite ids from the favorites API', async () => {
+    renderFavorites()
+
+    expect((await screen.findByLabelText('Favorite ids')).textContent).toBe('8')
+    expect(screen.getByLabelText('Favorites loaded').textContent).toBe('true')
+    expect(apiClient.get).toHaveBeenCalledWith('/client/favorites?lang=EN', { redirectOn401: false })
   })
 
-  it('falls back to an empty set when local storage cannot be read', () => {
-    const getItem = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => { throw new Error('blocked') })
-
-    expect(readMockFavorites().size).toBe(0)
-    getItem.mockRestore()
-  })
-
-  it('adds and removes ids, persists state, and emits the updated count', () => {
-    window.localStorage.setItem(KEY, JSON.stringify([8]))
+  it('adds and removes favorites through the API and broadcasts the count', async () => {
     const listener = vi.fn()
     window.addEventListener('storefront:favorites-updated', listener)
-    render(<FavoritesProvider><FavoritesProbe /></FavoritesProvider>)
+    renderFavorites()
+    await screen.findByLabelText('Favorites loaded')
 
-    expect(screen.getByText('8').textContent).toBe('8')
     fireEvent.click(screen.getByRole('button', { name: 'Toggle seven' }))
-    expect(screen.getByText('8,7').textContent).toBe('8,7')
-    expect(JSON.parse(window.localStorage.getItem(KEY))).toEqual([8, 7])
-    expect(listener.mock.calls.at(-1)[0].detail.count).toBe(2)
+    await waitFor(() => expect(screen.getByLabelText('Favorite ids').textContent).toBe('8,7'))
+    expect(apiClient.post).toHaveBeenCalledWith('/client/favorites/7?lang=EN', {}, { redirectOn401: false })
+    expect(listener.mock.calls.at(-1)[0].detail).toMatchObject({ count: 2, productId: 7, isFavorite: true })
 
     fireEvent.click(screen.getByRole('button', { name: 'Toggle eight' }))
-    expect(screen.getByRole('status').textContent).toBe('7')
-    expect(JSON.parse(window.localStorage.getItem(KEY))).toEqual([7])
-    expect(listener.mock.calls.at(-1)[0].detail.count).toBe(1)
+    await waitFor(() => expect(apiClient.delete).toHaveBeenCalledWith('/client/favorites/8?lang=EN', { redirectOn401: false }))
+    expect(screen.getByLabelText('Favorite ids').textContent).toBe('7')
+    expect(listener.mock.calls.at(-1)[0].detail).toMatchObject({ count: 0, productId: 8, isFavorite: false })
     window.removeEventListener('storefront:favorites-updated', listener)
   })
 
-  it('keeps in-memory state if local storage writes fail', () => {
-    const setItem = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('blocked') })
-    render(<FavoritesProvider><FavoritesProbe /></FavoritesProvider>)
+  it('uses an empty list when loading favorites fails', async () => {
+    apiClient.get.mockRejectedValueOnce(new Error('offline'))
+    renderFavorites()
 
+    expect((await screen.findByLabelText('Favorites loaded')).textContent).toBe('true')
+    expect(screen.getByLabelText('Favorite ids').textContent).toBe('')
+  })
+
+  it('navigates to login when changing favorites returns unauthorized', async () => {
+    apiClient.post.mockRejectedValueOnce(new ApiError('Unauthorized', { status: 401 }))
+    render(
+      <MemoryRouter initialEntries={['/favorites']}>
+        <FavoritesProvider><FavoritesProbe /></FavoritesProvider>
+      </MemoryRouter>,
+    )
+    await screen.findByLabelText('Favorites loaded')
     fireEvent.click(screen.getByRole('button', { name: 'Toggle seven' }))
-    expect(screen.getByText('7').textContent).toBe('7')
-    setItem.mockRestore()
+
+    await waitFor(() => expect(apiClient.post).toHaveBeenCalled())
   })
 
   it('requires the provider', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-    expect(() => render(<FavoritesProbe />)).toThrow('useFavorites must be used within FavoritesProvider')
+    expect(() => render(<MemoryRouter><FavoritesProbe /></MemoryRouter>)).toThrow('useFavorites must be used within FavoritesProvider')
     errorSpy.mockRestore()
   })
 })
