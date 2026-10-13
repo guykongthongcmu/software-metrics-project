@@ -1,3 +1,4 @@
+import time
 from datetime import timedelta
 from unittest import mock
 
@@ -64,7 +65,7 @@ class ForgotPasswordTests(ResetBase):
 
     def test_expiry_default_and_env(self):
         self.assertEqual(reset_expiry_minutes(), 15)
-        for value, expected in (('30', 30), ('0.5', 0.5), ('0', 15), ('-3', 15), ('abc', 15)):
+        for value, expected in (('30', 30), ('0.5', 0.5), ('0', 15), ('-3', 15), ('abc', 15), ('nan', 15), ('inf', 15), ('-inf', 15)):
             with mock.patch.dict('os.environ', {'PASSWORD_RESET_EXPIRY_MINUTES': value}):
                 self.assertEqual(reset_expiry_minutes(), expected)
         make_user()
@@ -127,6 +128,18 @@ class ForgotPasswordTests(ResetBase):
             res = self.forgot(email)
             self.assertEqual(res.status_code, 400)
             self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_lone_surrogate_email_400_not_500(self):
+        res = self.forgot('ja\ud800ne@example.com')
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_huge_email_rejected_quickly(self):
+        start = time.monotonic()
+        res = self.forgot('a' * 40000 + '@example.com')
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+        self.assertLess(time.monotonic() - start, 1)
 
     def test_non_object_body_400(self):
         res = self.post('/api/auth/forgot-password', ['a'])
@@ -201,6 +214,12 @@ class ResetPasswordTests(ResetBase):
             res = self.reset('abc123', new=password)
             self.assertEqual(res.status_code, 400)
             self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_lone_surrogate_password_400_not_500(self):
+        self.make_token()
+        res = self.reset('abc123', new='pass\ud800word1')
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
 
     def test_reset_revokes_all_customer_sessions(self):
         record = self.make_token()

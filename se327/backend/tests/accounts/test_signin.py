@@ -1,11 +1,14 @@
+import time
 from datetime import date
+from unittest import mock
 
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password, make_password
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from apps.accounts.models import Admin, Session, User
 from apps.accounts.sessions import COOKIE_NAME, create_session
+from apps.accounts.signin import dummy_hash
 
 FAST_HASH = override_settings(PASSWORD_HASHERS=['django.contrib.auth.hashers.MD5PasswordHasher'])
 
@@ -87,6 +90,25 @@ class SigninTests(TestCase):
             res = self.post(body)
             self.assertEqual(res.status_code, 400)
             self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_lone_surrogate_400_not_500(self):
+        for body in ({'email': 'ja\ud800ne@example.com', 'password': 'longenough1'},
+                     {'email': 'jane@example.com', 'password': 'pass\ud800word1'}):
+            res = self.post(body)
+            self.assertEqual(res.status_code, 400)
+            self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_huge_email_rejected_quickly(self):
+        start = time.monotonic()
+        res = self.post({'email': 'a' * 40000 + '@example.com', 'password': 'longenough1'})
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+        self.assertLess(time.monotonic() - start, 1)
+
+    def test_unknown_email_still_checks_dummy_hash(self):
+        with mock.patch('apps.accounts.signin.check_password', wraps=check_password) as checked:
+            self.post({'email': 'nobody@example.com', 'password': 'wrongpass1'})
+        checked.assert_called_once_with('wrongpass1', dummy_hash())
 
     def test_unverified_user_can_sign_in(self):
         make_user(verified=False)
