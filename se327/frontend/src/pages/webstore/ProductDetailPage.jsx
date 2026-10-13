@@ -81,6 +81,30 @@ function Accordion({ title, children }) {
   )
 }
 
+function VariantSelectors({ colors, variants, color, sizes, size, selectColor, selectSize }) {
+  const hasVariantCatalog = variants.length > 0
+  return (
+    <>
+      <p className="mb-[7px] text-[0.62rem] uppercase tracking-[0.12em] text-[#999]">COLOR: <strong className="text-[#2a2520]">{color}</strong></p>
+      <div aria-label="Available colors" className="mb-4 flex gap-[7px]">
+        {colors.map((entry) => {
+          const key = entry.toLowerCase()
+          const colorHasStock = !hasVariantCatalog || variants.some((variant) => variant.color === entry && Number(variant.stockQty) > 0)
+          return <button aria-label={`${entry}${colorHasStock ? '' : ', out of stock'}`} aria-pressed={entry === color} className={`h-6 w-6 rounded-full border-2 transition-transform ${entry === color ? 'scale-110 border-[#b89b6e]' : 'border-transparent hover:scale-110'} disabled:cursor-not-allowed disabled:opacity-40`} disabled={!colorHasStock} key={entry} onClick={() => selectColor(entry)} style={{ backgroundColor: colorSwatches[key] || '#ccc', boxShadow: lightColors.has(key) ? 'inset 0 0 0 1px #bbb' : undefined }} title={colorHasStock ? entry : `${entry} — Out of Stock`} type="button" />
+        })}
+      </div>
+
+      <p className="mb-[7px] flex items-center justify-between text-[0.62rem] uppercase tracking-[0.12em] text-[#999]"> <span>SIZE: <strong className="text-[#2a2520]">{size}</strong></span><span className="cursor-pointer text-[0.65rem] normal-case tracking-normal underline">Size guide</span></p>
+      <div aria-label="Available sizes" className="mb-[5px] flex flex-wrap gap-[5px]">
+        {sizes.map((entry) => {
+          const inStock = !hasVariantCatalog || variants.some((variant) => variant.color === color && variant.size === entry && Number(variant.stockQty) > 0)
+          return <button aria-label={`${entry}${inStock ? '' : ', out of stock'}`} aria-pressed={entry === size} className={`h-8 min-w-[38px] rounded-full border px-2 text-[0.68rem] transition-colors ${entry === size ? 'border-[#b89b6e] bg-[#b89b6e] text-white' : 'border-[#e0dbd2] bg-white hover:border-[#b89b6e]'} disabled:cursor-not-allowed disabled:opacity-40`} disabled={!inStock} key={entry} onClick={() => selectSize(entry)} title={inStock ? entry : `${entry} — Out of Stock`} type="button">{entry}</button>
+        })}
+      </div>
+    </>
+  )
+}
+
 export default function ProductDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -162,6 +186,11 @@ export default function ProductDetailPage() {
     setQuantity(1)
   }
 
+  function selectSize(nextSize) {
+    setSize(nextSize)
+    setQuantity(1)
+  }
+
   async function toggleFavorite() {
     if (!product || busy) return
     setBusy(true)
@@ -232,22 +261,7 @@ export default function ProductDetailPage() {
             <p className="mb-3 text-[1.1rem] font-medium text-[#b89b6e]">{money(displayedPrice)}{displayedOriginalPrice != null && <span className="ml-2 text-[0.85rem] text-[#999] line-through">{money(displayedOriginalPrice)}</span>}</p>
             <p className="mb-[18px] text-[0.8rem] leading-[1.75] text-[#999]">{product.detail || ''}</p>
 
-            <p className="mb-[7px] text-[0.62rem] uppercase tracking-[0.12em] text-[#999]">COLOR: <strong className="text-[#2a2520]">{color}</strong></p>
-            <div aria-label="Available colors" className="mb-4 flex gap-[7px]">
-              {colors.map((entry) => {
-                const key = entry.toLowerCase()
-                const colorHasStock = !hasVariantCatalog || variants.some((variant) => variant.color === entry && Number(variant.stockQty) > 0)
-                return <button aria-label={`${entry}${colorHasStock ? '' : ', out of stock'}`} aria-pressed={entry === color} className={`h-6 w-6 rounded-full border-2 transition-transform ${entry === color ? 'scale-110 border-[#b89b6e]' : 'border-transparent hover:scale-110'} disabled:cursor-not-allowed disabled:opacity-40`} disabled={!colorHasStock} key={entry} onClick={() => selectColor(entry)} style={{ backgroundColor: colorSwatches[key] || '#ccc', boxShadow: lightColors.has(key) ? 'inset 0 0 0 1px #bbb' : undefined }} title={colorHasStock ? entry : `${entry} — Out of Stock`} type="button" />
-              })}
-            </div>
-
-            <p className="mb-[7px] flex items-center justify-between text-[0.62rem] uppercase tracking-[0.12em] text-[#999]"> <span>SIZE: <strong className="text-[#2a2520]">{size}</strong></span><span className="cursor-pointer text-[0.65rem] normal-case tracking-normal underline">Size guide</span></p>
-            <div aria-label="Available sizes" className="mb-[5px] flex flex-wrap gap-[5px]">
-              {sizes.map((entry) => {
-                const inStock = !hasVariantCatalog || variants.some((variant) => variant.color === color && variant.size === entry && Number(variant.stockQty) > 0)
-                return <button aria-label={`${entry}${inStock ? '' : ', out of stock'}`} aria-pressed={entry === size} className={`h-8 min-w-[38px] rounded-full border px-2 text-[0.68rem] transition-colors ${entry === size ? 'border-[#b89b6e] bg-[#b89b6e] text-white' : 'border-[#e0dbd2] bg-white hover:border-[#b89b6e]'} disabled:cursor-not-allowed disabled:opacity-40`} disabled={!inStock} key={entry} onClick={() => { setSize(entry); setQuantity(1) }} title={inStock ? entry : `${entry} — Out of Stock`} type="button">{entry}</button>
-              })}
-            </div>
+            <VariantSelectors colors={colors} variants={variants} color={color} sizes={sizes} size={size} selectColor={selectColor} selectSize={selectSize} />
             {chosenVariant && chosenVariant.stockQty <= 0 && <p className="mb-2 text-xs text-red-700">Out of Stock</p>}
             <div className="mb-5 mt-4 flex items-stretch gap-[7px]">
               <div className="flex h-[42px] overflow-hidden rounded-full border border-[#e0dbd2] bg-white">
