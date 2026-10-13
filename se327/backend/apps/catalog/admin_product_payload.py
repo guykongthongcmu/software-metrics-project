@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from common.choices import Language
 
-from .admin_base import ID_MAX, AdminError
+from .admin_base import ID_MAX, AdminError, is_encodable
 from .models import Product
 
 MAX_IMAGES = 4
@@ -19,7 +19,7 @@ def validation_error(errors):
 
 def clean_text(value, max_len, required=True):
     """Return the trimmed string, or None when it is not acceptable."""
-    if not isinstance(value, str) or '\x00' in value:
+    if not isinstance(value, str) or '\x00' in value or not is_encodable(value):
         return None
     value = value.strip()
     if len(value) > max_len or (required and not value):

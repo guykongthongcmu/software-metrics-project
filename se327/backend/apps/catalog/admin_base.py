@@ -40,3 +40,12 @@ def parse_id(raw, code, message):
     if not (raw.isascii() and raw.isdigit()) or not 0 < int(raw) < ID_MAX:
         raise AdminError(400, code, message)
     return int(raw)
+
+
+def is_encodable(text):
+    # a lone surrogate parses from JSON but cannot be stored
+    try:
+        text.encode('utf-8')
+    except UnicodeEncodeError:
+        return False
+    return True
