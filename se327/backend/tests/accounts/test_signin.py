@@ -31,6 +31,8 @@ class SigninTests(TestCase):
         self.assertEqual(data['role'], 'user')
         self.assertEqual(data['user_id'], user.user_id)
         self.assertEqual(data['name'], 'Jane Doe')
+        self.assertEqual(data['phone_number'], '0812345678')
+        self.assertIs(data['email_verified'], True)
         self.assertEqual(data['redirectTo'], '/')
         self.assertIn('expiresAt', data['session'])
         cookie = res.cookies[COOKIE_NAME]
@@ -90,6 +92,7 @@ class SigninTests(TestCase):
         make_user(verified=False)
         res = self.post({'email': 'jane@example.com', 'password': 'longenough1'})
         self.assertEqual(res.status_code, 200)
+        self.assertIs(res.json()['data']['email_verified'], False)
 
     def test_admin_credentials_rejected_on_customer_route(self):
         Admin.objects.create(email='boss@example.com', password_hash=make_password('adminpass1'),

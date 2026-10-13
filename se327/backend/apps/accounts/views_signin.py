@@ -22,6 +22,8 @@ class UserSigninView(APIView):
             'user_id': user.user_id,
             'email': user.email,
             'name': signin.full_name(user),
+            'phone_number': user.phone_number,
+            'email_verified': user.email_verified_at is not None,
             'redirectTo': '/',
             'session': {'expiresAt': expires.isoformat()},
         })
