@@ -18,6 +18,7 @@ import AllProductsPage from './pages/webstore/AllProductsPage.jsx'
 import ProductDetailPage from './pages/webstore/ProductDetailPage.jsx'
 import SearchPage from './pages/webstore/SearchPage.jsx'
 import CartPage from './pages/webstore/CartPage.jsx'
+import CategoryLandingPage from './pages/webstore/CategoryLandingPage.jsx'
 
 function getAccountPage(route) {
   switch (route.path) {
@@ -63,6 +64,7 @@ function getStorefrontPage(route) {
   if (route.path === '/search') return <SearchPage />
   if (route.path === '/products/:id') return <ProductDetailPage />
   if (route.path === '/cart') return <CartPage />
+  if (route.category) return <CategoryLandingPage category={route} />
   return <StorefrontPlaceholder title={route.title} />
 }
 
