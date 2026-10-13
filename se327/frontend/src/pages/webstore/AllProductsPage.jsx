@@ -147,20 +147,17 @@ export default function AllProductsPage() {
 
   useEffect(() => {
     let active = true
-    loadCatalog()
-      .then((catalog) => {
+    const loadProducts = async () => {
+      try {
+        const catalog = await loadCatalog()
         if (active) setProducts(catalog)
-      }, () => {
+      } catch {
         if (active) setError('Products could not be loaded. Please try again later.')
-      })
-      .then(() => {
+      } finally {
         if (active) setLoading(false)
-      }, () => {
-        if (active) {
-          setError('Products could not be loaded. Please try again later.')
-          setLoading(false)
-        }
-      })
+      }
+    }
+    void loadProducts()
     return () => { active = false }
   }, [])
 
