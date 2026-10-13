@@ -217,7 +217,7 @@ export default function ProductDetailPage() {
       setFavorite(nextFavorite)
       window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: { count: response?.data?.favoritesCount } }))
     } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) navigate('/login')
+      if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
       else setCartMessage('Could not update favorites. Please try again.')
     } finally {
       setBusy(false)
@@ -239,7 +239,7 @@ export default function ProductDetailPage() {
       window.dispatchEvent(new CustomEvent('storefront:cart-updated', { detail: { count: totalItems } }))
       setCartMessage(`${product.name} added to cart`)
     } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) navigate('/login')
+      if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
       else setCartMessage(requestError instanceof ApiError ? requestError.message : 'Could not connect to server.')
     } finally {
       setBusy(false)
