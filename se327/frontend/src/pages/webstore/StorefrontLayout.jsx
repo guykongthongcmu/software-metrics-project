@@ -17,6 +17,10 @@ function categorySlug(category) {
 
 export default function StorefrontLayout() {
   const location = useLocation()
+  const isSignupPage = location.pathname.startsWith('/auth/signup')
+  const hideStorefrontFooter = location.pathname === '/login'
+    || location.pathname.startsWith('/auth/signup')
+    || ['/forgot-password', '/forgot-password-success', '/auth/reset-password'].includes(location.pathname)
   const [categories, setCategories] = useState([])
   useEffect(() => {
     const routes = [...storefrontRoutes, ...accountRoutes]
@@ -48,5 +52,18 @@ export default function StorefrontLayout() {
     .map((slug) => storefrontRoutes.find((route) => route.path === `/${slug}`))
     .filter(Boolean)
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [location.pathname])
-  return <div data-theme="storefront" className="min-h-screen bg-canvas text-ink"><StorefrontHeader visibleCategoryRoutes={visibleCategoryRoutes} /><FavoritesProvider><Outlet /></FavoritesProvider><StorefrontFooter /></div>
+return (
+  <div
+    data-theme="storefront"
+    className={`flex min-h-screen flex-col text-ink ${
+      isSignupPage ? 'signup-page-shell' : 'bg-canvas'
+    }`}
+  >
+    <StorefrontHeader visibleCategoryRoutes={visibleCategoryRoutes} />
+    <FavoritesProvider>
+      <Outlet />
+    </FavoritesProvider>
+    {!hideStorefrontFooter && <StorefrontFooter />}
+  </div>
+)
 }

@@ -5,6 +5,28 @@ import { storefrontRoutes } from './pages/webstore/routes.js'
 import StorefrontLayout from './pages/webstore/StorefrontLayout.jsx'
 import AboutPage from './pages/webstore/AboutPage.jsx'
 import ContactPage from './pages/webstore/ContactPage.jsx'
+import LoginPage from './pages/account/LoginPage.jsx'
+import SignupPage from './pages/account/SignupPage.jsx'
+import SignupInfoPage from './pages/account/SignupInfoPage.jsx'
+import SignupConfirmPage from './pages/account/SignupConfirmPage.jsx'
+import ForgotPasswordPage from './pages/account/ForgotPasswordPage.jsx'
+import ForgotPasswordSuccessPage from './pages/account/ForgotPasswordSuccessPage.jsx'
+import ResetPasswordPage from './pages/account/ResetPasswordPage.jsx'
+import ProfilePage from './pages/account/ProfilePage.jsx'
+
+function getAccountPage(route) {
+  switch (route.path) {
+    case '/login': return <LoginPage />
+    case '/auth/signup': return <SignupPage />
+    case '/auth/signup-info': return <SignupInfoPage />
+    case '/auth/signup-confirm': return <SignupConfirmPage />
+    case '/forgot-password': return <ForgotPasswordPage />
+    case '/forgot-password-success': return <ForgotPasswordSuccessPage />
+    case '/auth/reset-password': return <ResetPasswordPage />
+    case '/account/profile': return <ProfilePage />
+    default: return <StorefrontPlaceholder title={route.title} />
+  }
+}
 import HomePage from './pages/webstore/HomePage.jsx'
 import ProductDetailPage from './pages/webstore/ProductDetailPage.jsx'
 
@@ -31,6 +53,7 @@ function NotFoundPage() {
 }
 
 function getStorefrontPage(route) {
+  if (route.path === '/login') return <LoginPage />
   if (route.path === '/') return <HomePage />
   if (route.path === '/about') return <AboutPage />
   if (route.path === '/contact') return <ContactPage />
@@ -43,7 +66,7 @@ export default function App() {
     <Routes>
       <Route element={<StorefrontLayout />}>
         {storefrontRoutes.map((route) => <Route key={route.path} path={route.path} element={getStorefrontPage(route)} />)}
-        {accountRoutes.map((route) => <Route key={route.path} path={route.path} element={<StorefrontPlaceholder title={route.title} />} />)}
+        {accountRoutes.map((route) => <Route key={route.path} path={route.path} element={getAccountPage(route)} />)}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       {adminRoutes.map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}

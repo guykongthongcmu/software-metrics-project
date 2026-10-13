@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import App from '../App.jsx'
 
@@ -13,6 +13,7 @@ vi.mock('../lib/apiClient.js', () => ({
   },
 }))
 vi.stubGlobal('scrollTo', vi.fn())
+afterEach(cleanup)
 
 describe('App routes', () => {
   it('renders the home hero and new arrivals section', async () => {
@@ -31,6 +32,14 @@ describe('App routes', () => {
     expect(await screen.findByRole('heading', { name: 'Store Information' })).toBeTruthy()
   })
 
+  it('renders the sign-in form at the login route', async () => {
+    render(<MemoryRouter initialEntries={['/login']}><App /></MemoryRouter>)
+    expect(await screen.findByRole('heading', { name: 'SIGN IN' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Forgot Password?' }).getAttribute('href')).toBe('/forgot-password')
+    expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeTruthy()
+    expect(screen.queryByText('© 2026 Core & Co. All rights reserved.')).toBeNull()
+  })
+
   it('renders admin routes and redirects legacy admin paths', async () => {
     const { unmount } = render(<MemoryRouter initialEntries={['/admin/products/create']}><App /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'Create product' })).toBeTruthy()
@@ -41,7 +50,7 @@ describe('App routes', () => {
 
   it('redirects the legacy profile route and renders a not-found page', async () => {
     const { unmount } = render(<MemoryRouter initialEntries={['/profile']}><App /></MemoryRouter>)
-    expect(await screen.findByRole('heading', { name: 'My profile' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'My Profile' })).toBeTruthy()
     unmount()
     render(<MemoryRouter initialEntries={['/no-such-page']}><App /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeTruthy()
