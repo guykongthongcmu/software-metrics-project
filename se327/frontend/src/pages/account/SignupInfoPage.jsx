@@ -42,7 +42,7 @@ export default function SignupInfoPage() {
     const dateInput = event.currentTarget.elements.namedItem('dob')
     dateInput.setCustomValidity(form.dob && !isValidDateOfBirth(form.dob) ? 'Please enter a valid date of birth.' : '')
     if (!email || !form.name || !form.surname || !isValidDateOfBirth(form.dob) || !canContinue) return
-    navigate('/auth/signup-confirm')
+    void navigate('/auth/signup-confirm')
   }
 
   return (

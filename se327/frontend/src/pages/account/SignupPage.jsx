@@ -9,7 +9,7 @@ export default function SignupPage() {
   function handleSubmit(event) {
     event.preventDefault()
     const query = new URLSearchParams({ email })
-    navigate(`/auth/signup-info?${query.toString()}`)
+    void navigate(`/auth/signup-info?${query.toString()}`)
   }
 
   return (

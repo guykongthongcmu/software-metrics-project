@@ -15,12 +15,12 @@ export default function ForgotPasswordPage() {
     setIsSubmitting(true)
     try {
       await apiClient.post('/auth/forgot-password', { email: email.trim() })
-      navigate('/forgot-password-success')
+      void navigate('/forgot-password-success')
     } catch (requestError) {
       if (isEndpointUnavailable(requestError)) {
         try {
           const token = createMockPasswordResetToken(email)
-          navigate(`/forgot-password-success?demo=1&token=${encodeURIComponent(token)}`)
+          void navigate(`/forgot-password-success?demo=1&token=${encodeURIComponent(token)}`)
           return
         } catch {
           setError('Could not create a demo reset link in this browser.')

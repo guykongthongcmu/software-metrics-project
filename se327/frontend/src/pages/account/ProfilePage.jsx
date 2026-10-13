@@ -29,19 +29,19 @@ export default function ProfilePage() {
   useEffect(() => {
     let active = true
     if (isFrontendSignedOut()) {
-      navigate('/login', { replace: true })
+      void navigate('/login', { replace: true })
       return () => { active = false }
     }
     const demoSession = getMockAccountSession()
     if (demoSession?.profile) return () => { active = false }
-    apiClient.get('/auth/user/profile', { redirectOn401: false })
+    void apiClient.get('/auth/user/profile', { redirectOn401: false })
       .then((result) => {
         if (active) setProfile(result?.data || null)
       })
       .catch((requestError) => {
         if (!active) return
         if (isEndpointUnavailable(requestError)) {
-          navigate('/login', { replace: true })
+          void navigate('/login', { replace: true })
           return
         }
         if (requestError?.status === 401 || requestError?.code === 'UNAUTHORIZED') {
@@ -50,7 +50,7 @@ export default function ProfilePage() {
             setProfile(currentDemoSession.profile)
             return
           }
-          navigate('/login', { replace: true })
+          void navigate('/login', { replace: true })
           return
         }
         setError(requestError?.message || 'Could not load your profile')
@@ -63,7 +63,7 @@ export default function ProfilePage() {
     endMockAccountSession()
     markFrontendSignedOut()
     window.dispatchEvent(new Event('storefront:refresh-header'))
-    navigate('/', { replace: true })
+    void navigate('/', { replace: true })
   }
 
   if (isFrontendSignedOut()) return null

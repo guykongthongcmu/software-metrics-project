@@ -29,7 +29,7 @@ export default function ResetPasswordPage() {
         setError('This demo reset link is invalid or has already been used.')
         return
       }
-      navigate('/login?reset=demo')
+      void navigate('/login?reset=demo')
       return
     }
     setIsSubmitting(true)
@@ -39,10 +39,10 @@ export default function ResetPasswordPage() {
         new_password: newPassword,
         confirm_password: confirmPassword,
       })
-      navigate('/login')
+      void navigate('/login')
     } catch (requestError) {
       if (isEndpointUnavailable(requestError) && consumeMockPasswordResetToken(token)) {
-        navigate('/login?reset=demo')
+        void navigate('/login?reset=demo')
         return
       }
       setError(requestError?.message || 'Could not reset password')

@@ -59,7 +59,13 @@ export function isFrontendSignedOut() {
 }
 
 export function createMockPasswordResetToken(email) {
-  const token = `demo-reset-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+  const randomBytes = new Uint8Array(32)
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error('Secure random token generation is unavailable in this browser.')
+  }
+  globalThis.crypto.getRandomValues(randomBytes)
+  const randomToken = Array.from(randomBytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+  const token = `demo-reset-${randomToken}`
   window.sessionStorage.setItem(RESET_TOKEN_KEY, JSON.stringify({ email: email.trim().toLowerCase(), token }))
   return token
 }

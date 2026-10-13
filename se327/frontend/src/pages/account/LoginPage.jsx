@@ -34,14 +34,14 @@ export default function LoginPage() {
       clearFrontendSignedOut()
       window.dispatchEvent(new Event('storefront:refresh-header'))
       const redirectTo = result?.data?.redirectTo
-      navigate(typeof redirectTo === 'string' && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/')
+      void navigate(typeof redirectTo === 'string' && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/')
     } catch (requestError) {
       if (isEndpointUnavailable(requestError)) {
         try {
           startMockAccountSession(email)
           clearFrontendSignedOut()
           window.dispatchEvent(new Event('storefront:refresh-header'))
-          navigate('/')
+          void navigate('/')
           return
         } catch {
           setError('Could not start the demo session in this browser.')

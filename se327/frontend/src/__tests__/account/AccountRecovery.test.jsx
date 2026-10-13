@@ -24,6 +24,7 @@ afterEach(() => {
   cleanup()
   vi.clearAllMocks()
   window.sessionStorage.clear()
+  vi.unstubAllGlobals()
 })
 
 function Location() {
@@ -222,5 +223,23 @@ describe('mock account session helpers', () => {
     expect(consumeMockPasswordResetToken(token)).toBe(false)
     window.sessionStorage.setItem('se327:demo-password-reset', 'broken')
     expect(consumeMockPasswordResetToken(token)).toBe(false)
+  })
+
+  it('generates reset tokens from browser cryptographic randomness', () => {
+    const getRandomValues = vi.fn((bytes) => {
+      bytes.fill(0xab)
+      return bytes
+    })
+    vi.stubGlobal('crypto', { getRandomValues })
+
+    const token = createMockPasswordResetToken('member@example.com')
+    expect(getRandomValues).toHaveBeenCalledOnce()
+    expect(getRandomValues.mock.calls[0][0]).toBeInstanceOf(Uint8Array)
+    expect(token).toBe(`demo-reset-${'ab'.repeat(32)}`)
+  })
+
+  it('does not create password reset tokens without browser cryptography', () => {
+    vi.stubGlobal('crypto', undefined)
+    expect(() => createMockPasswordResetToken('member@example.com')).toThrow('Secure random token generation is unavailable')
   })
 })
