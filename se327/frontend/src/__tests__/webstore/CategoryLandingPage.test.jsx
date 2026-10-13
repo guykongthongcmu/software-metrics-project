@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import CategoryLandingPage from '../../pages/webstore/CategoryLandingPage.jsx'
@@ -87,7 +87,7 @@ describe('CategoryLandingPage', () => {
     expect(within(sellersSection).getAllByRole('heading', { level: 3 })).toHaveLength(8)
     expect(within(arrivalsSection).getByRole('heading', { name: 'New Arrivals' })).toBeTruthy()
     expect(within(sellersSection).getByRole('heading', { name: 'Sale' })).toBeTruthy()
-    expect(within(arrivalsSection).getByRole('link', { name: 'View All' }).getAttribute('href')).toBe('#')
+    expect(within(arrivalsSection).getByRole('button', { name: 'View All' })).toBeTruthy()
     expect(within(arrivalsSection).getByRole('heading', { name: 'Arrival 8' })).toBeTruthy()
     expect(within(arrivalsSection).queryByRole('heading', { name: 'Arrival 9' })).toBeNull()
     expect(within(sellersSection).queryByRole('heading', { name: 'Arrival 1' })).toBeNull()
@@ -115,6 +115,22 @@ describe('CategoryLandingPage', () => {
     renderLanding('women')
     expect((await screen.findByRole('alert')).textContent).toBe('This collection could not be loaded. Please try again later.')
     expect(apiClient.get).not.toHaveBeenCalledWith(expect.stringContaining('/client/products/category/women'), expect.anything())
+  })
+
+  it('announces while a category section is loading', async () => {
+    let resolveArrivals
+    apiClient.get.mockImplementation((path) => {
+      if (path.startsWith('/client/favorites')) return Promise.resolve({ data: { products: [] } })
+      if (path.startsWith('/client/categories')) return Promise.resolve({ data: { categories } })
+      if (path.includes('/recommendations')) return Promise.resolve({ data: { products: [] } })
+      return new Promise((resolve) => { resolveArrivals = resolve })
+    })
+    renderLanding('men')
+
+    expect(await screen.findByText('Loading new arrivals…')).toBeTruthy()
+    await waitFor(() => expect(resolveArrivals).toBeTypeOf('function'))
+    resolveArrivals({ data: { products: [] } })
+    expect(await screen.findByText('No new arrivals are available right now.')).toBeTruthy()
   })
 
   it('shows independent errors for arrivals and best sellers and supports empty states', async () => {
