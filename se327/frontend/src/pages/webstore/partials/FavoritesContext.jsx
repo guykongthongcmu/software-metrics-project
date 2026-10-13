@@ -1,40 +1,98 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ApiError, apiClient } from '../../../lib/apiClient.js'
 
 const FavoritesContext = createContext(null)
-const MOCK_FAVORITES_KEY = 'core-co-mock-favorites'
 
-export function readMockFavorites() {
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(MOCK_FAVORITES_KEY) || '[]')
-    return new Set(Array.isArray(saved) ? saved.map(Number).filter(Number.isFinite) : [])
-  } catch {
-    return new Set()
-  }
-}
-
-export function getMockFavoriteCount() {
-  return readMockFavorites().size
+function dispatchFavoriteUpdate(count, productId, isFavorite) {
+  window.dispatchEvent(new CustomEvent('storefront:favorites-updated', {
+    detail: { count, productId, isFavorite },
+  }))
 }
 
 export function FavoritesProvider({ children }) {
-  const [favoriteIds, setFavoriteIds] = useState(readMockFavorites)
+  const navigate = useNavigate()
+  const [favoriteIds, setFavoriteIds] = useState(new Set())
+  const [busyIds, setBusyIds] = useState(new Set())
+  const [loaded, setLoaded] = useState(false)
 
-  const value = useMemo(() => ({
-    favoriteIds,
-    loaded: true,
-    toggleFavorite(productId) {
+  const loadFavorites = useCallback(async () => {
+    try {
+      const response = await apiClient.get('/client/favorites?lang=EN', { redirectOn401: false })
+      const products = Array.isArray(response?.data?.products) ? response.data.products : []
+      setFavoriteIds(new Set(products.map((product) => Number(product.productId)).filter(Number.isFinite)))
+    } catch {
+      setFavoriteIds(new Set())
+    } finally {
+      setLoaded(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    let active = true
+    apiClient.get('/client/favorites?lang=EN', { redirectOn401: false })
+      .then((response) => {
+        if (!active) return
+        const products = Array.isArray(response?.data?.products) ? response.data.products : []
+        setFavoriteIds(new Set(products.map((product) => Number(product.productId)).filter(Number.isFinite)))
+      })
+      .catch(() => { if (active) setFavoriteIds(new Set()) })
+      .finally(() => { if (active) setLoaded(true) })
+    const refreshFromApi = () => { void loadFavorites() }
+    const applyFavoriteChange = (event) => {
+      const { productId, isFavorite } = event.detail || {}
+      if (productId == null || typeof isFavorite !== 'boolean') {
+        refreshFromApi()
+        return
+      }
+      const id = Number(productId)
+      if (!Number.isFinite(id)) return
       setFavoriteIds((current) => {
         const next = new Set(current)
-        const id = Number(productId)
-        if (next.has(id)) next.delete(id)
-        else next.add(id)
-        try { window.localStorage.setItem(MOCK_FAVORITES_KEY, JSON.stringify([...next])) } catch { /* mock state remains available in memory */ }
-        window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: { count: next.size } }))
+        if (isFavorite) next.add(id)
+        else next.delete(id)
         return next
       })
-    },
-  }), [favoriteIds])
+    }
+    window.addEventListener('storefront:refresh-header', refreshFromApi)
+    window.addEventListener('storefront:favorites-updated', applyFavoriteChange)
+    return () => {
+      active = false
+      window.removeEventListener('storefront:refresh-header', refreshFromApi)
+      window.removeEventListener('storefront:favorites-updated', applyFavoriteChange)
+    }
+  }, [loadFavorites])
 
+  const toggleFavorite = useCallback(async (productId) => {
+    const id = Number(productId)
+    if (!Number.isFinite(id) || busyIds.has(id)) return
+    const currentlyFavorite = favoriteIds.has(id)
+    setBusyIds((current) => new Set(current).add(id))
+    try {
+      const response = currentlyFavorite
+        ? await apiClient.delete(`/client/favorites/${id}?lang=EN`, { redirectOn401: false })
+        : await apiClient.post(`/client/favorites/${id}?lang=EN`, {}, { redirectOn401: false })
+      const isFavorite = Boolean(response?.data?.isFavorite)
+      const count = Number(response?.data?.favoritesCount) || 0
+      setFavoriteIds((current) => {
+        const next = new Set(current)
+        if (isFavorite) next.add(id)
+        else next.delete(id)
+        return next
+      })
+      dispatchFavoriteUpdate(count, id, isFavorite)
+    } catch (requestError) {
+      if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
+    } finally {
+      setBusyIds((current) => {
+        const next = new Set(current)
+        next.delete(id)
+        return next
+      })
+    }
+  }, [busyIds, favoriteIds, navigate])
+
+  const value = useMemo(() => ({ favoriteIds, busyIds, loaded, toggleFavorite }), [favoriteIds, busyIds, loaded, toggleFavorite])
   return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>
 }
 
