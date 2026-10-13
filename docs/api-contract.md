@@ -96,7 +96,7 @@ Base `/api/auth`. Email is trimmed and lower-cased. Email format: `something@som
 | `POST /signup` | none | `{ email, password, first_name, last_name, DOB, phone_number }`, all required | 201 [SignupResult](#9-shared-data-shapes) | 400 `MISSING_REQUIRED_FIELDS` (adds `missingFields`), 400 `INVALID_EMAIL_FORMAT`, 400 `PASSWORD_TOO_SHORT`, 409 `EMAIL_ALREADY_EXISTS` |
 | `GET /verify-email` | none | Query `token` (required), optional `format=json\|html` | 200 `{ user_id, email, email_verified: true }` | 400 `MISSING_REQUIRED_FIELDS`, 400 `INVALID_VERIFICATION_TOKEN`, 409 `VERIFICATION_TOKEN_ALREADY_USED`, 410 `VERIFICATION_TOKEN_EXPIRED`, 409 `EMAIL_ALREADY_VERIFIED` |
 | `POST /resend-verification` | none | `{ email }` | 200 `{ email, verification_email_sent }` | 400 `MISSING_REQUIRED_FIELDS`, 400 `INVALID_EMAIL_FORMAT`, 404 `USER_NOT_FOUND`, 409 `EMAIL_ALREADY_VERIFIED` |
-| `POST /user/signin` | none | `{ email, password }` | 200 [SessionInfo](#9-shared-data-shapes) with `role: "user"`; sets cookie | 400 `MISSING_REQUIRED_FIELDS`, 400 `INVALID_EMAIL_FORMAT`, 401 `INVALID_CREDENTIALS` |
+| `POST /user/signin` | none | `{ email, password }` | 200 [SessionInfo](#9-shared-data-shapes) with `role: "user"`; sets cookie | 400 `MISSING_REQUIRED_FIELDS`, 400 `INVALID_EMAIL_FORMAT`, 401 `INVALID_CREDENTIALS`, 403 `EMAIL_NOT_VERIFIED` |
 | `GET /user/profile` | customer | none | 200 [Profile](#9-shared-data-shapes) | 401, 403, 404 `USER_NOT_FOUND` |
 | `POST /admin/signin` | none | `{ email, password }` | 200 SessionInfo with `role: "admin"`; sets cookie | 400 as above, 401 `INVALID_CREDENTIALS`, 403 `ACCOUNT_INACTIVE` |
 | `POST /forgot-password` | none | `{ email }` | 200, no `data`. Same reply whether or not the email exists | 400 `MISSING_REQUIRED_FIELDS`, 400 `INVALID_EMAIL_FORMAT` (OQ 11) |
@@ -109,6 +109,7 @@ Behaviour notes
 - `verify-email` checks in this order: token exists, not used, not expired, user not already verified. With `format=html`, or an `Accept` header containing `text/html` and no `format=json`, the same outcome is returned as a branded HTML page with the same status code (OQ 10).
 - `resend-verification` invalidates earlier unused verification tokens before issuing a new one.
 - Token lifetimes: verification `EMAIL_VERIFICATION_EXPIRY_MINUTES` (default 5), reset `PASSWORD_RESET_EXPIRY_MINUTES` (default 15). Requesting a new reset link invalidates earlier unused ones.
+- Customer sign in requires a verified email. The 403 `EMAIL_NOT_VERIFIED` is only returned after the password matched, so a wrong password or unknown email still gets 401 `INVALID_CREDENTIALS`, and no session or cookie is created. `resend-verification` stays open so the customer can ask for a new link.
 - Admin accounts are seeded. There is no admin sign up.
 
 ## 5. Storefront catalogue endpoints
