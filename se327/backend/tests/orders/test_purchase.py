@@ -163,6 +163,43 @@ class PurchaseSuccessTests(PurchaseTestCase):
         self.assertNotEqual(res.json()['data']['cartId'], old.pk)
         self.assertEqual(Cart.objects.filter(user=self.user).count(), 2)
 
+    def test_quantity_equal_to_stock_leaves_zero(self):
+        # setUp already has 3 red in the cart and 4 in stock
+        self.add(self.shirt, colour='Red', size='L', qty=1)
+        self.assertEqual(self.buy().status_code, 200)
+        self.red.refresh_from_db()
+        self.assertEqual(self.red.stock_qty, 0)
+
+    def test_edits_after_first_read_are_not_dropped_or_orphaned(self):
+        hat = make_product('Hat', price='10.00', stock=5)
+        hat_variant = ProductVariant.objects.get(product=hat)
+        cart = Cart.objects.get(user=self.user)
+        real_lock = checkout.lock_variants
+        calls = []
+
+        def lock_then_edit(items):
+            locked = real_lock(items)
+            if not calls:
+                # a late edit: one line changes and a new line appears after the first read
+                CartItem.objects.filter(cart=cart, product_variant=self.black).update(quantity=3)
+                CartItem.objects.create(cart=cart, product_variant=hat_variant, quantity=2)
+            calls.append(1)
+            return locked
+
+        with mock.patch.object(checkout, 'lock_variants', lock_then_edit):
+            res = self.buy()
+        self.assertEqual(res.status_code, 200)
+        order = Order.objects.get()
+        self.assertEqual(order.items.count(), 3)
+        self.assertEqual(order.items.get(product_variant=self.black).quantity, 3)
+        self.assertEqual(order.items.get(product_variant=hat_variant).quantity, 2)
+        self.assertEqual(order.subtotal, Decimal('199.97'))
+        self.assertFalse(CartItem.objects.filter(cart=cart).exists())
+        self.black.refresh_from_db()
+        hat_variant.refresh_from_db()
+        self.assertEqual(self.black.stock_qty, 6)
+        self.assertEqual(hat_variant.stock_qty, 3)
+
     def test_second_purchase_finds_cart_empty(self):
         self.assertEqual(self.buy().status_code, 200)
         res = self.buy()
@@ -207,6 +244,15 @@ class PurchaseFailureTests(PurchaseTestCase):
         res = self.buy()
         self.assertEqual(res.status_code, 400)
         self.assertEqual(res.json()['code'], 'CHECKOUT_ADDRESS_REQUIRED')
+        self.assert_nothing_written({self.black: 5})
+
+    def test_total_too_large_is_409_nothing_written(self):
+        self.with_address()
+        self.add(self.shirt, qty=1)
+        ProductVariant.objects.filter(pk=self.black.pk).update(price=Decimal('99999999.00'))
+        res = self.buy()
+        self.assertEqual(res.status_code, 409)
+        self.assertEqual(res.json()['code'], 'ORDER_TOTAL_TOO_LARGE')
         self.assert_nothing_written({self.black: 5})
 
     def test_inactive_variant_is_409(self):
