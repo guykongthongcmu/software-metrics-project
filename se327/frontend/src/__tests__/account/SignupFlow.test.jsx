@@ -1,10 +1,14 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { apiClient } from '../../lib/apiClient.js'
 import SignupConfirmPage from '../../pages/account/SignupConfirmPage.jsx'
 import SignupInfoPage from '../../pages/account/SignupInfoPage.jsx'
 
+vi.mock('../../lib/apiClient.js', () => ({ apiClient: { post: vi.fn() } }))
+
 afterEach(() => { cleanup() })
+beforeEach(() => apiClient.post.mockReset())
 
 function renderInfo() {
   return render(<MemoryRouter initialEntries={['/auth/signup-info?email=member%40example.com']}><Routes>
@@ -91,16 +95,26 @@ describe('SignupInfoPage', () => {
     expect(screen.getByRole('button', { name: 'CONTINUE' }).disabled).toBe(false)
   })
 
-  it('continues to the confirmation step without sending registration data', () => {
+  it('submits registration details to the backend before showing the confirmation step', async () => {
+    apiClient.post.mockResolvedValue({ data: { email: 'member@example.com', verification_email_sent: true } })
     renderInfo()
     fillValidForm()
     expect(screen.getByLabelText('DATE OF BIRTH*').value).toBe('12/03/2000')
     expect(screen.getByRole('button', { name: 'CONTINUE' }).disabled).toBe(false)
     fireEvent.submit(screen.getByRole('button', { name: 'CONTINUE' }).closest('form'))
 
-    expect(screen.getByRole('heading', { name: /We already sent you/ })).toBeTruthy()
+    expect(apiClient.post).toHaveBeenCalledWith('/auth/signup', {
+      email: 'member@example.com',
+      password: 'password123',
+      first_name: 'Mina',
+      last_name: 'Example',
+      DOB: '2000-03-12',
+      phone_number: '+66812345678',
+    })
+    await waitFor(() => expect(screen.getByRole('heading', { name: /We already sent you/ })).toBeTruthy())
     expect(screen.getByLabelText('Sign up progress').querySelector('[aria-current="step"]').textContent).toContain('CONFIRM')
   })
+
 })
 
 describe('SignupConfirmPage', () => {
