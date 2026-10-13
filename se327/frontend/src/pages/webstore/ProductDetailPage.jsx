@@ -2,14 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiError, apiClient } from '../../lib/apiClient.js'
 import ProductCard from './partials/ProductCard.jsx'
-
-const colorSwatches = {
-  white: '#FFFFFF', black: '#222222', grey: '#888888', gray: '#888888', navy: '#1B2A4A',
-  blue: '#4A6FA5', red: '#C0392B', green: '#2E7D32', beige: '#E8DCC8', khaki: '#C3B091',
-  brown: '#795548', pink: '#F06292', purple: '#7B1FA2', yellow: '#F9A825', orange: '#E65100',
-  cream: '#FFFDD0', ivory: '#FFFFF0', natural: '#E8DCC8',
-}
-const lightColors = new Set(['white', 'ivory', 'cream'])
+import { getColorSwatch, isLightColor } from './partials/colorSwatches.js'
 const deliveryText = 'Free standard delivery on orders over $100. Returns accepted within 30 days.'
 
 function money(value) {
@@ -104,9 +97,8 @@ function VariantSelectors({ colors, variants, color, sizes, size, selectColor, s
       <p className="mb-[7px] text-[0.62rem] uppercase tracking-[0.12em] text-[#999]">COLOR: <strong className="text-[#2a2520]">{color}</strong></p>
       <div aria-label="Available colors" className="mb-4 flex gap-[7px]">
         {colors.map((entry) => {
-          const key = entry.toLowerCase()
           const colorHasStock = !hasVariantCatalog || variants.some((variant) => variant.color === entry && Number(variant.stockQty) > 0)
-          return <button aria-label={`${entry}${colorHasStock ? '' : ', out of stock'}`} aria-pressed={entry === color} className={`h-6 w-6 rounded-full border-2 transition-transform ${entry === color ? 'scale-110 border-[#b89b6e]' : 'border-transparent hover:scale-110'} disabled:cursor-not-allowed disabled:opacity-40`} disabled={!colorHasStock} key={entry} onClick={() => selectColor(entry)} style={{ backgroundColor: colorSwatches[key] || '#ccc', boxShadow: lightColors.has(key) ? 'inset 0 0 0 1px #bbb' : undefined }} title={colorHasStock ? entry : `${entry} — Out of Stock`} type="button" />
+          return <button aria-label={`${entry}${colorHasStock ? '' : ', out of stock'}`} aria-pressed={entry === color} className={`h-6 w-6 rounded-full border-2 transition-transform ${entry === color ? 'scale-110 border-[#b89b6e]' : 'border-transparent hover:scale-110'} disabled:cursor-not-allowed disabled:opacity-40`} disabled={!colorHasStock} key={entry} onClick={() => selectColor(entry)} style={{ backgroundColor: getColorSwatch(entry), boxShadow: isLightColor(entry) ? 'inset 0 0 0 1px #bbb' : undefined }} title={colorHasStock ? entry : `${entry} — Out of Stock`} type="button" />
         })}
       </div>
 
