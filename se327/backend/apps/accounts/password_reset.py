@@ -1,6 +1,7 @@
 import math
 import os
 import secrets
+import threading
 from datetime import timedelta
 
 from django.contrib.auth.hashers import make_password
@@ -32,6 +33,13 @@ def reset_expiry_minutes():
     return int(minutes) if minutes == int(minutes) else minutes
 
 
+def dispatch_mail(*args):
+    """Send the reset email on its own thread so a slow SMTP server does not show in the reply time."""
+    thread = threading.Thread(target=send_password_reset_email, args=args, daemon=True)
+    thread.start()
+    return thread
+
+
 def request_reset(email):
     """Issue a reset token if an account has this email. Returns nothing either way."""
     check_text(email, FIELD_LIMITS['email'])
@@ -47,8 +55,8 @@ def request_reset(email):
         expires_at = timezone.now() + timedelta(minutes=reset_expiry_minutes())
         PasswordResetToken.objects.create(user=user, token=token, expires_at=expires_at)
 
-    # the reply is the same if this fails, so a failure is only logged
-    send_password_reset_email(user.email, token, user.first_name, reset_expiry_minutes())
+    # the reply is the same if this fails, so a failure is only logged (by the mail helper)
+    dispatch_mail(user.email, token, user.first_name, reset_expiry_minutes())
 
 
 def reset_password(body):

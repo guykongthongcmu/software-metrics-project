@@ -1,3 +1,4 @@
+import threading
 import time
 from datetime import timedelta
 from unittest import mock
@@ -8,8 +9,9 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from apps.accounts.models import PasswordResetToken, Session
-from apps.accounts.password_reset import reset_expiry_minutes
+from apps.accounts.password_reset import dispatch_mail, reset_expiry_minutes
 from apps.accounts.sessions import create_session
+from common.mail import send_password_reset_email
 
 from .test_signin import FAST_HASH, make_user
 
@@ -30,6 +32,11 @@ class ResetBase(TestCase):
         patcher = mock.patch.dict('os.environ', MAIL_ENV)
         patcher.start()
         self.addCleanup(patcher.stop)
+        # run the mail inline so the tests do not depend on thread timing
+        inline = mock.patch('apps.accounts.password_reset.dispatch_mail',
+                            side_effect=send_password_reset_email)
+        inline.start()
+        self.addCleanup(inline.stop)
 
     def post(self, path, data):
         return self.client.post(path, data, content_type='application/json')
@@ -103,10 +110,19 @@ class ForgotPasswordTests(ResetBase):
 
     def test_mail_failure_still_200(self):
         make_user()
-        with mock.patch('apps.accounts.password_reset.send_password_reset_email', return_value=False):
+        with mock.patch('common.mail.send_email', return_value=False):
             res = self.forgot()
         self.assertEqual(res.status_code, 200)
         self.assertEqual(PasswordResetToken.objects.count(), 1)
+
+    def test_dispatch_runs_mail_on_another_thread(self):
+        seen = []
+        with mock.patch('apps.accounts.password_reset.send_password_reset_email',
+                        side_effect=lambda *a: seen.append(threading.current_thread())):
+            thread = dispatch_mail('jane@example.com', 'tok', 'Jane', 15)
+            thread.join(5)
+        self.assertEqual(len(seen), 1)
+        self.assertIsNot(seen[0], threading.main_thread())
 
     def test_missing_smtp_config_still_200(self):
         make_user()
