@@ -43,7 +43,9 @@ class SlugifyTests(TestCase):
     def test_slugify(self):
         self.assertEqual(slugify("Men's  Wear!"), 'men-s-wear')
         self.assertEqual(slugify('  --Tops--  '), 'tops')
-        self.assertEqual(slugify('เสื้อ'), 'category')
+        self.assertRegex(slugify('เสื้อ'), r'^category-[0-9a-f]{8}$')
+        self.assertEqual(slugify('เสื้อ'), slugify('เสื้อ'))
+        self.assertNotEqual(slugify('เสื้อ'), slugify('กางเกง'))
 
 
 class ListTests(AdminCategoryCase):
@@ -113,10 +115,20 @@ class CreateTests(AdminCategoryCase):
         res = self.client.post(BASE, '{nope', content_type='application/json')
         self.assertEqual(res.status_code, 400)
 
-    def test_create_nonlatin_name_slug_fallback(self):
-        res = self.post({'categoryName': 'เสื้อ'})
-        self.assertEqual(res.json()['data']['slug'], 'category')
-        self.assertEqual(self.post({'categoryName': 'กางเกง'}).status_code, 409)
+    def test_create_nonlatin_names_get_distinct_slugs(self):
+        first = self.post({'categoryName': 'เสื้อ'})
+        self.assertEqual(first.status_code, 201)
+        self.assertRegex(first.json()['data']['slug'], r'^category-[0-9a-f]{8}$')
+        self.assertEqual(self.post({'categoryName': 'กางเกง'}).status_code, 201)
+        dup = self.post({'categoryName': 'เสื้อ'})
+        self.assertEqual((dup.status_code, dup.json()['code']), (409, 'CATEGORY_SLUG_CONFLICT'))
+
+    def test_create_lone_surrogate_400(self):
+        res = self.client.post(BASE, '{"categoryName": "bad\\ud800name"}', content_type='application/json')
+        self.assertEqual((res.status_code, res.json()['code']), (400, 'VALIDATION_ERROR'))
+        category = make_category('Tops')
+        res = self.client.put(f'{BASE}/{category.pk}', '{"categoryName": "\\ud800"}', content_type='application/json')
+        self.assertEqual(res.status_code, 400)
 
     def test_create_race_on_unique_index_409(self):
         with mock.patch('apps.catalog.admin_categories.Category.objects.create', side_effect=IntegrityError):
