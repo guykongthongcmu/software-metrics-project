@@ -18,9 +18,9 @@ FIELDS = {
     'country': (True, 100),
 }
 
-# ASCII only, so other scripts' digits and spaces do not slip through
-PHONE_PATTERN = re.compile(r'[0-9+\-\s()]{7,20}', re.ASCII)
-POSTAL_PATTERN = re.compile(r'[A-Za-z0-9\- ]{3,12}', re.ASCII)
+# explicit classes with a literal space, so \s style whitespace and other scripts' digits are out
+PHONE_PATTERN = re.compile(r'[0-9+\- ()]{7,20}')
+POSTAL_PATTERN = re.compile(r'[A-Za-z0-9\- ]{3,12}')
 
 
 def invalid(details):
@@ -28,7 +28,8 @@ def invalid(details):
 
 
 def has_bad_chars(value):
-    if '\x00' in value:
+    # control characters, which also covers NUL
+    if any(ord(char) < 32 or ord(char) == 127 for char in value):
         return True
     try:
         value.encode('utf-8')

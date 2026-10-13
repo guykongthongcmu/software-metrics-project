@@ -175,6 +175,18 @@ class PutAddressTests(AddressTestCase):
         self.assertEqual(res.status_code, 400)
         self.assertFalse(Address.objects.exists())
 
+    def test_control_characters_rejected(self):
+        for bad in ('\n', '\t', '\x1b', '\x7f'):
+            res = self.save(phoneNumber=f'1234{bad}5678')
+            self.assertEqual(res.status_code, 400, repr(bad))
+            self.assertIn('phoneNumber', res.json()['details'])
+            res = self.save(postalCode=f'10{bad}500')
+            self.assertEqual(res.status_code, 400, repr(bad))
+            res = self.save(fullName=f'Buy{bad}Er')
+            self.assertEqual(res.status_code, 400, repr(bad))
+            self.assertIn('fullName', res.json()['details'])
+        self.assertFalse(Address.objects.exists())
+
     def test_too_long_fields(self):
         limits = {
             'fullName': 150, 'addressLine1': 255, 'addressLine2': 255,
