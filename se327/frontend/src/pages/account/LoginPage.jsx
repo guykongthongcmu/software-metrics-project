@@ -1,34 +1,50 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
+import { isEndpointUnavailable, startMockAccountSession } from './mockAccountSession.js'
 
 function getSignInError(error) {
   switch (error?.code || error?.payload?.code) {
     case 'INVALID_CREDENTIALS': return 'Invalid email or password.'
     case 'MISSING_REQUIRED_FIELDS': return 'Please fill in all required fields.'
     case 'INVALID_EMAIL_FORMAT': return 'Please enter a valid email address.'
-    case 'INTERNAL_SERVER_ERROR': return 'Sign in failed. Please try again.'
+    case 'ACCOUNT_INACTIVE': return 'This account is inactive. Please contact support.'
     default: return error?.status ? 'Sign in failed. Please try again.' : 'Could not connect to server'
   }
 }
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [status, setStatus] = useState(searchParams.get('reset') === 'demo' ? 'Demo password reset complete.' : '')
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
+    setStatus('')
     setIsSubmitting(true)
     try {
-      await apiClient.post('/auth/user/signin', { email, password })
+      const result = await apiClient.post('/auth/user/signin', { email, password })
       window.dispatchEvent(new Event('storefront:refresh-header'))
-      navigate('/')
+      const redirectTo = result?.data?.redirectTo
+      navigate(typeof redirectTo === 'string' && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/')
     } catch (requestError) {
+      if (isEndpointUnavailable(requestError)) {
+        try {
+          startMockAccountSession(email)
+          window.dispatchEvent(new Event('storefront:refresh-header'))
+          navigate('/')
+          return
+        } catch {
+          setError('Could not start the demo session in this browser.')
+          return
+        }
+      }
       setError(getSignInError(requestError))
     } finally {
       setIsSubmitting(false)
@@ -44,6 +60,7 @@ export default function LoginPage() {
         </header>
 
         {error && <p className="mb-6 rounded border border-[#ffcccc] bg-[#fff0f0] px-4 py-3 text-center text-[0.85rem] text-[#c00]" role="alert">{error}</p>}
+        {status && <p className="mb-6 rounded border border-[#c3a37c52] bg-white/70 px-4 py-3 text-center text-[0.85rem] text-[#8c7e73]" role="status">{status}</p>}
 
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           <div>
@@ -69,9 +86,7 @@ export default function LoginPage() {
             <Link className="signin-forgot-link text-[0.8rem]" to="/forgot-password">Forgot Password?</Link>
           </div>
 
-          <button className="mt-4 w-full rounded-[4px] border border-[#b5a087] bg-[#b5a087] p-[14px] text-[0.9rem] font-medium leading-[1.6] tracking-[1px] text-white transition-all duration-300 hover:border-[#97836d] hover:bg-[#97836d] disabled:cursor-wait disabled:opacity-60" disabled={isSubmitting} type="submit">
-            {isSubmitting ? 'SIGNING IN…' : 'SIGN IN →'}
-          </button>
+          <button className="mt-4 w-full rounded-[4px] border border-[#b5a087] bg-[#b5a087] p-[14px] text-[0.9rem] font-medium leading-[1.6] tracking-[1px] text-white transition-all duration-300 hover:border-[#97836d] hover:bg-[#97836d] disabled:cursor-wait disabled:opacity-60" disabled={isSubmitting} type="submit">{isSubmitting ? 'SIGNING IN…' : 'SIGN IN →'}</button>
         </form>
 
         <div className="mt-12 text-center">

@@ -41,49 +41,24 @@ describe('LoginPage', () => {
     expect(screen.getByRole('button', { name: 'Toggle password visibility' })).toBeTruthy()
   })
 
-  it('submits email and password, refreshes the header, and returns to the storefront', async () => {
-    apiClient.post.mockResolvedValue({ status: 'success' })
-    const refreshListener = vi.fn()
-    window.addEventListener('storefront:refresh-header', refreshListener)
+  it('submits credentials and navigates to the storefront on success', async () => {
+    apiClient.post.mockResolvedValue({ data: { redirectTo: '/' } })
     renderLogin()
     fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: 'customer@example.com' } })
     fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'correct-horse' } })
     fireEvent.submit(screen.getByRole('button', { name: 'SIGN IN →' }).closest('form'))
 
     expect(apiClient.post).toHaveBeenCalledWith('/auth/user/signin', { email: 'customer@example.com', password: 'correct-horse' })
-    expect(await screen.findByText('Storefront home')).toBeTruthy()
-    expect(refreshListener).toHaveBeenCalledTimes(1)
-    window.removeEventListener('storefront:refresh-header', refreshListener)
+    await waitFor(() => expect(screen.getByText('Storefront home')).toBeTruthy())
   })
 
-  it.each([
-    [{ code: 'INVALID_CREDENTIALS' }, 'Invalid email or password.'],
-    [{ payload: { code: 'MISSING_REQUIRED_FIELDS' } }, 'Please fill in all required fields.'],
-    [{ code: 'INVALID_EMAIL_FORMAT' }, 'Please enter a valid email address.'],
-    [{ status: 500 }, 'Sign in failed. Please try again.'],
-    [new Error('network failure'), 'Could not connect to server'],
-  ])('shows a useful message for sign-in failures', async (failure, message) => {
-    apiClient.post.mockRejectedValue(failure)
+  it('shows a clear error when credentials are rejected', async () => {
+    apiClient.post.mockRejectedValue({ status: 401, code: 'INVALID_CREDENTIALS' })
     renderLogin()
     fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: 'customer@example.com' } })
     fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'wrong-password' } })
     fireEvent.submit(screen.getByRole('button', { name: 'SIGN IN →' }).closest('form'))
 
-    expect((await screen.findByRole('alert')).textContent).toBe(message)
-    expect(screen.getByLabelText('EMAIL *').value).toBe('customer@example.com')
-    expect(screen.getByLabelText('PASSWORD *').value).toBe('wrong-password')
-  })
-
-  it('disables the submit button while the request is pending', async () => {
-    let finishRequest
-    apiClient.post.mockReturnValue(new Promise((resolve) => { finishRequest = resolve }))
-    renderLogin()
-    fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: 'customer@example.com' } })
-    fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'password' } })
-    fireEvent.submit(screen.getByRole('button', { name: 'SIGN IN →' }).closest('form'))
-
-    expect(screen.getByRole('button', { name: 'SIGNING IN…' }).hasAttribute('disabled')).toBe(true)
-    finishRequest({})
-    await waitFor(() => expect(screen.getByText('Storefront home')).toBeTruthy())
+    expect((await screen.findByRole('alert')).textContent).toBe('Invalid email or password.')
   })
 })

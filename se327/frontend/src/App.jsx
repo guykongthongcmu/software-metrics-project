@@ -6,6 +6,27 @@ import StorefrontLayout from './pages/webstore/StorefrontLayout.jsx'
 import AboutPage from './pages/webstore/AboutPage.jsx'
 import ContactPage from './pages/webstore/ContactPage.jsx'
 import LoginPage from './pages/account/LoginPage.jsx'
+import SignupPage from './pages/account/SignupPage.jsx'
+import SignupInfoPage from './pages/account/SignupInfoPage.jsx'
+import SignupConfirmPage from './pages/account/SignupConfirmPage.jsx'
+import ForgotPasswordPage from './pages/account/ForgotPasswordPage.jsx'
+import ForgotPasswordSuccessPage from './pages/account/ForgotPasswordSuccessPage.jsx'
+import ResetPasswordPage from './pages/account/ResetPasswordPage.jsx'
+import ProfilePage from './pages/account/ProfilePage.jsx'
+
+function getAccountPage(route) {
+  switch (route.path) {
+    case '/login': return <LoginPage />
+    case '/auth/signup': return <SignupPage />
+    case '/auth/signup-info': return <SignupInfoPage />
+    case '/auth/signup-confirm': return <SignupConfirmPage />
+    case '/forgot-password': return <ForgotPasswordPage />
+    case '/forgot-password-success': return <ForgotPasswordSuccessPage />
+    case '/auth/reset-password': return <ResetPasswordPage />
+    case '/account/profile': return <ProfilePage />
+    default: return <StorefrontPlaceholder title={route.title} />
+  }
+}
 
 function StorefrontPlaceholder({ title }) {
   const location = useLocation()
@@ -41,7 +62,7 @@ export default function App() {
     <Routes>
       <Route element={<StorefrontLayout />}>
         {storefrontRoutes.map((route) => <Route key={route.path} path={route.path} element={getStorefrontPage(route)} />)}
-        {accountRoutes.map((route) => <Route key={route.path} path={route.path} element={route.path === '/login' ? <LoginPage /> : <StorefrontPlaceholder title={route.title} />} />)}
+        {accountRoutes.map((route) => <Route key={route.path} path={route.path} element={getAccountPage(route)} />)}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
       {adminRoutes.map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}

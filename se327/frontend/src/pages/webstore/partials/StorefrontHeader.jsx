@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { apiClient } from '../../../lib/apiClient.js'
+import { getMockAccountSession, isEndpointUnavailable } from '../../account/mockAccountSession.js'
 import CategoryMenu from './CategoryMenu.jsx'
 
 const iconPaths = {
@@ -74,8 +75,10 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
         apiClient.get('/client/favorites?lang=EN', { redirectOn401: false }),
       ])
       if (!active) return
+      const profileError = profileResult.status === 'rejected' ? profileResult.reason : null
+      const demoProfile = isEndpointUnavailable(profileError) ? getMockAccountSession()?.profile : null
       const headerData = {
-        user: profileResult.status === 'fulfilled' ? profileResult.value?.data || null : null,
+        user: profileResult.status === 'fulfilled' ? profileResult.value?.data || null : demoProfile || null,
         cartCount: cartResult.status === 'fulfilled' ? Number(cartResult.value?.data?.cartSummary?.totalItems || 0) : 0,
         favoriteCount: favoritesResult.status === 'fulfilled' ? Number(favoritesResult.value?.data?.favoritesCount || 0) : 0,
       }
