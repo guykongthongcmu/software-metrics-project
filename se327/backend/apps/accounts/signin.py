@@ -8,6 +8,18 @@ from .signup import FIELD_LIMITS, ApiError, check_email_format, clean_email
 MAX_PASSWORD_LENGTH = 1000
 
 
+def check_text(value, limit):
+    """Reject strings that are too long, hold NUL or cannot be encoded (lone surrogates)."""
+    if not isinstance(value, str):
+        return
+    try:
+        value.encode('utf-8')
+    except UnicodeEncodeError:
+        value = None
+    if value is None or len(value) > limit or '\x00' in value:
+        raise ApiError('INVALID_FIELD_LENGTH', 'a field is too long or has invalid characters', 400)
+
+
 @lru_cache(maxsize=1)
 def dummy_hash():
     return make_password('not-a-real-password')
@@ -21,12 +33,12 @@ def authenticate(model, body):
     """
     email = clean_email(body.get('email'))
     password = body.get('password')
+    # size checks come first so a huge body never reaches the email regex
+    check_text(email, FIELD_LIMITS['email'])
+    check_text(password, MAX_PASSWORD_LENGTH)
     check_email_format(email)
     if not isinstance(password, str) or password == '':
         raise ApiError('MISSING_REQUIRED_FIELDS', 'password is required', 400)
-    if (len(email) > FIELD_LIMITS['email'] or len(password) > MAX_PASSWORD_LENGTH
-            or '\x00' in email or '\x00' in password):
-        raise ApiError('INVALID_FIELD_LENGTH', 'a field is too long or has invalid characters', 400)
 
     account = model.objects.filter(email__iexact=email).first()
     if account is None:

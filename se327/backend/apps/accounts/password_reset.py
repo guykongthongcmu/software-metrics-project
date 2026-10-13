@@ -1,5 +1,7 @@
+import math
 import os
 import secrets
+import threading
 from datetime import timedelta
 
 from django.contrib.auth.hashers import make_password
@@ -9,7 +11,7 @@ from django.utils import timezone
 from common.mail import send_password_reset_email
 
 from .models import PasswordResetToken, Session, User
-from .signin import MAX_PASSWORD_LENGTH
+from .signin import MAX_PASSWORD_LENGTH, check_text
 from .signup import (
     FIELD_LIMITS,
     MIN_PASSWORD_LENGTH,
@@ -25,16 +27,23 @@ def reset_expiry_minutes():
         minutes = float(os.environ.get('PASSWORD_RESET_EXPIRY_MINUTES', ''))
     except ValueError:
         return 15
-    if minutes <= 0:
+    # nan and inf would blow up below, so they fall back too
+    if not math.isfinite(minutes) or minutes <= 0:
         return 15
     return int(minutes) if minutes == int(minutes) else minutes
 
 
+def dispatch_mail(*args):
+    """Send the reset email on its own thread so a slow SMTP server does not show in the reply time."""
+    thread = threading.Thread(target=send_password_reset_email, args=args, daemon=True)
+    thread.start()
+    return thread
+
+
 def request_reset(email):
     """Issue a reset token if an account has this email. Returns nothing either way."""
+    check_text(email, FIELD_LIMITS['email'])
     check_email_format(email)
-    if len(email) > FIELD_LIMITS['email'] or '\x00' in email:
-        raise ApiError('INVALID_FIELD_LENGTH', 'email is too long or has invalid characters', 400)
 
     with transaction.atomic():
         user = User.objects.filter(email__iexact=email).first()
@@ -46,8 +55,8 @@ def request_reset(email):
         expires_at = timezone.now() + timedelta(minutes=reset_expiry_minutes())
         PasswordResetToken.objects.create(user=user, token=token, expires_at=expires_at)
 
-    # the reply is the same if this fails, so a failure is only logged
-    send_password_reset_email(user.email, token, user.first_name, reset_expiry_minutes())
+    # the reply is the same if this fails, so a failure is only logged (by the mail helper)
+    dispatch_mail(user.email, token, user.first_name, reset_expiry_minutes())
 
 
 def reset_password(body):
@@ -61,8 +70,7 @@ def reset_password(body):
         raise ApiError('MISSING_REQUIRED_FIELDS', 'missing required fields', 400, {'missingFields': missing})
     if not isinstance(new_password, str) or len(new_password) < MIN_PASSWORD_LENGTH:
         raise ApiError('PASSWORD_TOO_SHORT', f'password must be at least {MIN_PASSWORD_LENGTH} characters', 400)
-    if len(new_password) > MAX_PASSWORD_LENGTH or '\x00' in new_password:
-        raise ApiError('INVALID_FIELD_LENGTH', 'a field is too long or has invalid characters', 400)
+    check_text(new_password, MAX_PASSWORD_LENGTH)
     if new_password != confirm:
         raise ApiError('PASSWORD_CONFIRMATION_MISMATCH', 'passwords do not match', 400)
     # real tokens are plain hex, and a NUL character would break the query

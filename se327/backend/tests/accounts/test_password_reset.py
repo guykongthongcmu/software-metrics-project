@@ -1,3 +1,5 @@
+import threading
+import time
 from datetime import timedelta
 from unittest import mock
 
@@ -7,8 +9,9 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from apps.accounts.models import PasswordResetToken, Session
-from apps.accounts.password_reset import reset_expiry_minutes
+from apps.accounts.password_reset import dispatch_mail, reset_expiry_minutes
 from apps.accounts.sessions import create_session
+from common.mail import send_password_reset_email
 
 from .test_signin import FAST_HASH, make_user
 
@@ -29,6 +32,11 @@ class ResetBase(TestCase):
         patcher = mock.patch.dict('os.environ', MAIL_ENV)
         patcher.start()
         self.addCleanup(patcher.stop)
+        # run the mail inline so the tests do not depend on thread timing
+        inline = mock.patch('apps.accounts.password_reset.dispatch_mail',
+                            side_effect=send_password_reset_email)
+        inline.start()
+        self.addCleanup(inline.stop)
 
     def post(self, path, data):
         return self.client.post(path, data, content_type='application/json')
@@ -64,7 +72,7 @@ class ForgotPasswordTests(ResetBase):
 
     def test_expiry_default_and_env(self):
         self.assertEqual(reset_expiry_minutes(), 15)
-        for value, expected in (('30', 30), ('0.5', 0.5), ('0', 15), ('-3', 15), ('abc', 15)):
+        for value, expected in (('30', 30), ('0.5', 0.5), ('0', 15), ('-3', 15), ('abc', 15), ('nan', 15), ('inf', 15), ('-inf', 15)):
             with mock.patch.dict('os.environ', {'PASSWORD_RESET_EXPIRY_MINUTES': value}):
                 self.assertEqual(reset_expiry_minutes(), expected)
         make_user()
@@ -102,10 +110,19 @@ class ForgotPasswordTests(ResetBase):
 
     def test_mail_failure_still_200(self):
         make_user()
-        with mock.patch('apps.accounts.password_reset.send_password_reset_email', return_value=False):
+        with mock.patch('common.mail.send_email', return_value=False):
             res = self.forgot()
         self.assertEqual(res.status_code, 200)
         self.assertEqual(PasswordResetToken.objects.count(), 1)
+
+    def test_dispatch_runs_mail_on_another_thread(self):
+        seen = []
+        with mock.patch('apps.accounts.password_reset.send_password_reset_email',
+                        side_effect=lambda *a: seen.append(threading.current_thread())):
+            thread = dispatch_mail('jane@example.com', 'tok', 'Jane', 15)
+            thread.join(5)
+        self.assertEqual(len(seen), 1)
+        self.assertIsNot(seen[0], threading.main_thread())
 
     def test_missing_smtp_config_still_200(self):
         make_user()
@@ -127,6 +144,18 @@ class ForgotPasswordTests(ResetBase):
             res = self.forgot(email)
             self.assertEqual(res.status_code, 400)
             self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_lone_surrogate_email_400_not_500(self):
+        res = self.forgot('ja\ud800ne@example.com')
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_huge_email_rejected_quickly(self):
+        start = time.monotonic()
+        res = self.forgot('a' * 40000 + '@example.com')
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+        self.assertLess(time.monotonic() - start, 1)
 
     def test_non_object_body_400(self):
         res = self.post('/api/auth/forgot-password', ['a'])
@@ -201,6 +230,12 @@ class ResetPasswordTests(ResetBase):
             res = self.reset('abc123', new=password)
             self.assertEqual(res.status_code, 400)
             self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_lone_surrogate_password_400_not_500(self):
+        self.make_token()
+        res = self.reset('abc123', new='pass\ud800word1')
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
 
     def test_reset_revokes_all_customer_sessions(self):
         record = self.make_token()
