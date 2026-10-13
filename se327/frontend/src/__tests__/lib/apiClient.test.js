@@ -94,4 +94,37 @@ describe('apiClient', () => {
     await apiFetch('/client/cart', { method: 'GET' })
     expect(dispatchSpy).not.toHaveBeenCalled()
   })
+
+  it('uses an empty content type when the header is missing and preserves FormData post bodies', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ...response({ contentType: '' }),
+      headers: { get: vi.fn(() => null) },
+      text: vi.fn().mockResolvedValue('plain response'),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const form = new FormData()
+    form.append('name', 'member')
+    await expect(apiFetch('/plain')).resolves.toBe('plain response')
+    await apiClient.post('/upload', form)
+    expect(fetchMock.mock.calls[1][1].body).toBe(form)
+    expect(fetchMock.mock.calls[1][1].headers).toEqual({})
+  })
+
+  it('redirects unauthorized requests to the matching login page only when needed', async () => {
+    const assign = vi.fn()
+    const fetchMock = vi.fn().mockResolvedValue(response({ ok: false, status: 401, body: { message: 'Unauthorized' } }))
+    vi.stubGlobal('fetch', fetchMock)
+    vi.stubGlobal('window', { location: { pathname: '/admin/orders', assign } })
+    await expect(apiFetch('/admin/private')).rejects.toBeInstanceOf(ApiError)
+    expect(assign).toHaveBeenCalledWith('/admin/login')
+
+    window.location.pathname = '/account/profile'
+    await expect(apiFetch('/private')).rejects.toBeInstanceOf(ApiError)
+    expect(assign).toHaveBeenLastCalledWith('/login')
+
+    window.location.pathname = '/login'
+    const callsBeforeLoginPage = assign.mock.calls.length
+    await expect(apiFetch('/private')).rejects.toBeInstanceOf(ApiError)
+    expect(assign).toHaveBeenCalledTimes(callsBeforeLoginPage)
+  })
 })

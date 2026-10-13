@@ -40,7 +40,7 @@ describe('App routes', () => {
 
   it('redirects the legacy profile route and renders a not-found page', async () => {
     const { unmount } = render(<MemoryRouter initialEntries={['/profile']}><App /></MemoryRouter>)
-    expect(await screen.findByRole('heading', { name: 'My profile' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'My Profile' })).toBeTruthy()
     unmount()
     render(<MemoryRouter initialEntries={['/no-such-page']}><App /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeTruthy()

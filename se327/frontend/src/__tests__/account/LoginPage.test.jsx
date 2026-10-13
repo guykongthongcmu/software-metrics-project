@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
+import { getMockAccountSession } from '../../pages/account/mockAccountSession.js'
 import LoginPage from '../../pages/account/LoginPage.jsx'
 
 vi.mock('../../lib/apiClient.js', () => ({ apiClient: { post: vi.fn() } }))
@@ -61,4 +62,45 @@ describe('LoginPage', () => {
 
     expect((await screen.findByRole('alert')).textContent).toBe('Invalid email or password.')
   })
+
+  it.each([
+    ['MISSING_REQUIRED_FIELDS', 'Please fill in all required fields.'],
+    ['INVALID_EMAIL_FORMAT', 'Please enter a valid email address.'],
+    ['ACCOUNT_INACTIVE', 'This account is inactive. Please contact support.'],
+    ['OTHER_ERROR', 'Sign in failed. Please try again.'],
+  ])('shows the mapped message for %s', async (code, message) => {
+    apiClient.post.mockRejectedValue({ status: 400, payload: { code } })
+    renderLogin()
+    fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: 'member@example.com' } })
+    fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'password123' } })
+    submitLogin()
+    expect((await screen.findByRole('alert')).textContent).toBe(message)
+  })
+
+  it('starts a browser demo session when the sign-in endpoint is unavailable', async () => {
+    apiClient.post.mockRejectedValue({ status: 404, code: 'NOT_FOUND' })
+    renderLogin()
+    fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: ' Demo@Example.com ' } })
+    fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'password123' } })
+    submitLogin()
+    await waitFor(() => expect(screen.getByText('Storefront home')).toBeTruthy())
+    expect(getMockAccountSession().profile.email).toBe('demo@example.com')
+  })
+
+  it('accepts only safe internal redirect paths and displays demo reset status', async () => {
+    apiClient.post.mockResolvedValue({ data: { redirectTo: '//example.com' } })
+    render(<MemoryRouter initialEntries={['/login?reset=demo']}><Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<p>Storefront home</p>} />
+    </Routes></MemoryRouter>)
+    expect(screen.getByRole('status').textContent).toBe('Demo password reset complete.')
+    fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: 'member@example.com' } })
+    fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'password123' } })
+    submitLogin()
+    await waitFor(() => expect(screen.getByText('Storefront home')).toBeTruthy())
+  })
 })
+
+function submitLogin() {
+  fireEvent.submit(screen.getByRole('button', { name: /SIGN IN/ }).closest('form'))
+}
