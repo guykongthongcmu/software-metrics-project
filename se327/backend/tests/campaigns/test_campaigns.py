@@ -177,6 +177,7 @@ class LaunchTests(CampaignTestCase):
         url = campaigns[0]['bannerImageUrl']
         self.assertTrue(url.startswith('/media/campaign-banners/'))
         self.assertEqual(self.client.get(url).status_code, 200)
+        self.assertEqual(self.client.post(url).status_code, 405)
 
     def test_json_body_without_image_is_400(self):
         response = self.client.post(

@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.views.decorators.http import require_safe
 from django.views.static import serve
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
@@ -47,6 +48,7 @@ class LaunchCampaignView(CampaignView):
         return Response(success_body('campaign launched successfully', data), status=201)
 
 
+@require_safe
 def banner_file(request, path):
     """Serve a stored banner image from the local media folder."""
     return serve(request, path, document_root=storage.media_root())
