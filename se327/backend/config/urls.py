@@ -6,6 +6,7 @@ from common.views import HealthView, NotFoundView
 urlpatterns = [
     re_path(r'^health$', HealthView.as_view()),
     re_path(r'^api/client/', include('apps.catalog.urls')),
+    re_path(r'^api/admin/', include('apps.analytics.urls')),
     re_path(r'^api/admin/', include('apps.orders.urls_admin')),
     re_path(r'^api/client/', include('apps.cart.favourites_urls')),
     re_path(r'^api/client/', include('apps.cart.urls')),
