@@ -46,18 +46,51 @@ async function fetchSearchProducts(query, sort, categorySlug = '') {
   const pages = [firstData, ...otherResponses.map((response) => response?.data)]
   if (pages.some((page) => !Array.isArray(page?.products))) throw new Error('Unexpected search response')
 
+  const categoryCounts = resolveCategoryCounts(firstData, categorySlug)
+
   return {
     products: pages.flatMap((page) => page.products).map((product) => normalizeProduct({
       ...product,
       category: product.category || (categorySlug ? firstData.category : undefined),
     })),
-    categoryCounts: Array.isArray(firstData.categoryCounts)
-      ? firstData.categoryCounts
-      : categorySlug && firstData.category
-        ? [{ ...firstData.category, count: Number(firstData.pagination?.totalItems) || 0 }]
-        : [],
+    categoryCounts,
     totalResults: Number(firstData.pagination?.totalItems) || 0,
   }
+}
+
+function resolveCategoryCounts(data, categorySlug) {
+  if (Array.isArray(data.categoryCounts)) return data.categoryCounts
+  if (!categorySlug || !data.category) return []
+  const count = Number(data.pagination?.totalItems) || 0
+  return [{ ...data.category, count }]
+}
+
+async function fetchCategories() {
+  try {
+    const response = await apiClient.get('/client/categories?sort=category_name&order=asc', { redirectOn401: false })
+    return Array.isArray(response?.data?.categories) ? response.data.categories : []
+  } catch {
+    return []
+  }
+}
+
+async function fetchSuggestionsPage() {
+  const [response, categories] = await Promise.all([
+    apiClient.get('/client/products/search/suggestions?q=a&lang=EN', { redirectOn401: false }),
+    fetchCategories(),
+  ])
+  const suggestions = Array.isArray(response?.data?.suggestions) ? response.data.suggestions.slice(0, 4) : []
+  return { categories, suggestions, products: [], categoryCounts: [], totalResults: 0 }
+}
+
+async function fetchResultsPage(query, sort) {
+  const querySlug = query.toLowerCase() === 'kid' ? 'kids' : query.toLowerCase()
+  const categorySlug = CATEGORY_SLUGS.has(querySlug) ? querySlug : ''
+  const [results, categories] = await Promise.all([
+    fetchSearchProducts(query, sort, categorySlug),
+    fetchCategories(),
+  ])
+  return { ...results, categories, suggestions: [] }
 }
 
 function buildPaginationItems(currentPage, totalPages) {
@@ -84,14 +117,13 @@ function SearchIcon() {
   return <svg aria-hidden="true" className="absolute left-[22px] top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#b89b6e]" fill="none" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" strokeWidth="1.6" /><path d="m16 16 5 5" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" /></svg>
 }
 
-function SearchForm({ value, onSubmit, placeholder, autoFocus = false, className = '' }) {
+function SearchForm({ value, onSubmit, placeholder, className = '' }) {
   return (
     <form className={`relative w-full ${className}`} onSubmit={onSubmit} role="search">
       <SearchIcon />
       <input
         aria-label="Search products"
         autoComplete="off"
-        autoFocus={autoFocus}
         className="h-[60px] w-full rounded-full border-[1.5px] border-[#d7cdbe] bg-white pl-14 pr-6 text-[17px] text-[#333] shadow-sm outline-none transition focus:border-[#b89b6e] focus:shadow-[0_0_0_3px_rgba(201,168,126,0.15)] placeholder:text-[#8c857d] placeholder:opacity-70 max-[768px]:h-[54px] max-[768px]:text-base"
         defaultValue={value}
         name="q"
@@ -203,31 +235,16 @@ export default function SearchPage() {
     const load = async () => {
       setLoading(true)
       setError('')
-      const categoryRequest = apiClient.get('/client/categories?sort=category_name&order=asc', { redirectOn401: false })
-        .then((response) => Array.isArray(response?.data?.categories) ? response.data.categories : [])
-        .catch(() => [])
       try {
-        if (!query) {
-          const response = await apiClient.get('/client/products/search/suggestions?q=a&lang=EN', { redirectOn401: false })
-          const categoryList = await categoryRequest
-          if (active) {
-            setCategories(categoryList)
-            setSuggestions(Array.isArray(response?.data?.suggestions) ? response.data.suggestions.slice(0, 4) : [])
-            setProducts([])
-            setCategoryCounts([])
-            setTotalResults(0)
-          }
-        } else {
-          const querySlug = query.toLowerCase() === 'kid' ? 'kids' : query.toLowerCase()
-          const categorySlug = CATEGORY_SLUGS.has(querySlug) ? querySlug : ''
-          const [results, categoryList] = await Promise.all([fetchSearchProducts(query, sort, categorySlug), categoryRequest])
-          if (active) {
-            setCategories(categoryList)
-            setProducts(results.products)
-            setCategoryCounts(results.categoryCounts)
-            setTotalResults(results.totalResults)
-            setSuggestions([])
-          }
+        const pageData = query
+          ? await fetchResultsPage(query, sort)
+          : await fetchSuggestionsPage()
+        if (active) {
+          setCategories(pageData.categories)
+          setProducts(pageData.products)
+          setCategoryCounts(pageData.categoryCounts)
+          setTotalResults(pageData.totalResults)
+          setSuggestions(pageData.suggestions)
         }
       } catch {
         if (active) setError('Search could not be loaded. Please try again later.')
@@ -255,8 +272,9 @@ export default function SearchPage() {
 
   function submitSearch(event) {
     event.preventDefault()
-    const nextQuery = String(new FormData(event.currentTarget).get('q') || '').trim()
-    navigate(nextQuery ? `/search?q=${encodeURIComponent(nextQuery)}` : '/search')
+    const submittedValue = new FormData(event.currentTarget).get('q')
+    const nextQuery = typeof submittedValue === 'string' ? submittedValue.trim() : ''
+    void navigate(nextQuery ? `/search?q=${encodeURIComponent(nextQuery)}` : '/search')
   }
 
   function selectSort(nextSort) {
@@ -275,8 +293,8 @@ export default function SearchPage() {
   if (!query) {
     return (
       <main className="mx-auto flex w-full max-w-[1280px] flex-col items-center gap-12 px-6 pb-20 pt-16 max-[768px]:gap-8 max-[768px]:py-10 max-[575px]:px-4">
-        <SearchForm autoFocus key={query} onSubmit={submitSearch} placeholder="Type here to search..." value={query} />
-        {loading && <p className="text-sm text-[#777]" role="status">Loading product suggestions…</p>}
+        <SearchForm key={query} onSubmit={submitSearch} placeholder="Type here to search..." value={query} />
+        {loading && <output className="text-sm text-[#777]">Loading product suggestions…</output>}
         {error && <p className="text-sm text-red-700" role="alert">{error}</p>}
         <SuggestionList suggestions={suggestions} />
       </main>
@@ -309,7 +327,7 @@ export default function SearchPage() {
       </section>
 
       <section aria-label="Search results" className="py-7 pb-20">
-        {loading && <p className="py-12 text-center text-sm text-[#777]" role="status">Loading products…</p>}
+        {loading && <output className="py-12 text-center text-sm text-[#777]">Loading products…</output>}
         {error && <p className="py-12 text-center text-sm text-red-700" role="alert">{error}</p>}
         {!loading && !error && visibleProducts.length === 0 && <div className="flex animate-[searchFadeUp_.4s_ease_both] flex-col items-center gap-4 px-6 py-20 text-center">
           <svg aria-hidden="true" className="h-12 w-12 text-[#b89b6e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8" strokeWidth="1.5" /><path d="m16 16 5 5M4 4l16 16" strokeLinecap="round" strokeWidth="1.5" /></svg>
