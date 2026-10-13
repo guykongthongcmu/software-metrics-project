@@ -3,7 +3,6 @@ import { Link, NavLink } from 'react-router-dom'
 import { apiClient } from '../../../lib/apiClient.js'
 import { getMockAccountSession, isEndpointUnavailable, isFrontendSignedOut } from '../../account/mockAccountSession.js'
 import CategoryMenu from './CategoryMenu.jsx'
-import { getMockFavoriteCount } from './FavoritesContext.jsx'
 
 const iconPaths = {
   search: <><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 5 5" /></>,
@@ -70,17 +69,18 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
   useEffect(() => {
     let active = true
     const loadHeaderData = async () => {
-    const demoSession = getMockAccountSession()
-    const frontendSignedOut = isFrontendSignedOut()
+const demoSession = getMockAccountSession()
+const frontendSignedOut = isFrontendSignedOut()
 
-    const [profileResult, cartResult] = await Promise.allSettled([
-      demoSession
-        ? Promise.resolve({ data: demoSession.profile })
-        : frontendSignedOut
-          ? Promise.resolve(null)
-          : apiClient.get('/auth/user/profile', { redirectOn401: false }),
-      apiClient.get('/client/cart?lang=EN', { redirectOn401: false }),
-    ])
+const [profileResult, cartResult, favoritesResult] = await Promise.allSettled([
+  demoSession
+    ? Promise.resolve({ data: demoSession.profile })
+    : frontendSignedOut
+      ? Promise.resolve(null)
+      : apiClient.get('/auth/user/profile', { redirectOn401: false }),
+  apiClient.get('/client/cart?lang=EN', { redirectOn401: false }),
+  apiClient.get('/client/favorites?lang=EN', { redirectOn401: false }),
+])
       if (!active) return
       const profileError = profileResult.status === 'rejected' ? profileResult.reason : null
       const canUseDemoProfile = isEndpointUnavailable(profileError)
@@ -90,7 +90,7 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
       const headerData = {
         user: isFrontendSignedOut() ? null : profileResult.status === 'fulfilled' ? profileResult.value?.data || null : demoProfile || null,
         cartCount: cartResult.status === 'fulfilled' ? Number(cartResult.value?.data?.cartSummary?.totalItems || 0) : 0,
-        favoriteCount: getMockFavoriteCount(),
+        favoriteCount: favoritesResult.status === 'fulfilled' ? Number(favoritesResult.value?.data?.favoritesCount || 0) : 0,
       }
       setUser(headerData.user)
       setCartCount(headerData.cartCount)

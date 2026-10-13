@@ -28,6 +28,7 @@ function getAccountPage(route) {
   }
 }
 import HomePage from './pages/webstore/HomePage.jsx'
+import ProductDetailPage from './pages/webstore/ProductDetailPage.jsx'
 
 function StorefrontPlaceholder({ title }) {
   const location = useLocation()
@@ -56,6 +57,7 @@ function getStorefrontPage(route) {
   if (route.path === '/') return <HomePage />
   if (route.path === '/about') return <AboutPage />
   if (route.path === '/contact') return <ContactPage />
+  if (route.path === '/products/:id') return <ProductDetailPage />
   return <StorefrontPlaceholder title={route.title} />
 }
 
