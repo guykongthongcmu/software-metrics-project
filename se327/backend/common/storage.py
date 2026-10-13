@@ -73,6 +73,7 @@ def save_image(upload, folder):
             for chunk in upload.chunks():
                 out.write(chunk)
     except OSError as exc:
+        delete_files([relative])
         raise StorageError(str(exc)) from exc
     return StoredFile(BUCKET, relative, f'{media_url()}{relative}')
 
