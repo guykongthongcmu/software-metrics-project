@@ -1,0 +1,57 @@
+from functools import lru_cache
+
+from django.contrib.auth.hashers import check_password, make_password
+
+from .models import User
+from .signup import FIELD_LIMITS, ApiError, check_email_format, clean_email
+
+MAX_PASSWORD_LENGTH = 1000
+
+
+@lru_cache(maxsize=1)
+def dummy_hash():
+    return make_password('not-a-real-password')
+
+
+def authenticate(model, body):
+    """Return the account whose email and password match, or raise INVALID_CREDENTIALS.
+
+    Unknown email and wrong password give the same error, and an unknown email still
+    runs one hash check so the response time does not give the email away.
+    """
+    email = clean_email(body.get('email'))
+    password = body.get('password')
+    check_email_format(email)
+    if not isinstance(password, str) or password == '':
+        raise ApiError('MISSING_REQUIRED_FIELDS', 'password is required', 400)
+    if (len(email) > FIELD_LIMITS['email'] or len(password) > MAX_PASSWORD_LENGTH
+            or '\x00' in email or '\x00' in password):
+        raise ApiError('INVALID_FIELD_LENGTH', 'a field is too long or has invalid characters', 400)
+
+    account = model.objects.filter(email__iexact=email).first()
+    if account is None:
+        check_password(password, dummy_hash())
+        raise ApiError('INVALID_CREDENTIALS', 'invalid email or password', 401)
+    if not check_password(password, account.password_hash):
+        raise ApiError('INVALID_CREDENTIALS', 'invalid email or password', 401)
+    return account
+
+
+def customer_sign_in(body):
+    return authenticate(User, body)
+
+
+def full_name(user):
+    return f'{user.first_name} {user.last_name}'.strip()
+
+
+def customer_profile(user):
+    return {
+        'user_id': user.user_id,
+        'email': user.email,
+        'name': full_name(user),
+        'phone_number': user.phone_number,
+        'date_of_birth': user.date_of_birth.isoformat(),
+        'email_verified': user.email_verified_at is not None,
+        'created_at': user.created_at.isoformat(),
+    }
