@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { apiClient } from '../../../lib/apiClient.js'
 import CategoryMenu from './CategoryMenu.jsx'
-import { getMockFavoriteCount } from './FavoritesContext.jsx'
 
 const iconPaths = {
   search: <><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 5 5" /></>,
@@ -69,15 +68,16 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
   useEffect(() => {
     let active = true
     const loadHeaderData = async () => {
-      const [profileResult, cartResult] = await Promise.allSettled([
+      const [profileResult, cartResult, favoritesResult] = await Promise.allSettled([
         apiClient.get('/auth/user/profile', { redirectOn401: false }),
         apiClient.get('/client/cart?lang=EN', { redirectOn401: false }),
+        apiClient.get('/client/favorites?lang=EN', { redirectOn401: false }),
       ])
       if (!active) return
       const headerData = {
         user: profileResult.status === 'fulfilled' ? profileResult.value?.data || null : null,
         cartCount: cartResult.status === 'fulfilled' ? Number(cartResult.value?.data?.cartSummary?.totalItems || 0) : 0,
-        favoriteCount: getMockFavoriteCount(),
+        favoriteCount: favoritesResult.status === 'fulfilled' ? Number(favoritesResult.value?.data?.favoritesCount || 0) : 0,
       }
       setUser(headerData.user)
       setCartCount(headerData.cartCount)
