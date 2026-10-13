@@ -21,6 +21,22 @@ function unique(values) {
   return [...new Set(values.map((value) => String(value || '').trim()).filter(Boolean))]
 }
 
+function getPageState(id, loadedId, error, errorId, product) {
+  if (loadedId !== id) return 'loading'
+  if ((error && errorId === id) || !product) return 'error'
+  return 'ready'
+}
+
+function getPageErrorMessage(id, error, errorId) {
+  return errorId === id ? error : 'This product could not be loaded.'
+}
+
+function getCartButtonLabel(canAddToCart, busy) {
+  if (!canAddToCart) return 'Out of Stock'
+  if (busy) return 'Please wait…'
+  return 'Add to Cart'
+}
+
 function initialVariantSelection(item, variants) {
   const availableColors = unique(variants.map((entry) => entry.color))
   const firstAvailableVariant = variants.find((entry) => Number(entry.stockQty) > 0)
@@ -238,14 +254,13 @@ export default function ProductDetailPage() {
     toggleFavorite().catch(() => setCartMessage('Could not update favorites. Please try again.'))
   }
 
-  if (loadedId !== id) return <output className="block min-h-[55vh] bg-[#f5f0e8] px-5 py-12 text-sm text-[#777]">Loading product…</output>
-  if ((error && errorId === id) || !product) return <main className="min-h-[55vh] bg-[#f5f0e8] px-5 py-12"><p className="mx-auto max-w-6xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{errorId === id ? error : 'This product could not be loaded.'}</p><Link className="mx-auto mt-5 block max-w-6xl text-sm underline" to="/products">Back to products</Link></main>
+  const pageState = getPageState(id, loadedId, error, errorId, product)
+  if (pageState === 'loading') return <output className="block min-h-[55vh] bg-[#f5f0e8] px-5 py-12 text-sm text-[#777]">Loading product…</output>
+  if (pageState === 'error') return <main className="min-h-[55vh] bg-[#f5f0e8] px-5 py-12"><p className="mx-auto max-w-6xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">{getPageErrorMessage(id, error, errorId)}</p><Link className="mx-auto mt-5 block max-w-6xl text-sm underline" to="/products">Back to products</Link></main>
 
   const category = product.category
   const imageList = images.length ? images : [product.image]
-  let addToCartLabel = 'Add to Cart'
-  if (!canAddToCart) addToCartLabel = 'Out of Stock'
-  else if (busy) addToCartLabel = 'Please wait…'
+  const addToCartLabel = getCartButtonLabel(canAddToCart, busy)
   const favoriteLabel = favorite ? 'Remove from favorites' : 'Add to favorites'
   return (
     <main className="bg-[#f5f0e8] text-[#2a2520]">
