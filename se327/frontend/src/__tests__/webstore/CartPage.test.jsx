@@ -7,7 +7,7 @@ import { FavoritesProvider } from '../../pages/webstore/partials/FavoritesContex
 
 vi.mock('../../lib/apiClient.js', async (importOriginal) => {
   const actual = await importOriginal()
-  return { ...actual, apiClient: { get: vi.fn(), put: vi.fn(), delete: vi.fn() } }
+  return { ...actual, apiClient: { get: vi.fn(), put: vi.fn(), post: vi.fn(), delete: vi.fn() } }
 })
 
 vi.mock('../../pages/webstore/partials/ProductCard.jsx', () => ({
@@ -65,6 +65,7 @@ function setupApi({
     return value instanceof Error ? Promise.reject(value) : Promise.resolve(value)
   })
   apiClient.put.mockResolvedValue({ data: { item: { quantityCartItem: 3 }, cartSummary: { subtotal: 270, totalItems: 4 } } })
+  apiClient.post.mockResolvedValue({ data: { isFavorite: true, favoritesCount: 1 } })
   apiClient.delete.mockResolvedValue({ data: { cartSummary: { subtotal: 25, totalItems: 1 } } })
 }
 
@@ -72,6 +73,7 @@ describe('CartPage', () => {
   beforeEach(() => {
     apiClient.get.mockReset()
     apiClient.put.mockReset()
+    apiClient.post.mockReset()
     apiClient.delete.mockReset()
   })
 
@@ -124,6 +126,16 @@ describe('CartPage', () => {
       expect(row.children[3].className).toContain('max-[575px]:w-20')
     })
     expect(screen.getByText('$1980.00')).toBeTruthy()
+  })
+
+  it('enables the cart heart after favorites load and updates its state through the API', async () => {
+    setupApi()
+    renderCart()
+    const favoriteButton = await screen.findByRole('button', { name: 'Add Linen Shirt to favorites' })
+    fireEvent.click(favoriteButton)
+
+    await waitFor(() => expect(apiClient.post).toHaveBeenCalledWith('/client/favorites/59?lang=EN', {}, { redirectOn401: false }))
+    expect(await screen.findByRole('button', { name: 'Remove Linen Shirt from favorites' })).toBeTruthy()
   })
 
   it('uses safe fallbacks for malformed item fields and invalid prices', async () => {

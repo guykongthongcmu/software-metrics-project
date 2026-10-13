@@ -54,9 +54,6 @@ function FavoriteCard({ product, busy, onRemove, onAddToCart }) {
       </div>
       <div className="mt-auto flex flex-col gap-[10px]">
         <button className="min-h-[48px] w-full bg-[#1C1B1F] px-[15px] py-[14px] font-inter text-[0.75rem] font-medium tracking-[1px] text-white uppercase transition-colors hover:bg-[#333] disabled:cursor-not-allowed disabled:opacity-50" disabled={busy || !sizes.length || !colors.length} onClick={() => onAddToCart(product, color, size)} type="button">ADD TO CART</button>
-        <button aria-label={`Remove ${product.name} from favorites`} className="hidden" disabled={busy} onClick={() => onRemove(product)} type="button">
-          <svg aria-hidden="true" className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
-        </button>
       </div>
     </article>
   )

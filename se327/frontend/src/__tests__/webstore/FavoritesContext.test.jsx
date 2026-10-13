@@ -17,6 +17,7 @@ function FavoritesProbe() {
       <output aria-label="Favorites loaded">{String(loaded)}</output>
       <button onClick={() => { void toggleFavorite(7) }} type="button">Toggle seven</button>
       <button onClick={() => { void toggleFavorite('8') }} type="button">Toggle eight</button>
+      <button onClick={() => { void toggleFavorite('invalid') }} type="button">Toggle invalid</button>
     </div>
   )
 }
@@ -69,6 +70,47 @@ describe('FavoritesProvider', () => {
 
     expect((await screen.findByLabelText('Favorites loaded')).textContent).toBe('true')
     expect(screen.getByLabelText('Favorite ids').textContent).toBe('')
+  })
+
+  it('refreshes from header events and applies valid favorite updates', async () => {
+    renderFavorites()
+    await screen.findByLabelText('Favorites loaded')
+
+    window.dispatchEvent(new Event('storefront:refresh-header'))
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(2))
+    window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: { productId: 7, isFavorite: true } }))
+    await waitFor(() => expect(screen.getByLabelText('Favorite ids').textContent).toBe('8,7'))
+    window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: { productId: 7, isFavorite: false } }))
+    await waitFor(() => expect(screen.getByLabelText('Favorite ids').textContent).toBe('8'))
+    window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: { productId: 'invalid', isFavorite: true } }))
+    expect(screen.getByLabelText('Favorite ids').textContent).toBe('8')
+    window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: {} }))
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(3))
+  })
+
+  it('clears favorite ids when a header refresh fails', async () => {
+    renderFavorites()
+    await screen.findByLabelText('Favorites loaded')
+    apiClient.get.mockRejectedValueOnce(new Error('offline'))
+    window.dispatchEvent(new Event('storefront:refresh-header'))
+
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(screen.getByLabelText('Favorite ids').textContent).toBe(''))
+  })
+
+  it('ignores invalid ids and suppresses duplicate requests while a toggle is pending', async () => {
+    let finishPost
+    apiClient.post.mockReturnValue(new Promise((resolve) => { finishPost = resolve }))
+    renderFavorites()
+    await screen.findByLabelText('Favorites loaded')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle invalid' }))
+    expect(apiClient.post).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle seven' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle seven' }))
+    expect(apiClient.post).toHaveBeenCalledTimes(1)
+    finishPost({ data: { isFavorite: true, favoritesCount: 2 } })
+    await waitFor(() => expect(screen.getByLabelText('Favorite ids').textContent).toBe('8,7'))
   })
 
   it('navigates to login when changing favorites returns unauthorized', async () => {
