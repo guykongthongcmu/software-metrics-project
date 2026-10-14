@@ -1,3 +1,5 @@
+import { withSelectedLanguage } from './language.js'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export class ApiError extends Error {
@@ -51,7 +53,7 @@ function requestHeaders(options) {
 /** @param {string} path @param {RequestInit & {redirectOn401?: boolean}} [options] */
 export async function apiFetch(path, options = {}) {
   const { redirectOn401 = true, ...requestOptions } = options
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${API_BASE_URL}${withSelectedLanguage(path)}`, {
     ...requestOptions,
     credentials: 'include',
     headers: requestHeaders(requestOptions),

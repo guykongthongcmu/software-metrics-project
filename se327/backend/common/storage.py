@@ -82,8 +82,9 @@ def supabase_request(path, method, body, content_type):
             'Content-Type': content_type,
         },
     )
-    with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT):
-        pass
+    with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
+        # read the body so the connection is drained and closed cleanly
+        response.read()
 
 
 def save_to_supabase(upload, relative, extension):

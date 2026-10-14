@@ -85,7 +85,8 @@ function CampaignPreview({ form, imageUrl }) {
 function LaunchDialog({ form, busy, onClose, onConfirm }) {
   const selectedChannels = [form.web && 'Web Banner', form.email && 'Email blast'].filter(Boolean).join(', ')
   return (
-    <dialog aria-labelledby="campaign-confirm-heading" aria-modal="true" className="campaign-builder-modal-backdrop" onKeyDown={(event) => { if (event.key === 'Escape' && !busy) onClose() }} onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose() }} open>
+    <dialog aria-labelledby="campaign-confirm-heading" aria-modal="true" className="campaign-builder-modal-backdrop" open>
+      <button aria-label="Close dialog" className="campaign-builder-modal-dismiss" disabled={busy} onClick={onClose} tabIndex={-1} type="button" />
       <section className="campaign-builder-modal">
         {busy ? (
           <div className="campaign-builder-modal-body" aria-live="polite">

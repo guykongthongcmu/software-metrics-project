@@ -59,8 +59,11 @@ These can be returned by any endpoint and are not repeated in the tables unless 
 | 403 | `CORS_ORIGIN_NOT_ALLOWED` | `Origin` header is not on the allowlist |
 | 404 | `NOT_FOUND` | Unknown route |
 | 405 | `METHOD_NOT_ALLOWED` | Route exists, method does not |
+| 413 | `PAYLOAD_TOO_LARGE` | Request body over 2.5 MB (Django `DATA_UPLOAD_MAX_MEMORY_SIZE`). Uploaded image files are not counted here, they have their own 5 MB limit with `FILE_TOO_LARGE` |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Body type not accepted by the endpoint |
 | 500 | `INTERNAL_SERVER_ERROR` | Unhandled error. No stack trace or internal detail in the body |
+
+NUL bytes and lone surrogates cannot be stored, so any of them in the path, a query parameter or a JSON body is refused with 400 before the endpoint runs: `INVALID_QUERY` for the path and query string, `INVALID_FIELD_LENGTH` for a JSON body. Endpoints that check their own text (reset password, checkout address, admin categories and products) keep their own error codes.
 
 Standard messages: 401 `authentication is required`, 403 `admin access required` or `customer access required`, 500 `internal server error`.
 
@@ -96,7 +99,7 @@ Base `/api/auth`. Email is trimmed and lower-cased. Email format: `something@som
 | `POST /signup` | none | `{ email, password, first_name, last_name, DOB, phone_number }`, all required | 201 [SignupResult](#9-shared-data-shapes) | 400 `MISSING_REQUIRED_FIELDS` (adds `missingFields`), 400 `INVALID_EMAIL_FORMAT`, 400 `PASSWORD_TOO_SHORT`, 409 `EMAIL_ALREADY_EXISTS` |
 | `GET /verify-email` | none | Query `token` (required), optional `format=json\|html` | 200 `{ user_id, email, email_verified: true }` | 400 `MISSING_REQUIRED_FIELDS`, 400 `INVALID_VERIFICATION_TOKEN`, 409 `VERIFICATION_TOKEN_ALREADY_USED`, 410 `VERIFICATION_TOKEN_EXPIRED`, 409 `EMAIL_ALREADY_VERIFIED` |
 | `POST /resend-verification` | none | `{ email }` | 200 `{ email, verification_email_sent }` | 400 `MISSING_REQUIRED_FIELDS`, 400 `INVALID_EMAIL_FORMAT`, 404 `USER_NOT_FOUND`, 409 `EMAIL_ALREADY_VERIFIED` |
-| `POST /user/signin` | none | `{ email, password }` | 200 [SessionInfo](#9-shared-data-shapes) with `role: "user"`; sets cookie | 400 `MISSING_REQUIRED_FIELDS`, 400 `INVALID_EMAIL_FORMAT`, 401 `INVALID_CREDENTIALS` |
+| `POST /user/signin` | none | `{ email, password }` | 200 [SessionInfo](#9-shared-data-shapes) with `role: "user"`; sets cookie | 400 `MISSING_REQUIRED_FIELDS`, 400 `INVALID_EMAIL_FORMAT`, 401 `INVALID_CREDENTIALS`, 403 `EMAIL_NOT_VERIFIED` |
 | `GET /user/profile` | customer | none | 200 [Profile](#9-shared-data-shapes) | 401, 403, 404 `USER_NOT_FOUND` |
 | `POST /admin/signin` | none | `{ email, password }` | 200 SessionInfo with `role: "admin"`; sets cookie | 400 as above, 401 `INVALID_CREDENTIALS`, 403 `ACCOUNT_INACTIVE` |
 | `POST /forgot-password` | none | `{ email }` | 200, no `data`. Same reply whether or not the email exists | 400 `MISSING_REQUIRED_FIELDS`, 400 `INVALID_EMAIL_FORMAT` (OQ 11) |
@@ -109,6 +112,7 @@ Behaviour notes
 - `verify-email` checks in this order: token exists, not used, not expired, user not already verified. With `format=html`, or an `Accept` header containing `text/html` and no `format=json`, the same outcome is returned as a branded HTML page with the same status code (OQ 10).
 - `resend-verification` invalidates earlier unused verification tokens before issuing a new one.
 - Token lifetimes: verification `EMAIL_VERIFICATION_EXPIRY_MINUTES` (default 5), reset `PASSWORD_RESET_EXPIRY_MINUTES` (default 15). Requesting a new reset link invalidates earlier unused ones.
+- Customer sign in requires a verified email. The 403 `EMAIL_NOT_VERIFIED` is only returned after the password matched, so a wrong password or unknown email still gets 401 `INVALID_CREDENTIALS`, and no session or cookie is created. `resend-verification` stays open so the customer can ask for a new link.
 - Admin accounts are seeded. There is no admin sign up.
 
 ## 5. Storefront catalogue endpoints
@@ -167,9 +171,11 @@ Adding a colour and size already in the cart increases that line's quantity. The
 |---|---|---|---|
 | `GET /checkout/address` | none | `{ address: Address \| null }`, the saved default shipping address | none beyond common |
 | `PUT /checkout/address` | Address | 200 `{ address }`, creates or updates the default shipping address | 400 `INVALID_ADDRESS_PAYLOAD` (adds per-field messages) |
-| `POST /checkout/purchase` | none | 200 `{ orderId, orderStatus: "PURCHASED", purchasedAt, cartSummary: { totalItems, subtotal } }` (OQ 14) | 400 `CHECKOUT_ADDRESS_REQUIRED`, 409 `CART_EMPTY`, 409 `CART_ITEM_UNAVAILABLE`, 409 `INSUFFICIENT_STOCK` |
+| `POST /checkout/purchase` | none | 200 `{ orderId, orderStatus: "PURCHASED", purchasedAt, cartSummary: { totalItems, subtotal } }` (OQ 14) | 400 `CHECKOUT_ADDRESS_REQUIRED`, 409 `CART_EMPTY`, 409 `CART_ITEM_UNAVAILABLE`, 409 `INSUFFICIENT_STOCK`, 409 `ORDER_TOTAL_TOO_LARGE` |
 
 Address fields: `fullName` (max 150), `phoneNumber` (7 to 20 chars of digits, `+ - ( )` and spaces), `addressLine1` (max 255), `addressLine2` (optional, max 255), `district` (max 120), `province` (max 120), `postalCode` (3 to 12 letters, digits, `-` or space), `country` (max 100). All required except `addressLine2`.
+
+Only the default shipping address is used. `GET` returns `address: null` when there is none, `PUT` creates a new default when none exists (other saved addresses are left alone), and purchase without a default is refused with `CHECKOUT_ADDRESS_REQUIRED`.
 
 Purchase runs in one transaction. It stores an order with item and address snapshots, reduces variant stock, empties the cart and marks it converted. Payment is simulated. On any error nothing is written. Email verification is not checked (pending legacy-feature decision).
 
