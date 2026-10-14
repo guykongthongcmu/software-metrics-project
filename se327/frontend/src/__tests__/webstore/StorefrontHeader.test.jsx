@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import { getLanguage, setLanguage } from '../../lib/language.js'
@@ -247,5 +247,12 @@ describe('StorefrontHeader', () => {
     await Promise.allSettled(pendingRequests.map((request) => request.promise))
 
     expect(screen.queryByLabelText('6 cart')).toBeNull()
+  })
+
+  it('shows a language changed from outside the header', async () => {
+    renderHeader()
+    expect(screen.getByRole('button', { name: 'EN' })).toBeTruthy()
+    act(() => setLanguage('TH'))
+    expect(screen.getByRole('button', { name: 'TH' })).toBeTruthy()
   })
 })

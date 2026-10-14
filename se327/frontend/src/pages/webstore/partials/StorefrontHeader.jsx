@@ -68,8 +68,13 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
 
   function chooseLanguage(option) {
     setLanguage(option)
-    setSelectedLanguage(option)
   }
+
+  useEffect(() => {
+    const syncLanguage = (event) => setSelectedLanguage(event.detail.language)
+    window.addEventListener('storefront:language-changed', syncLanguage)
+    return () => window.removeEventListener('storefront:language-changed', syncLanguage)
+  }, [])
 
   useEffect(() => {
     let active = true
