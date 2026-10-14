@@ -62,6 +62,8 @@ These can be returned by any endpoint and are not repeated in the tables unless 
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Body type not accepted by the endpoint |
 | 500 | `INTERNAL_SERVER_ERROR` | Unhandled error. No stack trace or internal detail in the body |
 
+NUL bytes and lone surrogates cannot be stored, so any of them in the path, a query parameter or a JSON body is refused with 400 before the endpoint runs: `INVALID_QUERY` for the path and query string, `INVALID_FIELD_LENGTH` for a JSON body. Endpoints that check their own text (reset password, checkout address, admin categories and products) keep their own error codes.
+
 Standard messages: 401 `authentication is required`, 403 `admin access required` or `customer access required`, 500 `internal server error`.
 
 ### CORS
