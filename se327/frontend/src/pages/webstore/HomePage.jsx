@@ -33,6 +33,15 @@ function campaignBanner(campaign) {
   }
 }
 
+function NewArrivalsContent({ error, loading, products }) {
+  if (error) return <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
+  if (loading) return <p role="status" className="text-sm text-muted">Loading new arrivals…</p>
+  if (products.length > 0) {
+    return <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.productId} product={product} />)}</div>
+  }
+  return <p className="text-sm text-muted">No new arrivals are available right now.</p>
+}
+
 export default function HomePage() {
   const [products, setProducts] = useState([])
   const [productsError, setProductsError] = useState('')
@@ -84,10 +93,7 @@ export default function HomePage() {
           <h2 className="font-sans text-2xl font-light text-[#444]">New Arrivals</h2>
           <Link to="/products?sort=newest" className="relative text-sm text-accent after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-full after:bg-accent">View All</Link>
         </div>
-        {productsError ? <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{productsError}</p>
-          : productsLoading ? <p role="status" className="text-sm text-muted">Loading new arrivals…</p>
-            : products.length ? <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.productId} product={product} />)}</div>
-              : <p className="text-sm text-muted">No new arrivals are available right now.</p>}
+        <NewArrivalsContent error={productsError} loading={productsLoading} products={products} />
       </section>
 
       {showScrollTop && <button type="button" aria-label="Scroll to top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="fixed bottom-8 right-8 z-[999] grid h-12 w-12 place-items-center rounded-full border-0 bg-[#8b7355] text-xl text-white">↑</button>}

@@ -46,7 +46,8 @@ export default function SignupInfoPage() {
     const dateInput = event.currentTarget.elements.namedItem('dob')
     dateInput.setCustomValidity(form.dob && !isValidDateOfBirth(form.dob) ? 'Please enter a valid date of birth.' : '')
     if (!email || !form.name || !form.surname || !isValidDateOfBirth(form.dob) || !canContinue) return
-    const [, day, month, year] = form.dob.match(/^(\d{2})\/(\d{2})\/(\d{4})$/) || []
+    const dateParts = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(form.dob) || []
+    const [, day, month, year] = dateParts
     const phoneDigits = mobileDigits.replace(/^0/, '')
     setIsSubmitting(true)
     try {
