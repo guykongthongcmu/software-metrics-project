@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import AdminOrdersPage from '../../pages/admin/AdminOrdersPage.jsx'
@@ -63,6 +63,25 @@ describe('Admin order management pages', () => {
     apiClient.get.mockRejectedValue({})
     renderOrders()
     expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Failed to load orders')
+    apiClient.get.mockRejectedValue({})
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Failed to load orders')
+  })
+
+  it('ignores list responses that arrive after the page unmounts', async () => {
+    let resolveOrders
+    let resolveSummary
+    apiClient.get.mockImplementation((path) => new Promise((resolve) => {
+      if (path.startsWith('/admin/orders')) resolveOrders = resolve
+      else resolveSummary = resolve
+    }))
+    const view = renderOrders()
+    view.unmount()
+    await act(async () => {
+      resolveOrders(listPayload())
+      resolveSummary(summaryPayload())
+    })
+    expect(apiClient.get).toHaveBeenCalledTimes(2)
   })
 
   it('confirms and deletes an order, while cancellation leaves it in place', async () => {
@@ -128,6 +147,15 @@ describe('Admin order management pages', () => {
     expect(document.querySelector('.admin-order-spinner')).toBeTruthy()
   })
 
+  it('ignores detail responses that arrive after the page unmounts', async () => {
+    let resolveOrder
+    apiClient.get.mockImplementation(() => new Promise((resolve) => { resolveOrder = resolve }))
+    const view = renderDetail()
+    view.unmount()
+    await act(async () => { resolveOrder({ data: order }) })
+    expect(apiClient.get).toHaveBeenCalledWith('/admin/orders/12')
+  })
+
   it('shows empty items and per-field validation returned by the API', async () => {
     apiClient.get.mockResolvedValue({ data: { ...order, items: [] } })
     apiClient.patch.mockRejectedValue({ message: 'Invalid address', payload: { details: { postalCode: 'postal code invalid' } } })
@@ -145,6 +173,18 @@ describe('Admin order management pages', () => {
     expect(screen.getByText('PURCHASED')).toBeTruthy()
     expect(screen.getByLabelText('Full Name')).toHaveProperty('value', '')
     expect(screen.getByText('bad-date')).toBeTruthy()
+  })
+
+  it('handles nested API data, missing amounts and keeps edited address when the response omits it', async () => {
+    apiClient.get.mockResolvedValue({ data: { data: { ...order, subtotal: null, shippingFee: undefined, vatAmount: 'invalid', total: 0, items: [{ orderItemId: 2, quantity: 0 }] } } })
+    apiClient.patch.mockResolvedValue({ data: { data: { ...order, shippingAddressSnapshot: null } } })
+    renderDetail()
+    expect((await screen.findAllByText('--')).length).toBeGreaterThan(0)
+    expect(screen.getAllByText('$0.00').length).toBeGreaterThanOrEqual(3)
+    fireEvent.change(screen.getByLabelText('Phone Number'), { target: { value: '987654321' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Address Snapshot' }))
+    await waitFor(() => expect(apiClient.patch).toHaveBeenCalled())
+    expect(screen.getByLabelText('Phone Number')).toHaveProperty('value', '987654321')
   })
 
   it('displays load errors and retries the detail request', async () => {
