@@ -46,6 +46,17 @@ gunicorn is used instead of `runserver` because it is the same command you would
 
 If `SUPABASE_URL`, `SUPABASE_SECRET_KEY` and `SUPABASE_PRODUCT_BUCKET` are set in `backend/.env`, uploads go to Supabase. Otherwise they are written to `/app/media` in the backend container, which is the named volume `media`, and served from `/media/`.
 
+### Dependency lock file
+
+The backend image installs from `backend/requirements.lock` with hash checking, while CI and local development keep using `requirements.txt`. After changing `requirements.txt`, regenerate the lock (pip-tools is not a project dependency, install it in a scratch venv):
+
+```bash
+cd backend
+pip-compile --generate-hashes --allow-unsafe --strip-extras -o requirements.lock requirements.txt
+```
+
+A backend test fails if the versions in the two files drift apart.
+
 ### Stop and reset
 
 ```bash
