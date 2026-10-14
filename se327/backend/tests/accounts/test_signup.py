@@ -1,3 +1,4 @@
+import time
 from datetime import timedelta
 from unittest import mock
 
@@ -304,6 +305,14 @@ class VerifyEmailTests(SignupBase):
 
 
 class ResendVerificationTests(SignupBase):
+    def test_huge_malformed_email_is_rejected_quickly(self):
+        start = time.monotonic()
+        for email in ('a@' + '.' * 40000, 'a@' + 'b.' * 20000 + '@', '@' * 40000):
+            res = self.post('/api/auth/resend-verification', {'email': email})
+            self.assertEqual(res.status_code, 400)
+            self.assertEqual(res.json()['code'], 'INVALID_EMAIL_FORMAT')
+        self.assertLess(time.monotonic() - start, 2)
+
     def test_new_token_replaces_old_ones(self):
         self.signup()
         old = EmailVerificationToken.objects.get()
