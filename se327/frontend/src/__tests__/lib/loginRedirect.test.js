@@ -11,6 +11,14 @@ describe('safeNextPath', () => {
       expect(safeNextPath(value)).toBe('')
     }
   })
+
+  it('rejects control characters, encoded or not, and very long values', () => {
+    for (const value of ['/%09/evil.com', '/\t/evil.com', '/%0a/evil.com', '/\n/evil.com', '/%00x', '/\u0000x', '/%5Cevil.com', '/%zz']) {
+      expect(safeNextPath(value)).toBe('')
+    }
+    expect(safeNextPath(`/${'a'.repeat(2000)}`)).toBe('')
+    expect(safeNextPath(`/${'a'.repeat(1999)}`)).not.toBe('')
+  })
 })
 
 describe('loginPath', () => {
