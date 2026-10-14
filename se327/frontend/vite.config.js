@@ -10,6 +10,10 @@ export default defineConfig({
         target: process.env.API_BASE_URL || 'http://localhost:3000',
         changeOrigin: true,
       },
+      '/media': {
+        target: process.env.API_BASE_URL || 'http://localhost:3000',
+        changeOrigin: true,
+      },
     },
   },
   test: {
