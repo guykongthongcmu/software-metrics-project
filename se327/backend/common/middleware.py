@@ -2,7 +2,7 @@ import json
 import logging
 
 from django.conf import settings
-from django.core.exceptions import RequestDataTooBig
+from django.core.exceptions import RequestDataTooBig, SuspiciousOperation
 from django.http import HttpResponse
 
 from .responses import error_response
@@ -97,13 +97,30 @@ def json_has_bad_text(data):
     return False
 
 
+def is_json_request(request):
+    if request.method not in ('POST', 'PUT', 'PATCH'):
+        return False
+    kind = request.content_type
+    return kind == 'application/json' or kind.endswith('+json')
+
+
 def parsed_json_body(request):
-    if request.method not in ('POST', 'PUT', 'PATCH') or request.content_type.startswith('multipart/'):
+    """The decoded JSON body, or None when it is not JSON, not parseable or too big.
+
+    Too big is left alone here because the view answers 413 for it. Very deep nesting raises
+    RecursionError, which the caller turns into a 400.
+    """
+    if not is_json_request(request):
+        return None
+    try:
+        length = int(request.META.get('CONTENT_LENGTH') or 0)
+    except ValueError:
+        length = 0
+    if length > settings.DATA_UPLOAD_MAX_MEMORY_SIZE:
         return None
     try:
         return json.loads(request.body)
-    except (ValueError, RecursionError, RequestDataTooBig):
-        # not JSON or too big, the view reports that itself
+    except (ValueError, RequestDataTooBig):
         return None
 
 
@@ -119,16 +136,23 @@ class BadTextMiddleware:
 
     def __call__(self, request):
         values = [request.path_info]
-        for key, items in request.GET.lists():
-            values.append(key)
-            values.extend(items)
+        try:
+            for key, items in request.GET.lists():
+                values.append(key)
+                values.extend(items)
+        except SuspiciousOperation:
+            # more query parameters than DATA_UPLOAD_MAX_NUMBER_FIELDS allows
+            return error_response('INVALID_QUERY', 'the query string was rejected', 400)
         if any(has_bad_text(value) for value in values):
             return error_response('INVALID_QUERY', 'text contains characters that are not allowed', 400)
 
         if request.path_info.startswith(OWN_TEXT_CHECKS):
             return self.get_response(request)
 
-        body = parsed_json_body(request)
+        try:
+            body = parsed_json_body(request)
+        except RecursionError:
+            return error_response('INVALID_JSON', 'request body is nested too deeply', 400)
         if body is not None and json_has_bad_text(body):
             return error_response('INVALID_FIELD_LENGTH', 'a field is too long or has invalid characters', 400)
         return self.get_response(request)
