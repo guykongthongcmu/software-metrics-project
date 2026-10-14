@@ -172,9 +172,30 @@ function Growth({ value }) {
   return <span className={`admin-stat-growth ${className}`}>{formatGrowth(numericGrowth)}</span>
 }
 
+function kpiIcon(label) {
+  if (label === 'Total Revenue') return <><path d="M2 3h1l1.5 8h7.8l1.5-5.5H4" /><circle cx="6" cy="13.5" r="1" /><circle cx="12" cy="13.5" r="1" /><path d="m8 5 1.5 1.5L12 4" /></>
+  if (label === 'Total Orders') return <><path d="M4 5h8l1 9H3z" /><path d="M6 5a2 2 0 0 1 4 0" /></>
+  if (label === 'Products Sold') return <><path d="m8 2 6 3.2v7L8 15l-6-2.8v-7z" /><path d="M2 5.2 8 8.5l6-3.3M8 8.5V15" /></>
+  return <><path d="M2 13V9h3v4zm5 0V6h3v7zm5 0V3h3v10z" /><path d="m2 7 4-3 3 1 5-4" /></>
+}
+
+function formatRangeLabel(from, to) {
+  if (from && to) return `${from} to ${to}`
+  if (from) return `${from} to …`
+  return 'Select Date Range'
+}
+
+function renderTopSellers(loading, sellers) {
+  if (loading) return <output className="admin-dashboard-empty">Loading top sellers...</output>
+  if (!sellers.length) return <p className="admin-dashboard-empty">No sales data found</p>
+  return <div className="admin-top-sellers">{sellers.map((seller, index) => <Link className="admin-top-seller" key={seller.productId} to={`/admin/products/edit/${seller.productId}`}><b>#{index + 1}</b><strong>{seller.label || 'Unnamed product'}</strong><small>{seller.category || '—'}</small><span className="admin-seller-likes">♥ {formatNumber(seller.likesCount)}</span><span className="admin-seller-sales">{formatNumber(seller.salesValue)} sold</span></Link>)}</div>
+}
+
 function KpiCard({ label, value, growth, color, currency = false, overall = false, index = 0 }) {
-  const displayValue = overall ? formatGrowth(value) : currency ? `$${formatNumber(value)}` : formatNumber(value)
-  const icon = label === 'Total Revenue' ? <><path d="M2 3h1l1.5 8h7.8l1.5-5.5H4" /><circle cx="6" cy="13.5" r="1" /><circle cx="12" cy="13.5" r="1" /><path d="m8 5 1.5 1.5L12 4" /></> : label === 'Total Orders' ? <><path d="M4 5h8l1 9H3z" /><path d="M6 5a2 2 0 0 1 4 0" /></> : label === 'Products Sold' ? <><path d="m8 2 6 3.2v7L8 15l-6-2.8v-7z" /><path d="M2 5.2 8 8.5l6-3.3M8 8.5V15" /></> : <><path d="M2 13V9h3v4zm5 0V6h3v7zm5 0V3h3v10z" /><path d="m2 7 4-3 3 1 5-4" /></>
+  let displayValue = formatNumber(value)
+  if (currency) displayValue = `$${displayValue}`
+  if (overall) displayValue = formatGrowth(value)
+  const icon = kpiIcon(label)
   return (
     <article className={`admin-dashboard-kpi fade-in-delay-${index}`}>
       <span aria-hidden="true" className={`admin-kpi-icon ${color}`}><svg viewBox="0 0 16 16">{icon}</svg></span>
@@ -205,7 +226,7 @@ function DateRangePicker({ from, to, onSelectRange }) {
     day.setDate(gridStart.getDate() + index)
     return day
   })
-  const rangeLabel = from && to ? `${from} to ${to}` : from ? `${from} to …` : 'Select Date Range'
+  const rangeLabel = formatRangeLabel(from, to)
   const previousMonth = new Date(year, month - 1, 1)
   const nextMonth = new Date(year, month + 1, 1)
   const nextMonthDisabled = nextMonth > new Date(calendarToday.getFullYear(), calendarToday.getMonth(), 1)
@@ -289,7 +310,11 @@ export default function AdminDashboardPage() {
   const productsGrowth = calculateGrowth(charts.productsSold)
   const periodGranularity = data.period?.granularity || (period === 'monthly' ? 'month' : 'day')
   const topSellers = Array.isArray(data.topSellers) ? data.topSellers : []
-  const periodText = useMemo(() => data.period?.from && data.period?.to ? `Trend from ${data.period.from} to ${data.period.to}` : 'Trend for selected period', [data.period?.from, data.period?.to])
+  const periodText = useMemo(() => {
+    if (data.period?.from && data.period?.to) return `Trend from ${data.period.from} to ${data.period.to}`
+    return 'Trend for selected period'
+  }, [data.period?.from, data.period?.to])
+  const topSellersContent = renderTopSellers(loading, topSellers)
 
   function choosePeriod(nextPeriod) {
     setPeriod(nextPeriod)
@@ -327,7 +352,7 @@ export default function AdminDashboardPage() {
         </article>
         <article className="admin-feature-card admin-sellers-card">
           <div className="admin-dashboard-card-header"><h3><span aria-hidden="true">♜</span> Top Sellers</h3><Link className="admin-feature-link" to="/admin/products">All Products <span aria-hidden="true">→</span></Link></div>
-          {loading ? <output className="admin-dashboard-empty">Loading top sellers...</output> : topSellers.length ? <div className="admin-top-sellers">{topSellers.map((seller, index) => <Link className="admin-top-seller" key={seller.productId} to={`/admin/products/edit/${seller.productId}`}><b>#{index + 1}</b><strong>{seller.label || 'Unnamed product'}</strong><small>{seller.category || '—'}</small><span className="admin-seller-likes">♥ {formatNumber(seller.likesCount)}</span><span className="admin-seller-sales">{formatNumber(seller.salesValue)} sold</span></Link>)}</div> : <p className="admin-dashboard-empty">No sales data found</p>}
+          {topSellersContent}
         </article>
         <article className="admin-dashboard-viewers"><span aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8m-8 3a3 3 0 1 1 0-6 3 3 0 0 1 0 6" /></svg></span><div className="admin-kpi-label">Unique Viewers</div><div className="admin-kpi-value">{loading ? '0' : formatNumber(data.uniqueViewers)}</div><p>Total audience reach</p></article>
       </div>
