@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import AdminLoginPage from '../../pages/admin/AdminLoginPage.jsx'
@@ -108,7 +108,7 @@ describe('AdminLoginPage', () => {
     expect(screen.getByRole('button', { name: /Signing In/ }).disabled).toBe(true)
     expect(screen.getByLabelText('Email Address').disabled).toBe(true)
     resolveSignIn({ data: { name: 'Admin' } })
-    await waitFor(() => expect(screen.getByText('Admin dashboard')).toBeTruthy())
+    expect(await screen.findByText('Admin dashboard')).toBeTruthy()
   })
 
   it('shows and clears the expired-session notice', async () => {

@@ -192,8 +192,8 @@ describe('AdminCampaignBuilderPage', () => {
     await renderPage()
     fillRequiredFields()
     submitForm()
-    const backdrop = screen.getByRole('dialog').parentElement
-    fireEvent.mouseDown(backdrop, { target: backdrop })
+    const dialog = screen.getByRole('dialog')
+    fireEvent.mouseDown(dialog, { target: dialog })
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 
