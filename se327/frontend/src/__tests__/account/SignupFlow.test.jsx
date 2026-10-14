@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import SignupConfirmPage from '../../pages/account/SignupConfirmPage.jsx'
@@ -112,7 +112,7 @@ describe('SignupInfoPage', () => {
       DOB: '2000-03-12',
       phone_number: '+66812345678',
     })
-    await waitFor(() => expect(screen.getByRole('heading', { name: /We already sent you/ })).toBeTruthy())
+    expect(await screen.findByRole('heading', { name: /We already sent you/ })).toBeTruthy()
     expect(screen.getByLabelText('Sign up progress').querySelector('[aria-current="step"]').textContent).toContain('CONFIRM')
   })
 
