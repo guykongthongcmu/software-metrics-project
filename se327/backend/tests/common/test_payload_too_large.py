@@ -46,3 +46,9 @@ class PayloadTooLargeTests(AdminProductCase):
         content = JPEG + b'0' * (4 * 1024 * 1024)
         res = self.client.post(f'/api/admin/products/{product.pk}/image', {'image': image('big.jpg', content)})
         self.assertEqual(res.status_code, 201, res.content)
+
+    def test_too_many_query_parameters_is_400(self):
+        query = '&'.join(f'a{i}=1' for i in range(1001))
+        for url in (f'/api/client/products/search?q=x&{query}', f'/api/admin/orders?{query}'):
+            res = self.client.get(url)
+            self.assertEqual((res.status_code, res.json()['code']), (400, 'BAD_REQUEST'), url)
