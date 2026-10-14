@@ -25,6 +25,8 @@ import CategoryLandingPage from './pages/webstore/CategoryLandingPage.jsx'
 import CheckoutPage from './pages/webstore/CheckoutPage.jsx'
 import CheckoutSuccessPage from './pages/webstore/CheckoutSuccessPage.jsx'
 import FavoritesPage from './pages/webstore/FavoritesPage.jsx'
+import AdminProductsPage from './pages/admin/AdminProductsPage.jsx'
+import AdminProductFormPage from './pages/admin/AdminProductFormPage.jsx'
 import AdminOrdersPage from './pages/admin/AdminOrdersPage.jsx'
 import AdminOrderDetailPage from './pages/admin/AdminOrderDetailPage.jsx'
 import AdminCampaignBuilderPage from './pages/admin/AdminCampaignBuilderPage.jsx'
@@ -91,30 +93,25 @@ export default function App() {
       </Route>
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route element={<AdminLayout />}>
-<Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-<Route path="/admin/orders" element={<AdminOrdersPage />} />
-<Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
-<Route path="/admin/campaigns/builder" element={<AdminCampaignBuilderPage />} />
-<Route path="/admin/categories" element={<AdminCategoriesPage />} />
-
-{adminRoutes
-  .filter((route) =>
-    ![
-      '/admin/login',
-      '/admin/dashboard',
-      '/admin/orders',
-      '/admin/orders/:id',
-      '/admin/campaigns/builder',
-      '/admin/categories',
-    ].includes(route.path)
-  )
-  .map((route) => (
-    <Route
-      key={route.path}
-      path={route.path}
-      element={<AdminPlaceholder title={route.title} />}
-    />
-  ))}
+        <Route path="/admin/products" element={<AdminProductsPage />} />
+        <Route path="/admin/products/create" element={<AdminProductFormPage />} />
+        <Route path="/admin/products/edit/:id" element={<AdminProductFormPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
+        <Route path="/admin/campaigns/builder" element={<AdminCampaignBuilderPage />} />
+        <Route path="/admin/categories" element={<AdminCategoriesPage />} />
+        {adminRoutes.filter((route) => ![
+          '/admin/login',
+          '/admin/dashboard',
+          '/admin/orders',
+          '/admin/orders/:id',
+          '/admin/products',
+          '/admin/products/create',
+          '/admin/products/edit/:id',
+          '/admin/categories',
+          '/admin/campaigns/builder',
+        ].includes(route.path)).map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}
       </Route>
       <Route path="/profile" element={<Navigate to="/account/profile" replace />} />
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
