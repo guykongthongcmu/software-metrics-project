@@ -48,7 +48,7 @@ If `SUPABASE_URL`, `SUPABASE_SECRET_KEY` and `SUPABASE_PRODUCT_BUCKET` are set i
 
 ### Dependency lock file
 
-The backend image installs from `backend/requirements.lock` with hash checking, while CI and local development keep using `requirements.txt`. After changing `requirements.txt`, regenerate the lock (pip-tools is not a project dependency, install it in a scratch venv):
+The backend image installs from `backend/requirements.lock` with hash checking, while CI and local development keep using `requirements.txt`. After changing `requirements.txt`, regenerate the lock (pip-tools is not a project dependency, install it in a scratch venv). Run it with Python 3.12 so the markers match the image, for example from a `python:3.12-slim` container:
 
 ```bash
 cd backend
