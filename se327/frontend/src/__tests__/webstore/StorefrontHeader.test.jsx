@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
+import { getLanguage, setLanguage } from '../../lib/language.js'
 import StorefrontHeader from '../../pages/webstore/partials/StorefrontHeader.jsx'
 
 vi.mock('../../lib/apiClient.js', () => ({
@@ -16,6 +17,7 @@ describe('StorefrontHeader', () => {
     profile = null
     cartCount = 2
     window.localStorage.clear()
+    setLanguage('EN')
     apiClient.get.mockImplementation((path) => {
       if (path === '/auth/user/profile') {
         return profile
@@ -123,6 +125,8 @@ describe('StorefrontHeader', () => {
 
     expect(screen.queryByRole('menu')).toBeNull()
     expect(screen.getByRole('button', { name: 'TH' })).toBeTruthy()
+    expect(getLanguage()).toBe('TH')
+    expect(window.localStorage.getItem('language')).toBe('TH')
   })
 
   it('closes the language menu on outside pointer and Escape', () => {

@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
+import { setLanguage } from '../../lib/language.js'
 import StorefrontLayout from '../../pages/webstore/StorefrontLayout.jsx'
 
 vi.mock('../../lib/apiClient.js', () => ({ apiClient: { get: vi.fn() } }))
@@ -53,5 +55,20 @@ describe('StorefrontLayout', () => {
     unmount()
     renderAt('/search?q=%20%20')
     await waitFor(() => expect(document.title).toBe('Search'))
+  })
+
+  it('remounts the page content when the language changes so it reloads', async () => {
+    apiClient.get.mockResolvedValue({ data: { categories: [] } })
+    let mounts = 0
+    function CountingPage() {
+      useEffect(() => { mounts += 1 }, [])
+      return <p>page</p>
+    }
+    render(<MemoryRouter initialEntries={['/products']}><Routes><Route element={<StorefrontLayout />}><Route path="*" element={<CountingPage />} /></Route></Routes></MemoryRouter>)
+    await waitFor(() => expect(mounts).toBe(1))
+    act(() => setLanguage('TH'))
+    await waitFor(() => expect(mounts).toBe(2))
+    act(() => setLanguage('EN'))
+    await waitFor(() => expect(mounts).toBe(3))
   })
 })
