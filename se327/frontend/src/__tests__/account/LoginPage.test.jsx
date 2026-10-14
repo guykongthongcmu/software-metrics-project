@@ -112,6 +112,31 @@ describe('LoginPage', () => {
     submitLogin()
     expect(await screen.findByText('Storefront home')).toBeTruthy()
   })
+
+  it('returns to the page named in next after signing in', async () => {
+    apiClient.post.mockResolvedValue({ data: { redirectTo: '/' } })
+    render(<MemoryRouter initialEntries={['/login?next=%2Ffavorites']}><Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<p>Storefront home</p>} />
+      <Route path="/favorites" element={<p>Favorites page</p>} />
+    </Routes></MemoryRouter>)
+    fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: 'member@example.com' } })
+    fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'password123' } })
+    submitLogin()
+    expect(await screen.findByText('Favorites page')).toBeTruthy()
+  })
+
+  it('ignores a next value that points off the site', async () => {
+    apiClient.post.mockResolvedValue({ data: { redirectTo: '/' } })
+    render(<MemoryRouter initialEntries={['/login?next=%2F%2Fexample.com']}><Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/" element={<p>Storefront home</p>} />
+    </Routes></MemoryRouter>)
+    fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: 'member@example.com' } })
+    fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'password123' } })
+    submitLogin()
+    expect(await screen.findByText('Storefront home')).toBeTruthy()
+  })
 })
 
 function submitLogin() {
