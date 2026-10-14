@@ -42,10 +42,13 @@ describe('App routes', () => {
 
   it('renders admin routes and redirects legacy admin paths', async () => {
     const { unmount } = render(<MemoryRouter initialEntries={['/admin/products/create']}><App /></MemoryRouter>)
-    expect(await screen.findByRole('heading', { name: 'Create product' })).toBeTruthy()
+    expect(await screen.findAllByRole('heading', { name: 'Create product' })).toHaveLength(2)
     unmount()
+    render(<MemoryRouter initialEntries={['/admin/login']}><App /></MemoryRouter>)
+    expect(await screen.findByRole('heading', { name: 'Admin Panel' })).toBeTruthy()
+    cleanup()
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>)
-    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeTruthy()
+    expect(await screen.findAllByRole('heading', { name: 'Dashboard' })).toHaveLength(2)
   })
 
   it('redirects the legacy profile route and renders a not-found page', async () => {
