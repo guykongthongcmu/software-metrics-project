@@ -1,0 +1,12 @@
+.venv
+venv
+__pycache__
+*.pyc
+.env
+media
+.coverage
+coverage.xml
+htmlcov
+.pytest_cache
+.DS_Store
+docker.env
