@@ -62,6 +62,21 @@ describe('LoginPage', () => {
     expect((await screen.findByRole('alert')).textContent).toBe('Invalid email or password.')
   })
 
+  it('explains unverified email and resends verification to the entered address', async () => {
+    apiClient.post
+      .mockRejectedValueOnce({ status: 403, code: 'EMAIL_NOT_VERIFIED' })
+      .mockResolvedValueOnce({ message: 'Verification email sent successfully' })
+    renderLogin()
+    fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: 'member@example.com' } })
+    fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'correct-password' } })
+    submitLogin()
+
+    expect(await screen.findByText('Please verify your email address before signing in.')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Resend verification email' }))
+    expect(apiClient.post).toHaveBeenLastCalledWith('/auth/resend-verification', { email: 'member@example.com' })
+    expect((await screen.findByRole('status')).textContent).toBe('Verification email sent successfully')
+  })
+
   it.each([
     ['MISSING_REQUIRED_FIELDS', 'Please fill in all required fields.'],
     ['INVALID_EMAIL_FORMAT', 'Please enter a valid email address.'],

@@ -100,6 +100,21 @@ describe('CheckoutPage', () => {
     expect((await screen.findByRole('alert')).textContent).toBe('Your cart is empty')
   })
 
+  it('blocks checkout when no saved default address exists and preserves the entered form', async () => {
+    setupApi({ savedAddress: { data: { address: null } } })
+    renderCheckout()
+    await screen.findByRole('heading', { name: 'Checkout' })
+    fireEvent.change(screen.getByLabelText('First Name'), { target: { value: 'Grace' } })
+    fireEvent.change(screen.getByLabelText('Address'), { target: { value: '9 Compiler Lane' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Complete' }))
+
+    expect((await screen.findByRole('alert')).textContent).toBe('Please save a default shipping address to your account before placing your order.')
+    expect(screen.getByLabelText('First Name').value).toBe('Grace')
+    expect(screen.getByLabelText('Address').value).toBe('9 Compiler Lane')
+    expect(apiClient.put).not.toHaveBeenCalled()
+    expect(apiClient.post).not.toHaveBeenCalled()
+  })
+
   it('renders fallback values for incomplete cart item data', async () => {
     const incompleteItem = {
       ...item,
@@ -234,6 +249,19 @@ describe('CheckoutPage', () => {
     expect(screen.getByLabelText('District').value).toBe('Sathorn')
     expect(apiClient.put).toHaveBeenCalledOnce()
     expect(screen.getByTestId('location').textContent).toBe('/checkout')
+  })
+
+  it('explains a missing checkout address returned by the purchase API and keeps entered values', async () => {
+    setupApi()
+    apiClient.post.mockRejectedValue(new ApiError('Shipping address required', { status: 400, code: 'CHECKOUT_ADDRESS_REQUIRED' }))
+    renderCheckout()
+    await screen.findByRole('heading', { name: 'Checkout' })
+    fireEvent.change(screen.getByLabelText('District'), { target: { value: 'Sathorn' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Complete' }))
+
+    expect((await screen.findByRole('alert')).textContent).toBe('Please save a default shipping address to your account before placing your order.')
+    expect(screen.getByLabelText('District').value).toBe('Sathorn')
+    expect(apiClient.post).toHaveBeenCalledWith('/client/checkout/purchase', {}, { redirectOn401: false })
   })
 
   it('reports a generic connection error when checkout requests fail unexpectedly', async () => {
