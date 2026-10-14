@@ -37,13 +37,14 @@ describe('SignupInfoPage', () => {
     expect(screen.getByLabelText('Country code').value).toBe('+66')
     expect(screen.getByRole('button', { name: 'CONTINUE' }).disabled).toBe(true)
     expect(screen.getByRole('link', { name: 'Log in' }).getAttribute('href')).toBe('/login')
+    expect(screen.getByText(/Membership Terms and Privacy Policy/).closest('a')).toBeNull()
   })
 
   it('opens the legacy style date calendar and fills the date in DD/MM/YYYY format', () => {
     renderInfo()
     const dateInput = screen.getByLabelText('DATE OF BIRTH*')
     fireEvent.click(screen.getByRole('button', { name: 'Open date of birth calendar' }))
-    expect(screen.getByRole('dialog', { name: 'Date of birth calendar' })).toBeTruthy()
+    expect(screen.getByRole('dialog', { name: 'Date of birth calendar' }).tagName).toBe('DIALOG')
     expect(screen.getByText(new Intl.DateTimeFormat('en', { month: 'long' }).format(new Date()))).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Previous month' })).toBeTruthy()
     const yearPicker = screen.getByLabelText('Year')
