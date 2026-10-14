@@ -213,7 +213,7 @@ a {
   border: 1px solid #dcd4cc;
   border-radius: 50%;
   background-color: #f8f5f0;
-  color: #a3978f;
+  color: #756b62;
   font-family: 'Inter', sans-serif;
   font-size: 0.85rem;
 }
@@ -222,7 +222,7 @@ a {
 .signup-progress-step.completed .signup-step-circle {
   border-color: #c3a37c;
   background-color: #c3a37c;
-  color: #fff;
+  color: #1c1b1f;
   font-weight: 600;
 }
 
@@ -280,7 +280,7 @@ a {
   margin-top: 10px;
   border: none;
   border-radius: 2px;
-  background-color: #c3a37c;
+  background-color: #8c6d4b;
   padding: 18px;
   color: #fff;
   cursor: pointer;
@@ -293,7 +293,7 @@ a {
 }
 
 .signup-next-button:hover {
-  background-color: #b5946c;
+  background-color: #725739;
 }
 
 .signup-footer-link {
@@ -442,13 +442,19 @@ a {
 
 .signup-calendar {
   position: absolute;
+  right: auto;
+  bottom: auto;
   z-index: 50;
   top: calc(100% + 4px);
   left: 0;
   width: 307px;
+  max-width: none;
+  max-height: none;
+  margin: 0;
   border: 1px solid #e6e6e6;
   border-radius: 5px;
   background: #fff;
+  padding: 0;
   box-shadow: 0 3px 13px rgba(0, 0, 0, 0.08);
   color: #393939;
   font-family: 'Inter', sans-serif;
@@ -697,7 +703,7 @@ a {
 }
 
 .signup-calendar-day.selected {
-  background: #569ff7;
+  background: #1d65ad;
   color: #fff;
 }
 
