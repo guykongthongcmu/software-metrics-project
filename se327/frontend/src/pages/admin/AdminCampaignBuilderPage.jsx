@@ -57,6 +57,10 @@ function emailResultText(emailBlast) {
   return `Emails sent: ${emailBlast.sentCount} of ${emailBlast.totalRecipients}. Failed: ${emailBlast.failedCount}.`
 }
 
+function showAdminToast(title, message, type = 'success') {
+  window.dispatchEvent(new CustomEvent('admin:toast', { detail: { title, message, type } }))
+}
+
 function CampaignPreview({ form, imageUrl }) {
   const currentOffer = offerText(form.type, form.discountValue)
   return (
@@ -78,7 +82,7 @@ function CampaignPreview({ form, imageUrl }) {
   )
 }
 
-function LaunchDialog({ form, busy, error, onClose, onConfirm }) {
+function LaunchDialog({ form, busy, onClose, onConfirm }) {
   const selectedChannels = [form.web && 'Web Banner', form.email && 'Email blast'].filter(Boolean).join(', ')
   return (
     <div className="campaign-builder-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose() }}>
@@ -99,7 +103,6 @@ function LaunchDialog({ form, busy, error, onClose, onConfirm }) {
               <div><dt>Dates</dt><dd>{dateLabel(form.startDate, form.endDate)}</dd></div>
               <div><dt>Channels</dt><dd>{selectedChannels}</dd></div>
             </dl>
-            {error && <p className="campaign-builder-error" role="alert">{error}</p>}
             <div className="campaign-builder-modal-actions">
               <button className="campaign-builder-secondary" onClick={onClose} type="button">Go back</button>
               <button className="campaign-builder-primary" onClick={onConfirm} type="button">Confirm &amp; Launch</button>
@@ -116,16 +119,20 @@ export default function AdminCampaignBuilderPage() {
   const [file, setFile] = useState(null)
   const [imageUrl, setImageUrl] = useState('')
   const [formError, setFormError] = useState('')
-  const [modalError, setModalError] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [dragging, setDragging] = useState(false)
   const durationInput = useRef(null)
+  const reloadTimer = useRef(null)
   const discountRequired = form.type !== '' && form.type !== 'BEST_SELLER'
 
   useEffect(() => () => {
     if (imageUrl) URL.revokeObjectURL(imageUrl)
   }, [imageUrl])
+
+  useEffect(() => () => {
+    if (reloadTimer.current !== null) window.clearTimeout(reloadTimer.current)
+  }, [])
 
   useEffect(() => {
     if (!dialogOpen) return undefined
@@ -173,11 +180,13 @@ export default function AdminCampaignBuilderPage() {
   function selectImage(nextFile) {
     if (!nextFile) return
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(nextFile.type)) {
-      setFormError('Banner image must be a JPEG, PNG or WebP file.')
+      setFormError('')
+      showAdminToast('Invalid File', 'Please upload a JPEG, PNG or WebP image.', 'danger')
       return
     }
     if (nextFile.size > 5 * 1024 * 1024) {
-      setFormError('Banner image must be 5 MB or smaller.')
+      setFormError('')
+      showAdminToast('Invalid File', 'Banner image must be 5 MB or smaller.', 'danger')
       return
     }
     setFile(nextFile)
@@ -195,14 +204,12 @@ export default function AdminCampaignBuilderPage() {
     const error = validateCampaign(form, file)
     setFormError(error)
     if (error) return
-    setModalError('')
     setDialogOpen(true)
   }
 
   async function launchCampaign() {
     if (busy) return
     setBusy(true)
-    setModalError('')
     const campaignData = {
       name: form.name.trim(),
       type: form.type,
@@ -225,8 +232,9 @@ export default function AdminCampaignBuilderPage() {
       setForm(initialForm)
       durationInput.current?._flatpickr?.clear()
       clearImage()
+      reloadTimer.current = window.setTimeout(() => window.location.reload(), 1500)
     } catch (error) {
-      setModalError(error?.payload?.message || error?.message || 'Unable to launch campaign. Please try again.')
+      showAdminToast('Launch Failed', error?.payload?.message || error?.message || 'Unable to launch campaign. Please try again.', 'danger')
     } finally {
       setBusy(false)
     }
@@ -285,7 +293,7 @@ export default function AdminCampaignBuilderPage() {
           <button className="campaign-builder-launch-button" type="submit"><span aria-hidden="true">↗</span> Launch Campaign</button>
         </form>
       </section>
-      {dialogOpen && <LaunchDialog busy={busy} error={modalError} form={form} onClose={() => setDialogOpen(false)} onConfirm={() => { void launchCampaign() }} />}
+      {dialogOpen && <LaunchDialog busy={busy} form={form} onClose={() => setDialogOpen(false)} onConfirm={() => { void launchCampaign() }} />}
     </main>
   )
 }

@@ -75,18 +75,22 @@ describe('AdminCampaignBuilderPage', () => {
   })
 
   it('rejects unsupported and oversized files, and supports image preview removal', async () => {
+    const toastListener = vi.fn()
+    window.addEventListener('admin:toast', toastListener)
     await renderPage()
     const input = screen.getByLabelText('Campaign Cover (Image)')
     fireEvent.change(input, { target: { files: [new File(['x'], 'movie.mp4', { type: 'video/mp4' })] } })
-    expect(screen.getByRole('alert').textContent).toContain('JPEG, PNG or WebP')
+    expect(toastListener.mock.calls[0][0].detail).toMatchObject({ title: 'Invalid File', type: 'danger' })
+    expect(toastListener.mock.calls[0][0].detail.message).toContain('JPEG, PNG or WebP')
     const large = new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.png', { type: 'image/png' })
     fireEvent.change(input, { target: { files: [large] } })
-    expect(screen.getByRole('alert').textContent).toContain('5 MB or smaller')
+    expect(toastListener.mock.calls[1][0].detail.message).toContain('5 MB or smaller')
     fireEvent.change(input, { target: { files: [validFile()] } })
     expect(screen.getByAltText('Campaign banner preview').getAttribute('src')).toBe('blob:campaign-preview')
     fireEvent.click(screen.getByRole('button', { name: 'Remove banner image' }))
     expect(screen.queryByAltText('Campaign banner preview')).toBeNull()
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:campaign-preview')
+    window.removeEventListener('admin:toast', toastListener)
   })
 
   it('opens the confirmation summary and launches with multipart form data and email result toast', async () => {
@@ -119,7 +123,9 @@ describe('AdminCampaignBuilderPage', () => {
     window.removeEventListener('admin:toast', toastListener)
   })
 
-  it('clears discount for best seller and reports launch API errors in the confirmation dialog', async () => {
+  it('clears discount for best seller and reports launch API errors with an admin toast', async () => {
+    const toastListener = vi.fn()
+    window.addEventListener('admin:toast', toastListener)
     apiClient.post.mockRejectedValue({ payload: { message: 'No sales yet, so there is no best seller' } })
     await renderPage()
     fillRequiredFields()
@@ -128,9 +134,17 @@ describe('AdminCampaignBuilderPage', () => {
     setCampaignDates('2026-10-20', '2026-10-31')
     submitForm()
     fireEvent.click(screen.getByRole('button', { name: 'Confirm & Launch' }))
-    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'No sales yet, so there is no best seller')
+    await waitFor(() => expect(toastListener).toHaveBeenCalledWith(expect.objectContaining({
+      detail: expect.objectContaining({
+        title: 'Launch Failed',
+        message: 'No sales yet, so there is no best seller',
+        type: 'danger',
+      }),
+    })))
+    expect(screen.queryByRole('alert')).toBeNull()
     expect(screen.getByRole('dialog')).toBeTruthy()
     expect(apiClient.post).toHaveBeenCalledTimes(1)
+    window.removeEventListener('admin:toast', toastListener)
   })
 
   it('supports dropping an image and closes the confirmation dialog when going back', async () => {

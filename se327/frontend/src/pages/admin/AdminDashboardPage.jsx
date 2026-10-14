@@ -47,6 +47,10 @@ function getErrorMessage(error) {
   return error?.payload?.message || error?.message || 'Unable to load dashboard data. Please try again.'
 }
 
+function notifyAdmin(title, message, type = 'danger') {
+  window.dispatchEvent(new CustomEvent('admin:toast', { detail: { title, message, type } }))
+}
+
 function calculateGrowth(values) {
   if (!Array.isArray(values) || values.length < 2) return 0
   const current = numberValue(values.at(-1))
@@ -245,12 +249,10 @@ export default function AdminDashboardPage() {
   const [to, setTo] = useState(defaultRangeEnd)
   const [dashboard, setDashboard] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
   async function loadDashboard(selectedPeriod = period, rangeFrom = from, rangeTo = to, showLoading = true) {
     if (showLoading) {
       setLoading(true)
-      setError('')
     }
     const query = selectedPeriod === 'custom'
       ? `period=custom&from=${encodeURIComponent(rangeFrom)}&to=${encodeURIComponent(rangeTo)}`
@@ -259,7 +261,7 @@ export default function AdminDashboardPage() {
       const response = await apiClient.get(`/admin/dashboard/summary?${query}`)
       setDashboard(getResponseData(response))
     } catch (requestError) {
-      setError(getErrorMessage(requestError))
+      notifyAdmin('Dashboard Error', getErrorMessage(requestError))
     } finally {
       if (showLoading) setLoading(false)
     }
@@ -272,7 +274,7 @@ export default function AdminDashboardPage() {
         if (active) setDashboard(getResponseData(response))
       })
       .catch((requestError) => {
-        if (active) setError(getErrorMessage(requestError))
+        if (active) notifyAdmin('Dashboard Error', getErrorMessage(requestError))
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -308,7 +310,6 @@ export default function AdminDashboardPage() {
         <div className="admin-dashboard-page-heading"><h2>Dashboard</h2><p>Welcome back! Here's what's happening with your store.</p></div>
         <DateRangePicker from={from} to={to} onSelectRange={applyDateRange} />
       </header>
-      {error && <p className="admin-feature-error" role="alert">{error}</p>}
       <div className="admin-dashboard-kpis">
         <KpiCard color="golden" currency growth={revenueGrowth} index={0} label="Total Revenue" value={data.revenue?.total} />
         <KpiCard color="blue" growth={ordersGrowth} index={1} label="Total Orders" value={data.orders?.total} />

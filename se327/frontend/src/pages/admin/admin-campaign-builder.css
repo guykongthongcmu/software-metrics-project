@@ -5,8 +5,8 @@
 .campaign-builder-preview-section h2 { margin: 0 0 12px; color: var(--admin-text); font: 600 16px/1.4 Inter, sans-serif; }
 .campaign-builder-glass-card { margin: 0; border: 1px solid rgba(255,255,255,.5); border-radius: 16px; background: rgba(255,255,255,.65); box-shadow: 0 8px 32px rgba(0,0,0,.08); backdrop-filter: blur(12px); }
 .campaign-builder-preview-card { padding: 24px; }
-.campaign-builder-preview { position: relative; display: flex; min-height: 200px; overflow: hidden; align-items: flex-end; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: linear-gradient(135deg,#f1c40f,#e67e22); background-position: center; background-size: cover; }
-.campaign-builder-preview-content { z-index: 1; display: flex; width: 100%; flex-direction: column; justify-content: flex-end; gap: 10px; padding: 20px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.3); }
+.campaign-builder-preview { position: relative; min-height: 200px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: linear-gradient(135deg,#f1c40f,#e67e22); background-position: center; background-size: cover; }
+.campaign-builder-preview-content { position: relative; z-index: 1; display: flex; width: 100%; min-height: 200px; box-sizing: border-box; flex-direction: column; justify-content: flex-end; gap: 10px; padding: 20px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.3); }
 .campaign-builder-preview-content h3 { margin: 0; font: 28px/1.2 'DM Serif Display',serif; }
 .campaign-builder-preview-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .campaign-builder-preview-meta span:first-child { padding: 4px 8px; border-radius: 5px; background: #fff; color: #111; font-size: 11px; font-weight: 700; text-shadow: none; }

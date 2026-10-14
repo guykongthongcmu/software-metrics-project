@@ -43,6 +43,7 @@ export default function AdminOrdersPage() {
       setGrowth(Number(unwrap(summaryResponse)?.orders?.growth) || 0)
     } catch (requestError) {
       setError(requestError?.message || 'Failed to load orders')
+      toast('Error', 'Failed to load orders', 'error')
     } finally {
       setLoading(false)
     }
@@ -60,7 +61,10 @@ export default function AdminOrdersPage() {
         setGrowth(Number(unwrap(summaryResponse)?.orders?.growth) || 0)
       })
       .catch((requestError) => {
-        if (active) setError(requestError?.message || 'Failed to load orders')
+        if (active) {
+          setError(requestError?.message || 'Failed to load orders')
+          toast('Error', 'Failed to load orders', 'error')
+        }
       })
       .finally(() => {
         if (active) setLoading(false)
