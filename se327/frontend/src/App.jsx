@@ -20,6 +20,7 @@ import SearchPage from './pages/webstore/SearchPage.jsx'
 import CartPage from './pages/webstore/CartPage.jsx'
 import AdminLayout from './pages/admin/AdminLayout.jsx'
 import AdminLoginPage from './pages/admin/AdminLoginPage.jsx'
+import AdminDashboardPage from './pages/admin/AdminDashboardPage.jsx'
 import CategoryLandingPage from './pages/webstore/CategoryLandingPage.jsx'
 import CheckoutPage from './pages/webstore/CheckoutPage.jsx'
 import CheckoutSuccessPage from './pages/webstore/CheckoutSuccessPage.jsx'
@@ -88,9 +89,26 @@ export default function App() {
       </Route>
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route element={<AdminLayout />}>
-        <Route path="/admin/orders" element={<AdminOrdersPage />} />
-        <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
-        {adminRoutes.filter((route) => !['/admin/login', '/admin/orders', '/admin/orders/:id'].includes(route.path)).map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}
+<Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+<Route path="/admin/orders" element={<AdminOrdersPage />} />
+<Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
+
+{adminRoutes
+  .filter((route) =>
+    ![
+      '/admin/login',
+      '/admin/dashboard',
+      '/admin/orders',
+      '/admin/orders/:id',
+    ].includes(route.path)
+  )
+  .map((route) => (
+    <Route
+      key={route.path}
+      path={route.path}
+      element={<AdminPlaceholder title={route.title} />}
+    />
+  ))}
       </Route>
       <Route path="/profile" element={<Navigate to="/account/profile" replace />} />
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
