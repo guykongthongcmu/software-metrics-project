@@ -46,7 +46,7 @@
   background: #f4f5f7;
   font-size: 20px;
 }
-.admin-kpi-icon.golden { background: rgba(200,167,125,.15); color: #c8a77d; }
+.admin-kpi-icon.golden { background: rgba(200,167,125,.15); color: #80603a; }
 .admin-kpi-icon svg { width: 21px; height: 21px; fill: currentColor; }
 .admin-stat-growth {
   position: absolute;
@@ -57,7 +57,7 @@
   font-size: 12px;
   font-weight: 500;
 }
-.admin-stat-growth.is-positive { background: rgba(46,204,113,.15); color: #27ae60; }
+.admin-stat-growth.is-positive { background: rgba(46,204,113,.15); color: #187a43; }
 .admin-orders-stat > p { margin: 0 0 4px; color: var(--admin-muted); font-size: 13px; font-weight: 500; }
 .admin-orders-stat > strong { color: var(--admin-text); font: 600 24px/1.25 'DM Serif Display', serif; }
 
@@ -76,13 +76,13 @@
 .admin-orders-table tbody tr:hover { background: rgba(255,255,255,.4); }
 .admin-orders-table td > p { margin: 0; padding: 20px; color: var(--admin-muted); text-align: center; }
 .admin-orders-table td a { color: var(--admin-text); font-weight: 600; text-decoration: none; }
-.admin-orders-table td a:hover { color: #c8a77d; }
+.admin-orders-table td a:hover { color: #80603a; }
 
-.admin-order-status { display: inline-flex; align-items: center; justify-content: center; padding: 4px 8px; border: 1px solid rgba(46,204,113,.3); border-radius: 8px; background: rgba(46,204,113,.15); color: #27ae60; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-.admin-order-status.status-pending { border-color: rgba(241,196,15,.3); background: rgba(241,196,15,.15); color: #f39c12; }
-.admin-order-status.status-shipped { border-color: rgba(52,152,219,.3); background: rgba(52,152,219,.15); color: #2980b9; }
-.admin-order-status.status-delivered { border-color: rgba(155,89,182,.3); background: rgba(155,89,182,.15); color: #8e44ad; }
-.admin-order-status.status-cancelled { border-color: rgba(231,76,60,.3); background: rgba(231,76,60,.12); color: #c0392b; }
+.admin-order-status { display: inline-flex; align-items: center; justify-content: center; padding: 4px 8px; border: 1px solid rgba(46,204,113,.3); border-radius: 8px; background: rgba(46,204,113,.15); color: #187a43; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.admin-order-status.status-pending { border-color: rgba(241,196,15,.3); background: rgba(241,196,15,.15); color: #815800; }
+.admin-order-status.status-shipped { border-color: rgba(52,152,219,.3); background: rgba(52,152,219,.15); color: #17618c; }
+.admin-order-status.status-delivered { border-color: rgba(155,89,182,.3); background: rgba(155,89,182,.15); color: #6e3488; }
+.admin-order-status.status-cancelled { border-color: rgba(231,76,60,.3); background: rgba(231,76,60,.12); color: #a42f24; }
 
 .admin-feature-button,
 .admin-order-delete {
@@ -107,17 +107,17 @@
 .admin-order-header-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .admin-order-actions .admin-feature-button,
 .admin-order-actions .admin-order-delete { min-height: 30px; padding: 6px 12px; font-size: 13px; }
-.admin-order-delete { border-color: rgba(192,57,43,.2); color: #b03a2e; }
+.admin-order-delete { border-color: rgba(192,57,43,.2); color: #a42f24; }
 .admin-order-delete svg { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.35; }
-.admin-order-delete:hover { border-color: rgba(192,57,43,.4); color: #922b21; }
+.admin-order-delete:hover { border-color: rgba(192,57,43,.4); color: #78251d; }
 .admin-order-delete:disabled { cursor: wait; opacity: .6; }
 .admin-order-header-actions { gap: 12px; }
 
 .admin-orders-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; color: var(--admin-muted); font-size: 12px; }
 .admin-orders-pagination nav { display: flex; align-items: center; gap: 6px; }
 .admin-orders-pagination button { display: flex; min-width: 34px; height: 34px; align-items: center; justify-content: center; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: #4a4a5e; cursor: pointer; font: 500 13px Inter,sans-serif; transition: all .2s ease; }
-.admin-orders-pagination button:hover:not(:disabled) { background: rgba(200,167,125,.15); color: #c8a77d; }
-.admin-orders-pagination button.active { background: #c8a77d; color: white; }
+.admin-orders-pagination button:hover:not(:disabled) { background: rgba(200,167,125,.15); color: #80603a; }
+.admin-orders-pagination button.active { background: #80603a; color: white; }
 .admin-orders-pagination button:disabled { cursor: default; opacity: .4; }
 
 .admin-order-detail-grid { display: grid; width: 100%; min-width: 0; grid-template-columns: minmax(0,2fr) minmax(0,1fr); align-items: start; gap: 24px; }
@@ -141,10 +141,10 @@
 .admin-order-address-form input { display: block; width: 100%; min-height: 40px; margin-top: 8px; padding: 10px 16px; border: 1px solid rgba(215,205,190,.4); border-radius: 12px; outline: none; background: rgba(255,255,255,.6); color: var(--admin-text); font: 14px Inter,sans-serif; transition: all .2s ease; }
 .admin-order-address-form input:focus { border-color: #c8a77d; background: #fff; box-shadow: 0 0 0 4px rgba(200,167,125,.1); }
 .admin-order-address-form .wide { grid-column: 1 / -1; }
-.admin-order-address-form small { display: block; margin-top: 4px; color: #b03a2e; font-size: 11px; font-weight: 400; }
+.admin-order-address-form small { display: block; margin-top: 4px; color: #a42f24; font-size: 11px; font-weight: 400; }
 .admin-order-address-form .actions { display: flex; justify-content: flex-end; }
-.admin-order-address-form .actions .admin-feature-button { border: 0; background: linear-gradient(135deg,#c8a77d,#b8956d); color: #fff; }
-.admin-order-address-form .actions .admin-feature-button:hover { background: linear-gradient(135deg,#d4b78e,#c8a77d); box-shadow: 0 4px 16px rgba(200,167,125,.4); }
+.admin-order-address-form .actions .admin-feature-button { border: 0; background: linear-gradient(135deg,#80603a,#674a2b); color: #fff; }
+.admin-order-address-form .actions .admin-feature-button:hover { background: linear-gradient(135deg,#674a2b,#563b20); box-shadow: 0 4px 16px rgba(200,167,125,.4); }
 .admin-order-detail-aside dl { display: grid; grid-template-columns: 1fr; gap: 5px; margin: 16px 0 0; }
 .admin-order-detail-aside dt { margin-bottom: -1px; color: var(--admin-muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
 .admin-order-detail-aside dd { margin: 0 0 10px; overflow-wrap: anywhere; color: var(--admin-text); font-size: 14px; font-weight: 500; }

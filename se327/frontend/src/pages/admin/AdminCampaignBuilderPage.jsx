@@ -85,8 +85,8 @@ function CampaignPreview({ form, imageUrl }) {
 function LaunchDialog({ form, busy, onClose, onConfirm }) {
   const selectedChannels = [form.web && 'Web Banner', form.email && 'Email blast'].filter(Boolean).join(', ')
   return (
-    <div className="campaign-builder-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose() }}>
-      <section aria-labelledby="campaign-confirm-heading" aria-modal="true" className="campaign-builder-modal" role="dialog">
+    <dialog aria-labelledby="campaign-confirm-heading" aria-modal="true" className="campaign-builder-modal-backdrop" onKeyDown={(event) => { if (event.key === 'Escape' && !busy) onClose() }} onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) onClose() }} open>
+      <section className="campaign-builder-modal">
         {busy ? (
           <div className="campaign-builder-modal-body" aria-live="polite">
             <span className="campaign-builder-spinner" aria-hidden="true" />
@@ -110,7 +110,7 @@ function LaunchDialog({ form, busy, onClose, onConfirm }) {
           </div>
         )}
       </section>
-    </div>
+    </dialog>
   )
 }
 

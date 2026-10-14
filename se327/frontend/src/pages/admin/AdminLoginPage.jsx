@@ -90,7 +90,7 @@ export default function AdminLoginPage() {
         <span className="admin-liquid-orb admin-orb-four" />
         <span className="admin-liquid-orb admin-orb-five" />
       </div>
-      {sessionToast && <div className="admin-expired-toast"><div className="admin-toast admin-toast-danger" role="status"><span aria-hidden="true" className="admin-toast-icon">!</span><div><p className="admin-toast-title">Session Expired</p><p className="admin-toast-message">Redirecting to login...</p></div></div></div>}
+      {sessionToast && <div className="admin-expired-toast"><output className="admin-toast admin-toast-danger"><span aria-hidden="true" className="admin-toast-icon">!</span><div><p className="admin-toast-title">Session Expired</p><p className="admin-toast-message">Redirecting to login...</p></div></output></div>}
       <main className="admin-login-page">
         <section aria-labelledby="admin-login-heading" className="admin-login-card">
           <div className="admin-login-brand">
