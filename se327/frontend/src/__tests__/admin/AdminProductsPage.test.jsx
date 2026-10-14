@@ -415,6 +415,32 @@ describe('Admin product catalog and editor', () => {
       expect(apiClient.put.mock.calls[0][1]).toEqual(expect.objectContaining({ sku: 'LIN-M-BEIGE', stock: 8 }))
       expect(apiClient.put.mock.calls[1]).toEqual(['/admin/products/8', { sku: 'LIN-L-BLACK', stock: 1 }])
     })
+
+    it('does not let the sku be edited, so a price change always reaches the displayed variant', async () => {
+      await openEdit()
+      expect(screen.getByLabelText('SKU').readOnly).toBe(true)
+    })
+
+    it('explains that earlier changes were saved when a later request fails', async () => {
+      await openEdit()
+      apiClient.put.mockResolvedValueOnce({ data: twoVariants }).mockRejectedValueOnce({ message: 'Stock rejected' })
+      fireEvent.change(screen.getByLabelText('Variant 1 stock'), { target: { value: '8' } })
+      fireEvent.change(screen.getByLabelText('Variant 2 stock'), { target: { value: '1' } })
+      const reloaded = { ...twoVariants, variants: [{ ...twoVariants.variants[0], stockQty: 8 }, twoVariants.variants[1]] }
+      apiClient.get.mockImplementation((path) => Promise.resolve(path === '/admin/categories' ? categories : { data: reloaded }))
+      fireEvent.click(screen.getByRole('button', { name: 'Update Product' }))
+      expect((await screen.findByText('Some changes were saved. Stock rejected'))).toBeTruthy()
+      await waitFor(() => expect(screen.getByLabelText('Variant 1 stock')).toHaveProperty('value', '8'))
+      expect(screen.getByLabelText('Variant 2 stock')).toHaveProperty('value', '7')
+    })
+
+    it('shows the compare at price error under the discount price field', async () => {
+      await openEdit()
+      apiClient.put.mockRejectedValue({ message: 'request validation failed', payload: { details: { compare_at_price: 'compare_at_price must not be below price' } } })
+      fireEvent.change(screen.getByLabelText('Price ($) *'), { target: { value: '90' } })
+      fireEvent.click(screen.getByRole('button', { name: 'Update Product' }))
+      expect(await screen.findByText('compare_at_price must not be below price')).toBeTruthy()
+    })
   })
 
   it('shows product load errors and API field errors on update', async () => {
