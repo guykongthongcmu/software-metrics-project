@@ -74,6 +74,30 @@ describe('AdminCampaignBuilderPage', () => {
     expect(screen.getByRole('dialog').textContent).toContain('Channels')
   })
 
+  it('reports missing offer, non-positive discount, reversed dates and missing image', async () => {
+    await renderPage()
+    fillRequiredFields()
+    fireEvent.change(screen.getByLabelText('Offer Type'), { target: { value: '' } })
+    submitForm()
+    expect(screen.getByRole('alert').textContent).toBe('Select an offer type.')
+
+    fireEvent.change(screen.getByLabelText('Offer Type'), { target: { value: 'PERCENTAGE_DISCOUNT' } })
+    fireEvent.change(screen.getByLabelText('Discount Value'), { target: { value: '0' } })
+    submitForm()
+    expect(screen.getByRole('alert').textContent).toBe('Enter a discount value greater than zero.')
+
+    fireEvent.change(screen.getByLabelText('Discount Value'), { target: { value: '20' } })
+    const picker = screen.getByLabelText('Campaign Scheduled Duration')._flatpickr
+    act(() => picker.config.onChange[0]([], '2026-10-31 to 2026-10-20'))
+    submitForm()
+    expect(screen.getByRole('alert').textContent).toBe('The end date must be on or after the start date.')
+
+    setCampaignDates('2026-10-20', '2026-10-31')
+    fireEvent.click(screen.getByRole('button', { name: 'Remove banner image' }))
+    submitForm()
+    expect(screen.getByRole('alert').textContent).toBe('Upload a campaign banner image.')
+  })
+
   it('rejects unsupported and oversized files, and supports image preview removal', async () => {
     const toastListener = vi.fn()
     window.addEventListener('admin:toast', toastListener)
@@ -152,6 +176,10 @@ describe('AdminCampaignBuilderPage', () => {
     const dropZone = container.querySelector('.campaign-builder-drop-zone')
     fireEvent.dragEnter(dropZone, { dataTransfer: { files: [] } })
     expect(dropZone.className).toContain('is-dragging')
+    fireEvent.dragOver(dropZone)
+    fireEvent.dragLeave(dropZone)
+    expect(dropZone.className).not.toContain('is-dragging')
+    fireEvent.change(screen.getByLabelText('Campaign Cover (Image)'), { target: { files: [] } })
     fireEvent.drop(dropZone, { dataTransfer: { files: [validFile()] } })
     expect(screen.getByAltText('Campaign banner preview')).toBeTruthy()
     fillRequiredFields()
