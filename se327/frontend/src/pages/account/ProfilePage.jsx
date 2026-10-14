@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
+import { loginPath } from '../../lib/loginRedirect.js'
 
 function formatProfileDate(value) {
   if (!value) return 'Not provided'
@@ -35,7 +36,7 @@ export default function ProfilePage() {
       .catch((requestError) => {
         if (!active) return
         if (requestError?.status === 401 || requestError?.code === 'UNAUTHORIZED') {
-          void navigate('/login', { replace: true })
+          void navigate(loginPath(), { replace: true })
           return
         }
         setError(requestError?.message || 'Could not load your profile')

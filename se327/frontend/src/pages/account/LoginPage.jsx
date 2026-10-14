@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
+import { safeNextPath } from '../../lib/loginRedirect.js'
 
 function getSignInError(error) {
   switch (error?.code || error?.payload?.code) {
@@ -15,6 +16,7 @@ function getSignInError(error) {
 
 export default function LoginPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -34,6 +36,11 @@ export default function LoginPage() {
       const result = await apiClient.post('/auth/user/signin', { email, password })
       window.dispatchEvent(new Event('storefront:refresh-header'))
       const redirectTo = result?.data?.redirectTo
+      const next = safeNextPath(searchParams.get('next'))
+      if (next) {
+        void navigate(next)
+        return
+      }
       void navigate(typeof redirectTo === 'string' && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/')
     } catch (requestError) {
       setError(getSignInError(requestError))
