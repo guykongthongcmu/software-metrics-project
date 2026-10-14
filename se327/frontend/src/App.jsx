@@ -20,6 +20,7 @@ import SearchPage from './pages/webstore/SearchPage.jsx'
 import CartPage from './pages/webstore/CartPage.jsx'
 import AdminLayout from './pages/admin/AdminLayout.jsx'
 import AdminLoginPage from './pages/admin/AdminLoginPage.jsx'
+import CategoryLandingPage from './pages/webstore/CategoryLandingPage.jsx'
 import CheckoutPage from './pages/webstore/CheckoutPage.jsx'
 import CheckoutSuccessPage from './pages/webstore/CheckoutSuccessPage.jsx'
 import FavoritesPage from './pages/webstore/FavoritesPage.jsx'
@@ -68,6 +69,7 @@ function getStorefrontPage(route) {
   if (route.path === '/search') return <SearchPage />
   if (route.path === '/products/:id') return <ProductDetailPage />
   if (route.path === '/cart') return <CartPage />
+  if (route.category) return <CategoryLandingPage category={route} />
   if (route.path === '/checkout') return <CheckoutPage />
   if (route.path === '/checkout/success') return <CheckoutSuccessPage />
   if (route.path === '/favorites') return <FavoritesPage />
