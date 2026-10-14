@@ -1,4 +1,5 @@
 from datetime import date
+from unittest import mock
 
 from django.test import TestCase
 
@@ -82,3 +83,25 @@ class BadTextTests(TestCase):
         res = self.client.post('/api/auth/check-email', '{not json', content_type='application/json')
         self.assertEqual(res.status_code, 400)
         self.assertNotEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_too_many_query_parameters_is_json_400(self):
+        res = self.client.get('/api/client/products/search?' + '&'.join(f'a{i}=1' for i in range(1001)))
+        self.assertEqual((res.status_code, res.json()['code']), (400, 'INVALID_QUERY'))
+
+    def test_deeply_nested_body_is_400_not_500(self):
+        res = self.client.post('/api/auth/check-email', '[' * 400000, content_type='application/json')
+        self.assertEqual((res.status_code, res.json()['code']), (400, 'INVALID_JSON'))
+
+    def test_only_json_content_types_are_parsed(self):
+        body = '{"email": "a\\u0000@b.co"}'
+        res = self.client.post('/api/auth/check-email', body, content_type='text/plain')
+        self.assertNotEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+        res = self.client.post('/api/auth/check-email', body, content_type='application/vnd.api+json')
+        self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+        res = self.client.post('/api/auth/check-email', body, content_type='application/json; charset=utf-8')
+        self.assertEqual(res.json()['code'], 'INVALID_FIELD_LENGTH')
+
+    def test_oversize_body_is_not_parsed_by_the_middleware(self):
+        with mock.patch('common.middleware.json.loads') as loads:
+            self.client.post('/api/auth/check-email', '{"a": "' + 'x' * (3 * 1024 * 1024) + '"}', content_type='application/json')
+        loads.assert_not_called()
