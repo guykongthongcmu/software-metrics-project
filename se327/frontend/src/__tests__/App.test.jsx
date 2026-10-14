@@ -32,6 +32,15 @@ describe('App routes', () => {
     expect(await screen.findByRole('heading', { name: 'Store Information' })).toBeTruthy()
   })
 
+  it('renders a not found page with links back to the shop for unknown routes', async () => {
+    render(<MemoryRouter initialEntries={['/nonexistent']}><App /></MemoryRouter>)
+    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeTruthy()
+    expect(screen.queryByText(/ready for its feature implementation/)).toBeNull()
+    expect(screen.getByRole('link', { name: 'Back to home' }).getAttribute('href')).toBe('/')
+    expect(screen.getByRole('link', { name: 'Browse all products' }).getAttribute('href')).toBe('/products')
+    expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeTruthy()
+  })
+
   it('renders the sign-in form at the login route', async () => {
     render(<MemoryRouter initialEntries={['/login']}><App /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'SIGN IN' })).toBeTruthy()

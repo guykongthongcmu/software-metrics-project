@@ -192,8 +192,7 @@ describe('AdminCampaignBuilderPage', () => {
     await renderPage()
     fillRequiredFields()
     submitForm()
-    const dialog = screen.getByRole('dialog')
-    fireEvent.mouseDown(dialog, { target: dialog })
+    fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }))
     expect(screen.queryByRole('dialog')).toBeNull()
   })
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { apiClient } from '../../../lib/apiClient.js'
+import { getLanguage, setLanguage } from '../../../lib/language.js'
 import CategoryMenu from './CategoryMenu.jsx'
 
 const iconPaths = {
@@ -63,7 +64,17 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
   const [user, setUser] = useState(null)
   const [cartCount, setCartCount] = useState(0)
   const [favoriteCount, setFavoriteCount] = useState(0)
-  const [language, setLanguage] = useState('EN')
+  const [language, setSelectedLanguage] = useState(getLanguage)
+
+  function chooseLanguage(option) {
+    setLanguage(option)
+  }
+
+  useEffect(() => {
+    const syncLanguage = (event) => setSelectedLanguage(event.detail.language)
+    window.addEventListener('storefront:language-changed', syncLanguage)
+    return () => window.removeEventListener('storefront:language-changed', syncLanguage)
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -119,7 +130,7 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
             <IconLink label="Account" kind="account" to={user ? '/account/profile' : '/login'} />
             <IconLink count={favoriteCount} label="Favorites" kind="favorite" to="/favorites" />
             <IconLink count={cartCount} label="Cart" kind="cart" to="/cart" />
-            <div className="hidden lg:block"><LanguageSelector language={language} onChange={setLanguage} /></div>
+            <div className="hidden lg:block"><LanguageSelector language={language} onChange={chooseLanguage} /></div>
             <button aria-expanded={menuOpen} aria-label={menuOpen ? 'Close menu' : 'Open menu'} className="storefront-mobile-toggle ml-1 grid h-10 w-10 place-items-center text-stone-900 hover:text-stone-500 lg:hidden" onClick={() => setMenuOpen((value) => !value)} type="button">
               <svg aria-hidden="true" className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">{menuOpen ? <path d="m6 6 12 12M18 6 6 18" strokeLinecap="round" strokeWidth="1.6" /> : <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" strokeWidth="1.6" />}</svg>
             </button>
@@ -136,7 +147,7 @@ export default function StorefrontHeader({ visibleCategoryRoutes }) {
               <Link onClick={() => setMenuOpen(false)} to={user ? '/account/profile' : '/login'}>{user ? 'My account' : 'Sign in'}</Link>
               <Link onClick={() => setMenuOpen(false)} to="/about">About</Link><Link onClick={() => setMenuOpen(false)} to="/contact">Contact</Link>
             </div>
-            <LanguageSelector language={language} mobile onChange={setLanguage} />
+            <LanguageSelector language={language} mobile onChange={chooseLanguage} />
           </nav>
         )}
       </header>

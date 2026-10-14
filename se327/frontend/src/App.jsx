@@ -5,6 +5,7 @@ import { storefrontRoutes } from './pages/webstore/routes.js'
 import StorefrontLayout from './pages/webstore/StorefrontLayout.jsx'
 import AboutPage from './pages/webstore/AboutPage.jsx'
 import ContactPage from './pages/webstore/ContactPage.jsx'
+import NotFoundPage from './pages/webstore/NotFoundPage.jsx'
 import LoginPage from './pages/account/LoginPage.jsx'
 import SignupPage from './pages/account/SignupPage.jsx'
 import SignupInfoPage from './pages/account/SignupInfoPage.jsx'
@@ -61,10 +62,6 @@ function StorefrontPlaceholder({ title }) {
 function AdminPlaceholder({ title }) {
   const location = useLocation()
   return <section className="rounded-[var(--radius-card)] border border-line bg-panel p-6 shadow-panel backdrop-blur-xl sm:p-8"><p className="text-sm text-muted">{location.pathname}</p><h2 className="mt-2 font-admin-display text-3xl">{title}</h2></section>
-}
-
-function NotFoundPage() {
-  return <StorefrontPlaceholder title="Page not found" />
 }
 
 function getStorefrontPage(route) {
