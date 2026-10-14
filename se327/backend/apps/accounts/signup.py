@@ -12,7 +12,7 @@ from common.mail import send_verification_email
 
 from .models import EmailVerificationToken, User
 
-EMAIL_REGEX = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+EMAIL_REGEX = re.compile(r'^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$')
 MIN_PASSWORD_LENGTH = 8
 # column sizes from the User model
 FIELD_LIMITS = {'email': 255, 'first_name': 100, 'last_name': 100, 'phone_number': 30}

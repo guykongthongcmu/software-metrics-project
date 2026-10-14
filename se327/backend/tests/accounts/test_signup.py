@@ -1,3 +1,4 @@
+import time
 from datetime import timedelta
 from unittest import mock
 
@@ -162,6 +163,13 @@ class SignupTests(SignupBase):
     def test_over_long_email_is_a_400(self):
         res = self.signup(email='a' * 250 + '@x.com')
         self.assertEqual(res.status_code, 400)
+
+    def test_huge_malformed_email_is_rejected_quickly(self):
+        start = time.monotonic()
+        for email in ('a@' + '.' * 40000, 'a@' + 'b.' * 20000 + '@', '@' * 40000):
+            res = self.signup(email=email)
+            self.assertEqual(res.status_code, 400)
+        self.assertLess(time.monotonic() - start, 1)
 
     def test_password_too_short(self):
         res = self.signup(password='short12')
