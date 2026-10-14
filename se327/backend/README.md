@@ -38,11 +38,11 @@ With `DEBUG` off the command refuses to run unless `SEED_ADMIN_PASSWORD` is set.
 
 ### Images
 
-Product images come from the existing demo files in `se327/frontend/public/images`, which the frontend serves at `/images/<file>`. The seed stores `/images/<file>` as each image's `public_url`. Nothing is uploaded to Supabase by the command. If you upload the files to a bucket yourself, set `SEED_IMAGE_BASE_URL` to the bucket's public URL before seeding and the stored URLs will use it. `bucket_name` is taken from `SUPABASE_BUCKET`, or `local` when that is empty.
+Product images come from the existing demo files in `se327/frontend/public/images`, which the frontend serves at `/images/<file>`. The seed stores `/images/<file>` as each image's `public_url`. Nothing is uploaded to Supabase by the command. If you upload the files to a bucket yourself, set `SEED_IMAGE_BASE_URL` to the bucket's public URL before seeding and the stored URLs will use it. `bucket_name` is taken from `SUPABASE_PRODUCT_BUCKET`, or `local` when that is empty.
 
 ## Image storage
 
-Product images are uploaded through `common/storage.py`. If `SUPABASE_URL`, `SUPABASE_SECRET_KEY` and `SUPABASE_BUCKET` are all set, files go to that Supabase Storage bucket and the API returns the bucket's public URL. With any of them missing, files are written under `MEDIA_DIR` (default `backend/media`) and served from `/media/`.
+Product images are uploaded through `common/storage.py`. If `SUPABASE_URL`, `SUPABASE_SECRET_KEY` and `SUPABASE_PRODUCT_BUCKET` are all set, files go to that Supabase Storage bucket and the API returns the bucket's public URL. With any of them missing, files are written under `MEDIA_DIR` (default `backend/media`) and served from `/media/`.
 
 Create the bucket in the Supabase dashboard and mark it public. Use the service role key, which must never reach the frontend. Campaign banners are still stored locally.
 
