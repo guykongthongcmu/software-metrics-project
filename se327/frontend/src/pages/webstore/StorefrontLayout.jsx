@@ -22,6 +22,10 @@ export default function StorefrontLayout() {
   const hideStorefrontFooter = location.pathname === '/login'
     || location.pathname.startsWith('/auth/signup')
     || ['/forgot-password', '/forgot-password-success', '/auth/reset-password'].includes(location.pathname)
+  // pages with forms keep their typed values when the language changes
+  const keepPageState = hideStorefrontFooter
+    || location.pathname.startsWith('/checkout')
+    || location.pathname.startsWith('/account/')
   const [categories, setCategories] = useState([])
   const [language, setLanguage] = useState(getLanguage)
   useEffect(() => {
@@ -67,7 +71,7 @@ return (
     }`}
   >
     <StorefrontHeader visibleCategoryRoutes={visibleCategoryRoutes} />
-    <FavoritesProvider key={language}>
+    <FavoritesProvider key={keepPageState ? 'keep' : language}>
       <Outlet />
     </FavoritesProvider>
     {!hideStorefrontFooter && <StorefrontFooter />}

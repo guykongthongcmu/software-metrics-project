@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import { setLanguage } from '../../lib/language.js'
@@ -70,5 +70,15 @@ describe('StorefrontLayout', () => {
     await waitFor(() => expect(mounts).toBe(2))
     act(() => setLanguage('EN'))
     await waitFor(() => expect(mounts).toBe(3))
+  })
+
+  it('keeps typed form values on checkout when the language changes', async () => {
+    apiClient.get.mockResolvedValue({ data: { categories: [] } })
+    render(<MemoryRouter initialEntries={['/checkout']}><Routes><Route element={<StorefrontLayout />}><Route path="*" element={<input aria-label="Address" />} /></Route></Routes></MemoryRouter>)
+    fireEvent.change(screen.getByLabelText('Address'), { target: { value: '12 Main Road' } })
+    act(() => setLanguage('TH'))
+    expect(screen.getByLabelText('Address').value).toBe('12 Main Road')
+    act(() => setLanguage('EN'))
+    expect(screen.getByLabelText('Address').value).toBe('12 Main Road')
   })
 })
