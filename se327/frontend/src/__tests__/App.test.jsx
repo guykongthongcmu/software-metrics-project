@@ -54,6 +54,12 @@ describe('App routes', () => {
     expect(screen.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')).toBe('page')
   })
 
+  it('renders the campaign builder route', async () => {
+    render(<MemoryRouter initialEntries={['/admin/campaigns/builder']}><App /></MemoryRouter>)
+    expect(await screen.findByRole('heading', { name: 'Promotional Campaign Builder' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Campaign Preview' })).toBeTruthy()
+  })
+
   it('redirects the legacy profile route and renders a not-found page', async () => {
     const { unmount } = render(<MemoryRouter initialEntries={['/profile']}><App /></MemoryRouter>)
     expect(await screen.findByRole('heading', { name: 'My Profile' })).toBeTruthy()
