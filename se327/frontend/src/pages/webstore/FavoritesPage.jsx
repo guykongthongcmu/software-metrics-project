@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError, apiClient, isUnauthorizedError } from '../../lib/apiClient.js'
+import { loginPath } from '../../lib/loginRedirect.js'
 import { getColorSwatch, isLightColor } from './partials/colorSwatches.js'
 
 function money(value) {
@@ -32,7 +33,7 @@ async function loadRecommendations(favoriteIds) {
 
 function handleFavoriteLoadError(requestError, navigate, setError) {
   if (isUnauthorizedError(requestError)) {
-    void navigate('/login')
+    void navigate(loginPath())
     return
   }
   setError(requestError instanceof ApiError ? requestError.message : 'Could not load your favorites. Please try again.')
@@ -139,7 +140,7 @@ export default function FavoritesPage() {
       setFavoriteIds((current) => { const next = new Set(current); next.delete(Number(product.productId)); return next })
       emitFavoriteCount(count, product.productId, false)
     } catch (requestError) {
-      if (isUnauthorizedError(requestError)) void navigate('/login')
+      if (isUnauthorizedError(requestError)) void navigate(loginPath())
       else setError(requestError instanceof ApiError ? requestError.message : 'Could not remove this favorite. Please try again.')
     } finally {
       setBusyId(null)
@@ -171,7 +172,7 @@ export default function FavoritesPage() {
       }
       emitFavoriteCount(count, product.productId, Boolean(data.isFavorite))
     } catch (requestError) {
-      if (isUnauthorizedError(requestError)) void navigate('/login')
+      if (isUnauthorizedError(requestError)) void navigate(loginPath())
       else setError(requestError instanceof ApiError ? requestError.message : 'Could not update favorites. Please try again.')
     } finally {
       setBusyId(null)
@@ -196,7 +197,7 @@ export default function FavoritesPage() {
       setToast(`${product.name} added to cart`)
       window.setTimeout(() => setToast(''), 3000)
     } catch (requestError) {
-      if (isUnauthorizedError(requestError)) void navigate('/login')
+      if (isUnauthorizedError(requestError)) void navigate(loginPath())
       else setError(requestError instanceof ApiError ? requestError.message : 'Could not add to cart. Please try again.')
     } finally {
       setBusyId(null)

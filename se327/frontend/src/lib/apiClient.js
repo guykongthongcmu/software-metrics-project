@@ -1,3 +1,5 @@
+import { loginPath } from './loginRedirect.js'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 export class ApiError extends Error {
@@ -24,8 +26,8 @@ async function readPayload(response) {
 function redirectForUnauthorized(status, redirectOn401) {
   if (status !== 401 || !redirectOn401 || typeof window === 'undefined') return
   const isAdminRoute = window.location.pathname.startsWith('/admin/')
-  const loginPath = isAdminRoute ? '/admin/login' : '/login'
-  if (window.location.pathname === loginPath) return
+  const loginUrl = isAdminRoute ? '/admin/login' : loginPath()
+  if (window.location.pathname === (isAdminRoute ? '/admin/login' : '/login')) return
   if (isAdminRoute) {
     try {
       window.sessionStorage?.setItem('adminSessionExpired', 'true')
@@ -33,7 +35,7 @@ function redirectForUnauthorized(status, redirectOn401) {
       // The redirect still works if browser storage is unavailable.
     }
   }
-  window.location.assign(loginPath)
+  window.location.assign(loginUrl)
 }
 
 function shouldRefreshHeader(method, path) {

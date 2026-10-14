@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiError, apiClient } from '../../lib/apiClient.js'
+import { loginPath } from '../../lib/loginRedirect.js'
 import './checkout.css'
 
 const emptyAddress = {
@@ -129,7 +130,7 @@ export default function CheckoutPage() {
         setItems(Array.isArray(cart.items) ? cart.items : [])
         setSubtotal(Number(cart.cartSummary?.subtotal) || 0)
       } else if (cartResult.reason instanceof ApiError && cartResult.reason.status === 401) {
-        void navigate('/login')
+        void navigate(loginPath())
       } else {
         setStatus(getErrorText(cartResult.reason, 'Could not load checkout cart'))
       }
@@ -139,7 +140,7 @@ export default function CheckoutPage() {
         setHasSavedAddress(Boolean(savedAddress))
         setForm(addressFormValue(savedAddress))
       } else if (addressResult.reason instanceof ApiError && addressResult.reason.status === 401) {
-        void navigate('/login')
+        void navigate(loginPath())
       }
       setLoading(false)
     }
@@ -194,7 +195,7 @@ export default function CheckoutPage() {
       void navigate('/checkout/success', { state: { orderId: result?.data?.orderId } })
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 401) {
-        void navigate('/login')
+        void navigate(loginPath())
       } else {
         setStatus(getCheckoutErrorText(requestError))
         setFieldErrors(getAddressErrors(requestError))

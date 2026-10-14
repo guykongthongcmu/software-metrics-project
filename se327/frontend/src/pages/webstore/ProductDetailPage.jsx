@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ApiError, apiClient, isUnauthorizedError } from '../../lib/apiClient.js'
+import { loginPath } from '../../lib/loginRedirect.js'
 import ProductCard from './partials/ProductCard.jsx'
 import { getColorSwatch, isLightColor } from './partials/colorSwatches.js'
 const deliveryText = 'Free standard delivery on orders over $100. Returns accepted within 30 days.'
@@ -294,7 +295,7 @@ export default function ProductDetailPage() {
         isFavorite: nextFavorite,
       } }))
     } catch (requestError) {
-      if (isUnauthorizedError(requestError)) void navigate('/login')
+      if (isUnauthorizedError(requestError)) void navigate(loginPath())
       else setCartMessage('Could not update favorites. Please try again.')
     } finally {
       setBusy(false)
@@ -318,7 +319,7 @@ export default function ProductDetailPage() {
         setToast((current) => ({ id: (current?.id || 0) + 1, message: `${product.name} added to cart` }))
       })
     } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
+      if (requestError instanceof ApiError && requestError.status === 401) void navigate(loginPath())
       else setToast((current) => ({ id: (current?.id || 0) + 1, message: requestError instanceof ApiError ? requestError.message : 'Could not connect to server.' }))
     } finally {
       setBusy(false)

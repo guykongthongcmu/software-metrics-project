@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient, isUnauthorizedError } from '../../../lib/apiClient.js'
+import { loginPath } from '../../../lib/loginRedirect.js'
 
 const FavoritesContext = createContext(null)
 
@@ -82,7 +83,7 @@ export function FavoritesProvider({ children }) {
       })
       dispatchFavoriteUpdate(count, id, isFavorite)
     } catch (requestError) {
-      if (isUnauthorizedError(requestError)) void navigate('/login')
+      if (isUnauthorizedError(requestError)) void navigate(loginPath())
     } finally {
       setBusyIds((current) => {
         const next = new Set(current)

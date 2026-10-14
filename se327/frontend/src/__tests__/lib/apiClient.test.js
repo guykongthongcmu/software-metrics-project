@@ -123,7 +123,7 @@ describe('apiClient', () => {
 
     window.location.pathname = '/account/profile'
     await expect(apiFetch('/private')).rejects.toBeInstanceOf(ApiError)
-    expect(assign).toHaveBeenLastCalledWith('/login')
+    expect(assign).toHaveBeenLastCalledWith('/login?next=%2Faccount%2Fprofile')
 
     window.location.pathname = '/login'
     const callsBeforeLoginPage = assign.mock.calls.length

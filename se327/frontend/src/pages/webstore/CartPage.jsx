@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ApiError, apiClient } from '../../lib/apiClient.js'
+import { loginPath } from '../../lib/loginRedirect.js'
 import ProductCard from './partials/ProductCard.jsx'
 import { getColorSwatch, isLightColor } from './partials/colorSwatches.js'
 import { useFavorites } from './partials/FavoritesContext.jsx'
@@ -80,7 +81,7 @@ export default function CartPage() {
         window.dispatchEvent(new CustomEvent('storefront:cart-updated', { detail: { count: Number(data.cartSummary?.totalItems) || 0 } }))
       } catch (requestError) {
         if (!active) return
-        if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
+        if (requestError instanceof ApiError && requestError.status === 401) void navigate(loginPath())
         else setError(getErrorMessage(requestError, 'Could not load your cart. Please try again.'))
       } finally {
         if (active) setLoading(false)
@@ -111,7 +112,7 @@ export default function CartPage() {
       setSubtotal(Number(response?.data?.cartSummary?.subtotal) || 0)
       window.dispatchEvent(new CustomEvent('storefront:cart-updated', { detail: { count: total } }))
     } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
+      if (requestError instanceof ApiError && requestError.status === 401) void navigate(loginPath())
       else setError(getErrorMessage(requestError, 'Could not update quantity. Please try again.'))
     } finally {
       setBusyItemId(null)
@@ -128,7 +129,7 @@ export default function CartPage() {
       setSubtotal(Number(summary.subtotal) || 0)
       window.dispatchEvent(new CustomEvent('storefront:cart-updated', { detail: { count: Number(summary.totalItems) || 0 } }))
     } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
+      if (requestError instanceof ApiError && requestError.status === 401) void navigate(loginPath())
       else setError(getErrorMessage(requestError, 'Could not remove this item. Please try again.'))
     } finally {
       setBusyItemId(null)
