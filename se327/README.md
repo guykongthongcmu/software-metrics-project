@@ -1,0 +1,52 @@
+# Core&Co (se327)
+
+React + Vite frontend, Django + DRF backend, PostgreSQL.
+
+## Run everything with Docker
+
+From this folder:
+
+```bash
+docker compose up --build
+```
+
+This starts three containers:
+
+| Service | What it is | Reachable at |
+| --- | --- | --- |
+| `frontend` | nginx serving the built React app | http://localhost:8080 |
+| `backend` | Django served by gunicorn | only through the frontend, at `/api` and `/media` |
+| `db` | PostgreSQL 16 | inside the compose network only |
+
+nginx proxies `/api`, `/media` and `/health` to the backend, so the browser only talks to http://localhost:8080. That keeps cookies and CORS out of the way. The frontend is built with `VITE_API_BASE_URL=/api`.
+
+On start the backend waits for the database, runs `migrate`, and runs `seed_demo` when `SEED_DEMO` is true (the default in compose). The seed is idempotent, so restarting is safe. To skip it:
+
+```bash
+SEED_DEMO=false docker compose up --build
+```
+
+To seed by hand: `docker compose exec backend python manage.py seed_demo`.
+
+### Admin login
+
+The seed creates `admin@coreco.test` with password `secret123` (see `backend/README.md` for the variables that change this).
+
+### Configuration
+
+Defaults for a plain local run live in `backend/docker.env` (`DEBUG=true`, a dev secret key, CORS for http://localhost:8080). If `backend/.env` exists it is loaded on top, so your Supabase and SMTP keys are picked up. The database settings (`DB_*`) and `PORT` are always forced to match the compose database, whatever `.env` says. Keep `DEBUG=true` over plain http, otherwise the session cookie is marked secure and the browser will not send it.
+
+If a line in `backend/.env` is malformed (for example a quote closed in the wrong place on `MAIL_FROM`), it is ignored with a warning and that value is left unset.
+
+gunicorn is used instead of `runserver` because it is the same command you would run in production and it handles concurrent requests. Edits to backend code need `docker compose up --build` to show up.
+
+### Uploaded images
+
+If `SUPABASE_URL`, `SUPABASE_SECRET_KEY` and `SUPABASE_PRODUCT_BUCKET` are set in `backend/.env`, uploads go to Supabase. Otherwise they are written to `/app/media` in the backend container, which is the named volume `media`, and served from `/media/`.
+
+### Stop and reset
+
+```bash
+docker compose down        # stop, keep database and uploads
+docker compose down -v     # stop and delete the database and uploads
+```
