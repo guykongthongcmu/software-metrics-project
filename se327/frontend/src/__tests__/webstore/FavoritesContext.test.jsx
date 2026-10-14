@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
-import { ApiError, apiClient } from '../../lib/apiClient.js'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { apiClient } from '../../lib/apiClient.js'
 import { FavoritesProvider, useFavorites } from '../../pages/webstore/partials/FavoritesContext.jsx'
 
 vi.mock('../../lib/apiClient.js', async (importOriginal) => {
@@ -114,16 +114,19 @@ describe('FavoritesProvider', () => {
   })
 
   it('navigates to login when changing favorites returns unauthorized', async () => {
-    apiClient.post.mockRejectedValueOnce(new ApiError('Unauthorized', { status: 401 }))
+    apiClient.post.mockRejectedValueOnce(Object.assign(new Error('Unauthorized'), { status: 401 }))
     render(
       <MemoryRouter initialEntries={['/favorites']}>
-        <FavoritesProvider><FavoritesProbe /></FavoritesProvider>
+        <Routes>
+          <Route path="/favorites" element={<FavoritesProvider><FavoritesProbe /></FavoritesProvider>} />
+          <Route path="/login" element={<p>Login page</p>} />
+        </Routes>
       </MemoryRouter>,
     )
     await screen.findByLabelText('Favorites loaded')
     fireEvent.click(screen.getByRole('button', { name: 'Toggle seven' }))
 
-    await waitFor(() => expect(apiClient.post).toHaveBeenCalled())
+    expect(await screen.findByText('Login page')).toBeTruthy()
   })
 
   it('requires the provider', () => {
