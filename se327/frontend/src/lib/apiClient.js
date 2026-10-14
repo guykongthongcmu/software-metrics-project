@@ -11,6 +11,10 @@ export class ApiError extends Error {
   }
 }
 
+export function isUnauthorizedError(error) {
+  return error?.status === 401
+}
+
 /** @param {string} path @param {RequestInit & {redirectOn401?: boolean}} [options] */
 export async function apiFetch(path, options = {}) {
   const { redirectOn401 = true, ...requestOptions } = options
