@@ -5,10 +5,6 @@ import './admin-dashboard.css'
 
 const categoryColors = ['#c8a77d', '#d7cdbe', '#8f8272', '#e9dec1', '#b89468']
 const calendarToday = new Date()
-const defaultRangeEnd = getDateKey(calendarToday)
-const defaultRangeStartDate = new Date(calendarToday)
-defaultRangeStartDate.setDate(defaultRangeStartDate.getDate() - 7)
-const defaultRangeStart = getDateKey(defaultRangeStartDate)
 
 function numberValue(value) {
   const parsed = Number(value)
@@ -49,15 +45,6 @@ function getErrorMessage(error) {
 
 function notifyAdmin(title, message, type = 'danger') {
   window.dispatchEvent(new CustomEvent('admin:toast', { detail: { title, message, type } }))
-}
-
-function calculateGrowth(values) {
-  if (!Array.isArray(values) || values.length < 2) return 0
-  const current = numberValue(values.at(-1))
-  const previous = values.slice(0, -1).map(numberValue)
-  const average = previous.reduce((sum, value) => sum + value, 0) / previous.length
-  if (average === 0) return current > 0 ? 100 : 0
-  return ((current - average) / average) * 100
 }
 
 function getNiceStep(rawStep) {
@@ -266,10 +253,16 @@ function DateRangePicker({ from, to, onSelectRange }) {
 
 export default function AdminDashboardPage() {
   const [period, setPeriod] = useState('weekly')
-  const [from, setFrom] = useState(defaultRangeStart)
-  const [to, setTo] = useState(defaultRangeEnd)
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
   const [dashboard, setDashboard] = useState(null)
   const [loading, setLoading] = useState(true)
+
+  function showPeriodRange(payload) {
+    if (!payload.period?.from || !payload.period?.to) return
+    setFrom(payload.period.from)
+    setTo(payload.period.to)
+  }
 
   async function loadDashboard(selectedPeriod = period, rangeFrom = from, rangeTo = to, showLoading = true) {
     if (showLoading) {
@@ -280,7 +273,9 @@ export default function AdminDashboardPage() {
       : `period=${selectedPeriod}`
     try {
       const response = await apiClient.get(`/admin/dashboard/summary?${query}`)
-      setDashboard(getResponseData(response))
+      const payload = getResponseData(response)
+      setDashboard(payload)
+      if (selectedPeriod !== 'custom') showPeriodRange(payload)
     } catch (requestError) {
       notifyAdmin('Dashboard Error', getErrorMessage(requestError))
     } finally {
@@ -292,7 +287,10 @@ export default function AdminDashboardPage() {
     let active = true
     apiClient.get('/admin/dashboard/summary?period=weekly')
       .then((response) => {
-        if (active) setDashboard(getResponseData(response))
+        if (!active) return
+        const payload = getResponseData(response)
+        setDashboard(payload)
+        showPeriodRange(payload)
       })
       .catch((requestError) => {
         if (active) notifyAdmin('Dashboard Error', getErrorMessage(requestError))
@@ -305,9 +303,9 @@ export default function AdminDashboardPage() {
 
   const data = dashboard || {}
   const charts = data.charts || {}
-  const revenueGrowth = calculateGrowth(charts.revenue)
-  const ordersGrowth = calculateGrowth(charts.orders)
-  const productsGrowth = calculateGrowth(charts.productsSold)
+  const revenueGrowth = data.revenue?.growth
+  const ordersGrowth = data.orders?.growth
+  const productsGrowth = data.productsSold?.growth
   const periodGranularity = data.period?.granularity || (period === 'monthly' ? 'month' : 'day')
   const topSellers = Array.isArray(data.topSellers) ? data.topSellers : []
   const periodText = useMemo(() => {

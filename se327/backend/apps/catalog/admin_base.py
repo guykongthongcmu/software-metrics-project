@@ -1,8 +1,9 @@
-from django.core.exceptions import SuspiciousOperation
+from django.core.exceptions import RequestDataTooBig, SuspiciousOperation
 from django.http import JsonResponse
 from rest_framework.views import APIView
 
 from apps.accounts.permissions import IsAdmin
+from common.exceptions import TOO_BIG
 from common.responses import error_body
 from common.storage import ImageRejected
 
@@ -29,6 +30,8 @@ class AdminView(APIView):
             if getattr(exc, 'details', None):
                 body['details'] = exc.details
             return JsonResponse(body, status=exc.status)
+        if isinstance(exc, RequestDataTooBig):
+            return JsonResponse(error_body(*TOO_BIG), status=413)
         if isinstance(exc, SuspiciousOperation):
             # oversize text fields or too many form fields, Django would otherwise let this reach a 500
             return JsonResponse(error_body('BAD_REQUEST', 'the request body was rejected'), status=400)

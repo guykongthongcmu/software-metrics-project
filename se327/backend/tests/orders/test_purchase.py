@@ -133,11 +133,6 @@ class PurchaseSuccessTests(PurchaseTestCase):
         self.assertIsNone(order.shipping_address)
         self.assertEqual(order.shipping_address_snapshot, expected)
 
-    def test_latest_address_used_when_no_default(self):
-        Address.objects.filter(pk=self.address.pk).update(is_default_shipping=False)
-        self.buy()
-        self.assertEqual(Order.objects.get().shipping_address_snapshot['fullName'], 'Buy Er')
-
     def test_stock_decreases(self):
         self.buy()
         self.black.refresh_from_db()
@@ -254,6 +249,25 @@ class PurchaseFailureTests(PurchaseTestCase):
         self.assertEqual(res.status_code, 409)
         self.assertEqual(res.json()['code'], 'ORDER_TOTAL_TOO_LARGE')
         self.assert_nothing_written({self.black: 5})
+
+    def test_only_non_default_address_is_rejected_and_writes_nothing(self):
+        make_address(self.user, default=False)
+        self.add(self.shirt, qty=2)
+        res = self.buy()
+        self.assertEqual(res.status_code, 400)
+        body = res.json()
+        self.assertEqual(body['code'], 'CHECKOUT_ADDRESS_REQUIRED')
+        self.assertEqual(
+            body['message'], 'a default shipping address is required before purchase, please save one first',
+        )
+        self.assert_nothing_written({self.black: 5})
+
+    def test_default_address_among_others_succeeds(self):
+        make_address(self.user, default=False, full_name='Other')
+        self.with_address()
+        self.add(self.shirt, qty=1)
+        self.assertEqual(self.buy().status_code, 200)
+        self.assertEqual(Order.objects.get().shipping_address_snapshot['fullName'], 'Buy Er')
 
     def test_inactive_variant_is_409(self):
         self.with_address()

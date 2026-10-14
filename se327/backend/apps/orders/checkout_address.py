@@ -94,12 +94,8 @@ def address_payload(address):
 
 
 def current_address(user):
-    """The default shipping address, else the most recently updated one, else None."""
-    addresses = Address.objects.filter(user=user)
-    return (
-        addresses.filter(is_default_shipping=True).first()
-        or addresses.order_by('-updated_at', '-address_id').first()
-    )
+    """The default shipping address, or None. Other saved addresses are never used."""
+    return Address.objects.filter(user=user, is_default_shipping=True).first()
 
 
 def get_address(user):

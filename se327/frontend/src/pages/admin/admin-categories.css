@@ -42,7 +42,8 @@
 .admin-category-icon-button.is-danger { color: #b42318; }
 .admin-category-icon-button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.4; }
 .admin-category-modal-backdrop { position: fixed; z-index: 1200; inset: 0; display: grid; width: auto; max-width: none; max-height: none; align-items: center; justify-items: center; overflow-y: auto; margin: 0; padding: 16px; border: 0; background: rgba(26,26,46,.45); animation: admin-category-fade .15s ease-out; }
-.admin-category-modal { width: min(500px,100%); overflow: hidden; border: 1px solid rgba(255,255,255,.5); border-radius: 16px; background: rgba(255,255,255,.95); box-shadow: 0 8px 32px rgba(0,0,0,.18); backdrop-filter: blur(20px); }
+.admin-category-modal-dismiss { position: fixed; inset: 0; border: 0; background: transparent; cursor: default; }
+.admin-category-modal { position: relative; width: min(500px,100%); overflow: hidden; border: 1px solid rgba(255,255,255,.5); border-radius: 16px; background: rgba(255,255,255,.95); box-shadow: 0 8px 32px rgba(0,0,0,.18); backdrop-filter: blur(20px); }
 .admin-category-modal > header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px 0; }
 .admin-category-modal h2 { margin: 0; color: var(--admin-text); font: 500 20px/1.3 'DM Serif Display',serif; }
 .admin-category-modal > header button { display: grid; width: 32px; height: 32px; place-items: center; border: 0; background: transparent; color: var(--admin-muted); cursor: pointer; font: 300 26px/1 Inter,sans-serif; }

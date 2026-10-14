@@ -16,7 +16,6 @@ const dayKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).pa
 const dayButton = (date) => date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 const daysFromNow = (offset) => new Date(fixedNow.getFullYear(), fixedNow.getMonth(), fixedNow.getDate() + offset)
 const firstOfMonth = new Date(fixedNow.getFullYear(), fixedNow.getMonth(), 1)
-const defaultRange = `${dayKey(daysFromNow(-7))} to ${dayKey(daysFromNow(0))}`
 
 vi.mock('../../lib/apiClient.js', () => ({ apiClient: { get: vi.fn() } }))
 
@@ -30,6 +29,7 @@ const summary = {
   topSellers: [{ productId: 9, label: 'Linen Shirt', category: 'Men', likesCount: 6, salesValue: 12 }],
   uniqueViewers: 1234,
 }
+const weeklyRange = `${summary.period.from} to ${summary.period.to}`
 
 function renderDashboard() {
   return render(<MemoryRouter initialEntries={['/admin/dashboard']}><Routes><Route path="/admin/dashboard" element={<AdminDashboardPage />} /><Route path="/admin/products" element={<p>Products list</p>} /><Route path="/admin/products/edit/:id" element={<p>Product editor</p>} /></Routes></MemoryRouter>)
@@ -45,9 +45,9 @@ describe('AdminDashboardPage', () => {
     renderDashboard()
     expect(await screen.findByText('$1,250.5')).toBeTruthy()
     expect(apiClient.get).toHaveBeenCalledWith('/admin/dashboard/summary?period=weekly')
-    expect(screen.getByText('+116.7%')).toBeTruthy()
-    expect(screen.getByText('+100.0%')).toBeTruthy()
-    expect(screen.getAllByText('+120.0%')).toHaveLength(3)
+    expect(screen.getByText('+12.5%')).toBeTruthy()
+    expect(screen.getByText('-2.5%')).toBeTruthy()
+    expect(screen.getAllByText('+5.0%')).toHaveLength(3)
     expect(screen.getByText('Total Orders').closest('article').className).toContain('admin-dashboard-kpi')
     expect(screen.getByRole('img', { name: 'Revenue over time' })).toBeTruthy()
     expect(screen.getByRole('img', { name: 'Revenue over time' }).querySelector('.admin-revenue-line').getAttribute('d')).toContain('C')
@@ -87,28 +87,45 @@ describe('AdminDashboardPage', () => {
     expect(screen.getByRole('img', { name: 'Revenue over time' })).toBeTruthy()
   })
 
-  it('shows negative growth and currency axis labels for larger revenue', async () => {
-    apiClient.get.mockResolvedValue({ data: { ...summary, charts: { ...summary.charts, revenue: [2000, 1000, 500], orders: [3, 2, 1], productsSold: [3, 2, 1] } } })
+  it('shows the growth values from the API instead of deriving them from the chart', async () => {
+    apiClient.get.mockResolvedValue({ data: { ...summary, revenue: { total: 90, growth: -33.3 }, orders: { total: 3, growth: 0 }, productsSold: { total: 4, growth: 250 }, charts: { ...summary.charts, revenue: [2000, 1000, 500] } } })
     renderDashboard()
-    expect(await screen.findByText('$1,250.5')).toBeTruthy()
-    expect(screen.getByText('-66.7%')).toBeTruthy()
-    expect(screen.getAllByText('-60.0%')).toHaveLength(4)
+    expect(await screen.findByText('$90')).toBeTruthy()
+    expect(screen.getByText('-33.3%')).toBeTruthy()
+    expect(screen.getByText('+0.0%')).toBeTruthy()
+    expect(screen.getAllByText('+250.0%')).toHaveLength(3)
     expect(screen.getByText('$2.5k')).toBeTruthy()
   })
 
-  it('uses the legacy zero-baseline growth calculation', async () => {
-    apiClient.get.mockResolvedValue({ data: { ...summary, charts: { ...summary.charts, revenue: [0, 0, 10], orders: [0, 0, 0], productsSold: [] } } })
+  it('does not show -100% when the last chart points are still empty', async () => {
+    apiClient.get.mockResolvedValue({ data: { ...summary, revenue: { total: 100, growth: 0 }, orders: { total: 1, growth: 0 }, productsSold: { total: 1, growth: 0 }, charts: { ...summary.charts, revenue: [0, 100, 0], orders: [0, 1, 0], productsSold: [0, 1, 0] } } })
     renderDashboard()
-    expect(await screen.findByText('$1,250.5')).toBeTruthy()
-    expect(screen.getByText('+100.0%')).toBeTruthy()
-    expect(screen.getAllByText('+0.0%')).toHaveLength(4)
+    expect(await screen.findByText('$100')).toBeTruthy()
+    expect(screen.queryByText('-100.0%')).toBeNull()
+    expect(screen.getAllByText('+0.0%')).toHaveLength(5)
+  })
+
+  it('treats missing growth values as zero', async () => {
+    apiClient.get.mockResolvedValue({ data: { ...summary, revenue: { total: 5 }, orders: undefined, productsSold: undefined } })
+    renderDashboard()
+    expect(await screen.findByText('$5')).toBeTruthy()
+    expect(screen.getAllByText('+0.0%')).toHaveLength(5)
+  })
+
+  it('shows the range of the selected period on the date button', async () => {
+    apiClient.get.mockResolvedValueOnce({ data: summary })
+    renderDashboard()
+    expect(await screen.findByRole('button', { name: '2026-10-12 to 2026-10-18' })).toBeTruthy()
+    apiClient.get.mockResolvedValueOnce({ data: { ...summary, period: { from: '2026-01-01', to: '2026-12-31', granularity: 'month' } } })
+    fireEvent.click(screen.getByRole('button', { name: 'Monthly' }))
+    expect(await screen.findByRole('button', { name: '2026-01-01 to 2026-12-31' })).toBeTruthy()
   })
 
   it('selects a custom range and reloads immediately after the end date', async () => {
     apiClient.get.mockResolvedValue({ data: summary })
     renderDashboard()
     await screen.findByText('$1,250.5')
-    fireEvent.click(screen.getByRole('button', { name: defaultRange }))
+    fireEvent.click(screen.getByRole('button', { name: weeklyRange }))
     expect(screen.getByLabelText('Select date range')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: dayButton(firstOfMonth) }))
     expect(apiClient.get).toHaveBeenCalledTimes(1)
@@ -122,7 +139,7 @@ describe('AdminDashboardPage', () => {
     apiClient.get.mockResolvedValue({ data: summary })
     renderDashboard()
     await screen.findByText('$1,250.5')
-    fireEvent.click(screen.getByRole('button', { name: defaultRange }))
+    fireEvent.click(screen.getByRole('button', { name: weeklyRange }))
     fireEvent.click(screen.getByRole('button', { name: dayButton(daysFromNow(0)) }))
     fireEvent.click(screen.getByRole('button', { name: dayButton(daysFromNow(-2)) }))
     await waitFor(() => expect(apiClient.get).toHaveBeenLastCalledWith(`/admin/dashboard/summary?period=custom&from=${dayKey(daysFromNow(-2))}&to=${dayKey(daysFromNow(0))}`))
@@ -133,7 +150,7 @@ describe('AdminDashboardPage', () => {
     apiClient.get.mockResolvedValue({ data: summary })
     renderDashboard()
     await screen.findByText('$1,250.5')
-    fireEvent.click(screen.getByRole('button', { name: defaultRange }))
+    fireEvent.click(screen.getByRole('button', { name: weeklyRange }))
     fireEvent.click(screen.getByRole('button', { name: dayButton(firstOfMonth) }))
     expect(apiClient.get).toHaveBeenCalledTimes(1)
     fireEvent.click(screen.getByRole('button', { name: `${dayKey(firstOfMonth)} to …` }))
@@ -144,7 +161,7 @@ describe('AdminDashboardPage', () => {
     apiClient.get.mockResolvedValue({ data: summary })
     const view = renderDashboard()
     await screen.findByText('$1,250.5')
-    fireEvent.click(screen.getByRole('button', { name: defaultRange }))
+    fireEvent.click(screen.getByRole('button', { name: weeklyRange }))
     const picker = view.container.querySelector('.admin-dashboard-range-wrap')
     fireEvent.blur(picker, { relatedTarget: screen.getByRole('button', { name: 'Previous month' }) })
     expect(screen.getByLabelText('Select date range')).toBeTruthy()

@@ -451,7 +451,7 @@ class CreateTests(AdminProductCase):
 
     def test_oversize_text_field_is_not_a_500(self):
         res = self.client.post(BASE, {'payload': 'x' * (3 * 1024 * 1024), 'mediaFiles': image()})
-        self.assertEqual(res.status_code, 400)
+        self.assertEqual((res.status_code, res.json()['code']), (413, 'PAYLOAD_TOO_LARGE'))
 
     def test_create_invalid_json_400(self):
         for form in (
