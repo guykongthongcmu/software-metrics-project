@@ -1,5 +1,8 @@
+import json
 import logging
 import os
+import urllib.error
+import urllib.request
 import uuid
 from collections import namedtuple
 from pathlib import Path
@@ -8,9 +11,11 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-# Images live on local disk for now. A hosted bucket only has to replace save_image and delete_files.
+# Images go to a Supabase bucket when it is configured, else to local disk.
 BUCKET = 'local'
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
+REQUEST_TIMEOUT = 20
+CONTENT_TYPES = {'.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp'}
 
 StoredFile = namedtuple('StoredFile', 'bucket_name file_path public_url')
 
@@ -62,10 +67,35 @@ def check_image(upload):
     return extension
 
 
-def save_image(upload, folder):
-    """Write a checked upload under media_root()/folder and return where it went."""
-    extension = check_image(upload)
-    relative = f'{folder}/{uuid.uuid4().hex}{extension}'
+def use_supabase():
+    return bool(settings.SUPABASE_URL and settings.SUPABASE_SECRET_KEY and settings.SUPABASE_BUCKET)
+
+
+def supabase_request(path, method, body, content_type):
+    request = urllib.request.Request(
+        f"{settings.SUPABASE_URL.rstrip('/')}/storage/v1/object/{path}",
+        data=body, method=method,
+        headers={
+            'Authorization': f'Bearer {settings.SUPABASE_SECRET_KEY}',
+            'apikey': settings.SUPABASE_SECRET_KEY,
+            'Content-Type': content_type,
+        },
+    )
+    with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT):
+        pass
+
+
+def save_to_supabase(upload, relative, extension):
+    upload.seek(0)
+    try:
+        supabase_request(f'{settings.SUPABASE_BUCKET}/{relative}', 'POST', upload.read(), CONTENT_TYPES[extension])
+    except (urllib.error.URLError, OSError) as exc:
+        raise StorageError(str(exc)) from exc
+    public_url = f"{settings.SUPABASE_URL.rstrip('/')}/storage/v1/object/public/{settings.SUPABASE_BUCKET}/{relative}"
+    return StoredFile(settings.SUPABASE_BUCKET, relative, public_url)
+
+
+def save_to_disk(upload, relative):
     target = media_root() / relative
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -78,8 +108,29 @@ def save_image(upload, folder):
     return StoredFile(BUCKET, relative, f'{media_url()}{relative}')
 
 
+def save_image(upload, folder):
+    """Store a checked upload under folder and return where it went."""
+    extension = check_image(upload)
+    relative = f'{folder}/{uuid.uuid4().hex}{extension}'
+    if use_supabase():
+        return save_to_supabase(upload, relative, extension)
+    return save_to_disk(upload, relative)
+
+
+def delete_from_supabase(file_paths):
+    body = json.dumps({'prefixes': list(file_paths)}).encode()
+    try:
+        supabase_request(settings.SUPABASE_BUCKET, 'DELETE', body, 'application/json')
+    except (urllib.error.URLError, OSError):
+        logger.warning('could not remove %d stored files from the bucket', len(file_paths))
+
+
 def delete_files(file_paths):
     """Best effort clean up. Never raises, and never leaves the media folder."""
+    if use_supabase():
+        if file_paths:
+            delete_from_supabase(file_paths)
+        return
     root = media_root().resolve()
     for relative in file_paths:
         try:

@@ -1,9 +1,11 @@
+import json
 import tempfile
+import urllib.error
 from pathlib import Path
 from unittest import mock
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, override_settings
 
 from common import storage
 
@@ -101,3 +103,64 @@ class DeleteTests(StorageCase):
     def test_delete_error_is_swallowed(self):
         with mock.patch.object(Path, 'unlink', side_effect=OSError):
             storage.delete_files(['products/a.jpg'])
+
+
+BUCKET_SETTINGS = override_settings(
+    SUPABASE_URL='https://proj.supabase.co/', SUPABASE_SECRET_KEY='secret-key', SUPABASE_BUCKET='shop',
+)
+
+
+@BUCKET_SETTINGS
+class SupabaseTests(StorageCase):
+    def sent(self, urlopen):
+        return urlopen.call_args.args[0]
+
+    def test_save_posts_to_the_bucket_and_returns_public_url(self):
+        with mock.patch('common.storage.urllib.request.urlopen') as urlopen:
+            stored = storage.save_image(upload(PNG), 'products')
+        request = self.sent(urlopen)
+        self.assertEqual(request.get_method(), 'POST')
+        self.assertEqual(request.full_url, f'https://proj.supabase.co/storage/v1/object/shop/{stored.file_path}')
+        self.assertEqual(request.data, PNG)
+        self.assertEqual(request.get_header('Content-type'), 'image/png')
+        self.assertEqual(request.get_header('Authorization'), 'Bearer secret-key')
+        self.assertEqual(stored.bucket_name, 'shop')
+        self.assertEqual(
+            stored.public_url, f'https://proj.supabase.co/storage/v1/object/public/shop/{stored.file_path}',
+        )
+        self.assertEqual(list(Path(self.tmp.name).iterdir()), [])
+
+    def test_bad_file_is_rejected_before_any_request(self):
+        with mock.patch('common.storage.urllib.request.urlopen') as urlopen:
+            with self.assertRaises(storage.ImageRejected):
+                storage.save_image(upload(b'<?php ?>'), 'products')
+        urlopen.assert_not_called()
+
+    def test_failed_upload_is_a_storage_error(self):
+        for error in (urllib.error.URLError('down'), TimeoutError('slow')):
+            with mock.patch('common.storage.urllib.request.urlopen', side_effect=error):
+                with self.assertRaises(storage.StorageError):
+                    storage.save_image(upload(), 'products')
+
+    def test_delete_sends_one_request_with_every_path(self):
+        with mock.patch('common.storage.urllib.request.urlopen') as urlopen:
+            storage.delete_files(['products/a.jpg', 'products/b.png'])
+        request = self.sent(urlopen)
+        self.assertEqual(request.get_method(), 'DELETE')
+        self.assertEqual(request.full_url, 'https://proj.supabase.co/storage/v1/object/shop')
+        self.assertEqual(json.loads(request.data), {'prefixes': ['products/a.jpg', 'products/b.png']})
+
+    def test_delete_with_nothing_to_remove_sends_nothing(self):
+        with mock.patch('common.storage.urllib.request.urlopen') as urlopen:
+            storage.delete_files([])
+        urlopen.assert_not_called()
+
+    def test_delete_error_is_swallowed(self):
+        with mock.patch('common.storage.urllib.request.urlopen', side_effect=urllib.error.URLError('down')):
+            storage.delete_files(['products/a.jpg'])
+
+    def test_partial_settings_keep_local_disk(self):
+        with override_settings(SUPABASE_BUCKET=''), mock.patch('common.storage.urllib.request.urlopen') as urlopen:
+            stored = storage.save_image(upload(), 'products')
+        urlopen.assert_not_called()
+        self.assertEqual(stored.bucket_name, 'local')
