@@ -1,8 +1,22 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import AdminDashboardPage from '../../pages/admin/AdminDashboardPage.jsx'
+
+// The page reads today's date when the module loads, so the clock is fixed before the imports run.
+const fixedNow = vi.hoisted(() => {
+  const now = new Date(2026, 9, 14, 12)
+  vi.useFakeTimers({ toFake: ['Date'] })
+  vi.setSystemTime(now)
+  return now
+})
+
+const dayKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+const dayButton = (date) => date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+const daysFromNow = (offset) => new Date(fixedNow.getFullYear(), fixedNow.getMonth(), fixedNow.getDate() + offset)
+const firstOfMonth = new Date(fixedNow.getFullYear(), fixedNow.getMonth(), 1)
+const defaultRange = `${dayKey(daysFromNow(-7))} to ${dayKey(daysFromNow(0))}`
 
 vi.mock('../../lib/apiClient.js', () => ({ apiClient: { get: vi.fn() } }))
 
@@ -22,6 +36,7 @@ function renderDashboard() {
 }
 
 describe('AdminDashboardPage', () => {
+  afterAll(() => vi.useRealTimers())
   beforeEach(() => apiClient.get.mockReset())
   afterEach(cleanup)
 
@@ -93,13 +108,13 @@ describe('AdminDashboardPage', () => {
     apiClient.get.mockResolvedValue({ data: summary })
     renderDashboard()
     await screen.findByText('$1,250.5')
-    fireEvent.click(screen.getByRole('button', { name: '2026-10-07 to 2026-10-14' }))
+    fireEvent.click(screen.getByRole('button', { name: defaultRange }))
     expect(screen.getByLabelText('Select date range')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'October 1, 2026' }))
+    fireEvent.click(screen.getByRole('button', { name: dayButton(firstOfMonth) }))
     expect(apiClient.get).toHaveBeenCalledTimes(1)
-    fireEvent.click(screen.getByRole('button', { name: 'October 14, 2026' }))
-    await waitFor(() => expect(apiClient.get).toHaveBeenLastCalledWith('/admin/dashboard/summary?period=custom&from=2026-10-01&to=2026-10-14'))
-    expect(screen.getByRole('button', { name: '2026-10-01 to 2026-10-14' })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: dayButton(daysFromNow(0)) }))
+    await waitFor(() => expect(apiClient.get).toHaveBeenLastCalledWith(`/admin/dashboard/summary?period=custom&from=${dayKey(firstOfMonth)}&to=${dayKey(daysFromNow(0))}`))
+    expect(screen.getByRole('button', { name: `${dayKey(firstOfMonth)} to ${dayKey(daysFromNow(0))}` })).toBeTruthy()
     expect(screen.getByText('Oct 12')).toBeTruthy()
   })
 
@@ -107,10 +122,10 @@ describe('AdminDashboardPage', () => {
     apiClient.get.mockResolvedValue({ data: summary })
     renderDashboard()
     await screen.findByText('$1,250.5')
-    fireEvent.click(screen.getByRole('button', { name: '2026-10-07 to 2026-10-14' }))
-    fireEvent.click(screen.getByRole('button', { name: 'October 14, 2026' }))
-    fireEvent.click(screen.getByRole('button', { name: 'October 12, 2026' }))
-    await waitFor(() => expect(apiClient.get).toHaveBeenLastCalledWith('/admin/dashboard/summary?period=custom&from=2026-10-12&to=2026-10-14'))
+    fireEvent.click(screen.getByRole('button', { name: defaultRange }))
+    fireEvent.click(screen.getByRole('button', { name: dayButton(daysFromNow(0)) }))
+    fireEvent.click(screen.getByRole('button', { name: dayButton(daysFromNow(-2)) }))
+    await waitFor(() => expect(apiClient.get).toHaveBeenLastCalledWith(`/admin/dashboard/summary?period=custom&from=${dayKey(daysFromNow(-2))}&to=${dayKey(daysFromNow(0))}`))
     expect(screen.queryByLabelText('Select date range')).toBeNull()
   })
 
@@ -118,10 +133,10 @@ describe('AdminDashboardPage', () => {
     apiClient.get.mockResolvedValue({ data: summary })
     renderDashboard()
     await screen.findByText('$1,250.5')
-    fireEvent.click(screen.getByRole('button', { name: '2026-10-07 to 2026-10-14' }))
-    fireEvent.click(screen.getByRole('button', { name: 'October 1, 2026' }))
+    fireEvent.click(screen.getByRole('button', { name: defaultRange }))
+    fireEvent.click(screen.getByRole('button', { name: dayButton(firstOfMonth) }))
     expect(apiClient.get).toHaveBeenCalledTimes(1)
-    fireEvent.click(screen.getByRole('button', { name: '2026-10-01 to …' }))
+    fireEvent.click(screen.getByRole('button', { name: `${dayKey(firstOfMonth)} to …` }))
     expect(screen.queryByLabelText('Select date range')).toBeNull()
   })
 
@@ -129,7 +144,7 @@ describe('AdminDashboardPage', () => {
     apiClient.get.mockResolvedValue({ data: summary })
     const view = renderDashboard()
     await screen.findByText('$1,250.5')
-    fireEvent.click(screen.getByRole('button', { name: '2026-10-07 to 2026-10-14' }))
+    fireEvent.click(screen.getByRole('button', { name: defaultRange }))
     const picker = view.container.querySelector('.admin-dashboard-range-wrap')
     fireEvent.blur(picker, { relatedTarget: screen.getByRole('button', { name: 'Previous month' }) })
     expect(screen.getByLabelText('Select date range')).toBeTruthy()
