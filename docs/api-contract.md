@@ -59,6 +59,7 @@ These can be returned by any endpoint and are not repeated in the tables unless 
 | 403 | `CORS_ORIGIN_NOT_ALLOWED` | `Origin` header is not on the allowlist |
 | 404 | `NOT_FOUND` | Unknown route |
 | 405 | `METHOD_NOT_ALLOWED` | Route exists, method does not |
+| 413 | `PAYLOAD_TOO_LARGE` | Request body over 2.5 MB (Django `DATA_UPLOAD_MAX_MEMORY_SIZE`). Uploaded image files are not counted here, they have their own 5 MB limit with `FILE_TOO_LARGE` |
 | 415 | `UNSUPPORTED_MEDIA_TYPE` | Body type not accepted by the endpoint |
 | 500 | `INTERNAL_SERVER_ERROR` | Unhandled error. No stack trace or internal detail in the body |
 
