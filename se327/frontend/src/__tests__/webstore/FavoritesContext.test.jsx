@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import { FavoritesProvider, useFavorites } from '../../pages/webstore/partials/FavoritesContext.jsx'
 
@@ -20,6 +20,10 @@ function FavoritesProbe() {
       <button onClick={() => { void toggleFavorite('invalid') }} type="button">Toggle invalid</button>
     </div>
   )
+}
+
+function CurrentPath() {
+  return <output aria-label="Current path">{useLocation().pathname}</output>
 }
 
 function renderFavorites() {
@@ -72,6 +76,14 @@ describe('FavoritesProvider', () => {
     expect(screen.getByLabelText('Favorite ids').textContent).toBe('')
   })
 
+  it('uses an empty list when the API response has no products array', async () => {
+    apiClient.get.mockResolvedValueOnce({ data: { products: null } })
+    renderFavorites()
+
+    expect((await screen.findByLabelText('Favorites loaded')).textContent).toBe('true')
+    expect(screen.getByLabelText('Favorite ids').textContent).toBe('')
+  })
+
   it('refreshes from header events and applies valid favorite updates', async () => {
     renderFavorites()
     await screen.findByLabelText('Favorites loaded')
@@ -84,14 +96,48 @@ describe('FavoritesProvider', () => {
     await waitFor(() => expect(screen.getByLabelText('Favorite ids').textContent).toBe('8'))
     window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: { productId: 'invalid', isFavorite: true } }))
     expect(screen.getByLabelText('Favorite ids').textContent).toBe('8')
-    window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: {} }))
+    window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: { productId: 7 } }))
     await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(3))
+    window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: null }))
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(4))
+    window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: {} }))
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(5))
+  })
+
+  it('ignores an initial favorites response that arrives after unmount', async () => {
+    let resolveFavorites
+    apiClient.get.mockReturnValueOnce(new Promise((resolve) => { resolveFavorites = resolve }))
+    const view = renderFavorites()
+    view.unmount()
+    resolveFavorites({ data: { products: [{ productId: 7 }] } })
+    await Promise.resolve()
+    expect(apiClient.get).toHaveBeenCalledTimes(1)
+  })
+
+  it('ignores an initial favorites failure after unmount', async () => {
+    let rejectFavorites
+    apiClient.get.mockReturnValueOnce(new Promise((_resolve, reject) => { rejectFavorites = reject }))
+    const view = renderFavorites()
+    view.unmount()
+    rejectFavorites(new Error('late failure'))
+    await Promise.resolve()
+    expect(apiClient.get).toHaveBeenCalledTimes(1)
   })
 
   it('clears favorite ids when a header refresh fails', async () => {
     renderFavorites()
     await screen.findByLabelText('Favorites loaded')
     apiClient.get.mockRejectedValueOnce(new Error('offline'))
+    window.dispatchEvent(new Event('storefront:refresh-header'))
+
+    await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(screen.getByLabelText('Favorite ids').textContent).toBe(''))
+  })
+
+  it('clears favorite ids when a header refresh has no products array', async () => {
+    renderFavorites()
+    await screen.findByLabelText('Favorites loaded')
+    apiClient.get.mockResolvedValueOnce({ data: { products: null } })
     window.dispatchEvent(new Event('storefront:refresh-header'))
 
     await waitFor(() => expect(apiClient.get).toHaveBeenCalledTimes(2))
@@ -117,6 +163,7 @@ describe('FavoritesProvider', () => {
     apiClient.post.mockRejectedValueOnce(Object.assign(new Error('Unauthorized'), { status: 401 }))
     render(
       <MemoryRouter initialEntries={['/favorites']}>
+        <CurrentPath />
         <Routes>
           <Route path="/favorites" element={<FavoritesProvider><FavoritesProbe /></FavoritesProvider>} />
           <Route path="/login" element={<p>Login page</p>} />
@@ -127,6 +174,25 @@ describe('FavoritesProvider', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Toggle seven' }))
 
     expect(await screen.findByText('Login page')).toBeTruthy()
+  })
+
+  it('does not redirect for favorite errors that are not unauthorized', async () => {
+    apiClient.post.mockRejectedValueOnce(Object.assign(new Error('Unavailable'), { status: 503 }))
+    render(
+      <MemoryRouter initialEntries={['/favorites']}>
+        <CurrentPath />
+        <Routes>
+          <Route path="/favorites" element={<FavoritesProvider><FavoritesProbe /></FavoritesProvider>} />
+          <Route path="/login" element={<p>Login page</p>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    await screen.findByLabelText('Favorites loaded')
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle seven' }))
+
+    await waitFor(() => expect(screen.getByLabelText('Current path').textContent).toBe('/favorites'))
+    expect(screen.queryByText('Login page')).toBeNull()
+    expect(screen.getByLabelText('Favorite ids').textContent).toBe('8')
   })
 
   it('requires the provider', () => {
