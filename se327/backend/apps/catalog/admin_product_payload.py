@@ -243,6 +243,61 @@ UPDATE_KEYS = (
 )
 
 
+def update_name(body, data, errors):
+    if 'name' in body:
+        data['name'] = clean_text(body['name'], 150)
+        if data['name'] is None:
+            errors['name'] = 'name is required, up to 150 characters'
+
+
+def update_description(body, data, errors):
+    if 'description' in body:
+        text = body['description']
+        data['description'] = None if text is None else clean_text(text, 10_000, required=False)
+        if text is not None and data['description'] is None:
+            errors['description'] = 'description must be text or null'
+        elif data['description'] == '':
+            data['description'] = None
+
+
+def update_category(body, data, errors):
+    for key in ('category_id', 'categoryId'):
+        if key in body:
+            data['categoryId'] = parse_int(body[key], 1, ID_MAX - 1)
+            if data['categoryId'] is None:
+                errors[key] = 'category_id must be a positive integer'
+
+
+def update_price(body, data, errors):
+    if 'price' in body:
+        data['price'] = parse_money(body['price'])
+        if data['price'] is None or data['price'] <= 0:
+            errors['price'] = 'price must be a number above 0 with at most 2 decimals'
+
+
+def update_compare_at_price(body, data, errors):
+    for key in ('compare_at_price', 'compareAtPrice'):
+        if key in body:
+            compare = body[key]
+            data['compareAtPrice'] = None if compare is None else parse_money(compare)
+            if compare is not None and data['compareAtPrice'] is None:
+                errors[key] = 'compare_at_price must be a number or null'
+
+
+def update_stock(body, data, errors):
+    if 'stock' in body:
+        data['stock'] = parse_int(body['stock'], 0, INT_MAX)
+        if data['stock'] is None:
+            errors['stock'] = 'stock must be an integer of 0 or more'
+
+
+def update_sku(body, data, errors):
+    if body.get('sku') is not None:
+        data['sku'] = clean_text(body['sku'], 100)
+        if data['sku'] is None:
+            errors['sku'] = 'sku must be text up to 100 characters'
+
+
 def parse_update(body):
     """Validate the subset of fields sent on update."""
     if not isinstance(body, dict):
@@ -252,43 +307,16 @@ def parse_update(body):
     if not present:
         raise validation_error({'body': 'send at least one field to change'})
     data = {}
-    if 'name' in body:
-        data['name'] = clean_text(body['name'], 150)
-        if data['name'] is None:
-            errors['name'] = 'name is required, up to 150 characters'
-    if 'description' in body:
-        text = body['description']
-        data['description'] = None if text is None else clean_text(text, 10_000, required=False)
-        if text is not None and data['description'] is None:
-            errors['description'] = 'description must be text or null'
-        elif data['description'] == '':
-            data['description'] = None
+    update_name(body, data, errors)
+    update_description(body, data, errors)
     active = parse_active(body, errors)
     if active is not None:
         data['isActive'] = active
-    for key in ('category_id', 'categoryId'):
-        if key in body:
-            data['categoryId'] = parse_int(body[key], 1, ID_MAX - 1)
-            if data['categoryId'] is None:
-                errors[key] = 'category_id must be a positive integer'
-    if 'price' in body:
-        data['price'] = parse_money(body['price'])
-        if data['price'] is None or data['price'] <= 0:
-            errors['price'] = 'price must be a number above 0 with at most 2 decimals'
-    for key in ('compare_at_price', 'compareAtPrice'):
-        if key in body:
-            compare = body[key]
-            data['compareAtPrice'] = None if compare is None else parse_money(compare)
-            if compare is not None and data['compareAtPrice'] is None:
-                errors[key] = 'compare_at_price must be a number or null'
-    if 'stock' in body:
-        data['stock'] = parse_int(body['stock'], 0, INT_MAX)
-        if data['stock'] is None:
-            errors['stock'] = 'stock must be an integer of 0 or more'
-    if body.get('sku') is not None:
-        data['sku'] = clean_text(body['sku'], 100)
-        if data['sku'] is None:
-            errors['sku'] = 'sku must be text up to 100 characters'
+    update_category(body, data, errors)
+    update_price(body, data, errors)
+    update_compare_at_price(body, data, errors)
+    update_stock(body, data, errors)
+    update_sku(body, data, errors)
     if errors:
         raise validation_error(errors)
     return data
