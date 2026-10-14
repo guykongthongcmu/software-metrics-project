@@ -23,19 +23,19 @@
 .admin-calendar-day.is-range-start::before { right: 0; }
 .admin-calendar-day.is-range-end::before { left: 0; }
 .admin-calendar-day.is-selected:disabled { color: #fff; }
-.admin-feature-error { margin: 0 0 16px; padding: 10px 14px; border: 1px solid rgba(231,76,60,.22); border-radius: 8px; background: rgba(231,76,60,.08); color: #a93226; font-size: 13px; }
+.admin-feature-error { margin: 0 0 16px; padding: 10px 14px; border: 1px solid rgba(231,76,60,.22); border-radius: 8px; background: #faedea; color: #a93226; font-size: 13px; }
 .admin-dashboard-kpis { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px; margin-bottom: 20px; }
 .admin-dashboard-kpi, .admin-feature-card, .admin-dashboard-viewers { position: relative; border: 1px solid rgba(255,255,255,.5); border-radius: 16px; background: rgba(255,255,255,.65); box-shadow: 0 8px 32px rgba(0,0,0,.08); backdrop-filter: blur(12px); }
 .admin-dashboard-kpi { display: flex; min-height: 168px; flex-direction: column; overflow: hidden; padding: 20px; transition: all .3s ease; }
 .admin-dashboard-kpi:hover, .admin-dashboard-viewers:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.12); }
 .admin-kpi-icon { display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; margin-bottom: 16px; border-radius: 12px; background: #f4f5f7; font-size: 20px; }
 .admin-kpi-icon svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.4; }
-.admin-kpi-icon.golden { background: rgba(200,167,125,.15); color: #80603a; }
-.admin-kpi-icon.blue { background: rgba(52,152,219,.1); color: #17618c; }
-.admin-kpi-icon.green { background: rgba(76,175,80,.08); color: #287a37; }
-.admin-kpi-icon.purple { background: rgba(155,89,182,.1); color: #70418a; }
+.admin-kpi-icon.golden { background: #f4eee6; color: #80603a; }
+.admin-kpi-icon.blue { background: #e8f1f6; color: #17618c; }
+.admin-kpi-icon.green { background: #eef5eb; color: #287a37; }
+.admin-kpi-icon.purple { background: #f2ebf2; color: #70418a; }
 .admin-stat-growth { position: absolute; top: 20px; right: 20px; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 500; }
-.admin-stat-growth.positive { background: rgba(76,175,80,.08); color: #287a37; }
+.admin-stat-growth.positive { background: #eef5eb; color: #287a37; }
 .admin-kpi-label { margin-bottom: 4px; color: #71685d; font-size: 13px; font-weight: 500; }
 .admin-kpi-value { color: #1a1a2e; font: 600 24px/normal 'DM Serif Display',Georgia,serif; font-synthesis: weight; }
 .admin-dashboard-grid { display: grid; grid-template-columns: minmax(0,2fr) minmax(270px,1fr); gap: 20px; }
@@ -73,18 +73,18 @@
 .admin-dashboard-empty { margin: 0; padding: 30px 12px; color: #71685d; font-size: 13px; text-align: center; }
 .admin-sellers-card { min-height: 220px; }
 .admin-sellers-card .admin-dashboard-card-header { margin-bottom: 12px; }
-.admin-feature-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid rgba(200,167,125,.2); border-radius: 6px; background: rgba(200,167,125,.1); color: #80603a; font-size: 12px; text-decoration: none; transition: all .2s ease; }
+.admin-feature-link { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid rgba(200,167,125,.2); border-radius: 6px; background: #f7f3ed; color: #80603a; font-size: 12px; text-decoration: none; transition: all .2s ease; }
 .admin-feature-link:hover { transform: translateX(2px); background: rgba(200,167,125,.2); }
 .admin-top-seller { display: grid; grid-template-columns: 40px minmax(0,1fr) 120px 100px 80px; grid-template-areas: 'rank name category likes sales'; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid rgba(215,205,190,.1); color: inherit; text-decoration: none; transition: background .2s ease; }
 .admin-top-seller:hover { background: rgba(255,255,255,.45); }
 .admin-top-seller:last-child { border-bottom: 0; }
 .admin-top-seller b { grid-area: rank; color: #80603a; font-size: 18px; }
 .admin-top-seller strong { grid-area: name; min-width: 0; overflow: hidden; font-size: 14px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
-.admin-top-seller small { grid-area: category; padding: 2px 8px; border-radius: 4px; background: rgba(143,130,114,.1); color: #71685d; font-size: 12px; text-align: center; }
+.admin-top-seller small { grid-area: category; padding: 2px 8px; border-radius: 4px; background: #f1efec; color: #71685d; font-size: 12px; text-align: center; }
 .admin-seller-likes { grid-area: likes; display: flex; align-items: center; gap: 4px; color: #b42318; font-size: 14px; }
 .admin-seller-sales { grid-area: sales; color: #71685d; font-size: 14px; text-align: right; }
 .admin-dashboard-viewers { display: flex; min-height: 220px; grid-column: 2; grid-row: 2; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; text-align: center; transition: all .3s ease; }
-.admin-dashboard-viewers > span { display: grid; width: 64px; height: 64px; place-items: center; margin-bottom: 20px; border-radius: 12px; background: rgba(52,152,219,.1); color: #17618c; font-size: 28px; }
+.admin-dashboard-viewers > span { display: grid; width: 64px; height: 64px; place-items: center; margin-bottom: 20px; border-radius: 12px; background: #e8f1f6; color: #17618c; font-size: 28px; }
 .admin-dashboard-viewers > span svg { width: 28px; height: 28px; fill: currentColor; }
 .admin-dashboard-viewers .admin-kpi-label { font-size: 16px; }
 .admin-dashboard-viewers .admin-kpi-value { font-size: 36px; }

@@ -22,7 +22,7 @@
 .admin-category-table .is-actions { text-align: right; }
 .admin-category-table .admin-category-name { color: var(--admin-text); font-weight: 600; }
 .admin-category-table code { color: var(--admin-muted); font: 400 .85rem/1.4 Inter,monospace; }
-.admin-category-state { height: 272px; padding: 60px 24px !important; color: var(--admin-muted) !important; text-align: center !important; }
+.admin-category-table td.admin-category-state { height: 272px; padding: 60px 24px; color: var(--admin-muted); text-align: center; }
 .admin-category-spinner { display: inline-block; width: 16px; height: 16px; margin-right: 10px; vertical-align: -3px; border: 2px solid #c8a77d; border-right-color: transparent; border-radius: 50%; animation: admin-category-spin .75s linear infinite; }
 @keyframes admin-category-spin { to { transform: rotate(360deg); } }
 .admin-category-visibility { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
