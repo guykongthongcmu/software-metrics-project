@@ -1,3 +1,4 @@
+import http.client
 import json
 import tempfile
 import urllib.error
@@ -149,6 +150,13 @@ class SupabaseTests(StorageCase):
         self.assertEqual(request.get_method(), 'DELETE')
         self.assertEqual(request.full_url, 'https://proj.supabase.co/storage/v1/object/shop')
         self.assertEqual(json.loads(request.data), {'prefixes': ['products/a.jpg', 'products/b.png']})
+
+    def test_odd_failures_are_still_handled(self):
+        for error in (ValueError('unknown url type'), http.client.IncompleteRead(b'')):
+            with mock.patch('common.storage.urllib.request.urlopen', side_effect=error):
+                with self.assertRaises(storage.StorageError):
+                    storage.save_image(upload(), 'products')
+                storage.delete_files(['products/a.jpg'])
 
     def test_delete_with_nothing_to_remove_sends_nothing(self):
         with mock.patch('common.storage.urllib.request.urlopen') as urlopen:

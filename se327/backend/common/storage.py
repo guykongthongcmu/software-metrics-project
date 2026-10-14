@@ -1,7 +1,7 @@
+import http.client
 import json
 import logging
 import os
-import urllib.error
 import urllib.request
 import uuid
 from collections import namedtuple
@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 BUCKET = 'local'
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 REQUEST_TIMEOUT = 20
+REQUEST_ERRORS = (OSError, ValueError, http.client.HTTPException)
 CONTENT_TYPES = {'.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp'}
 
 StoredFile = namedtuple('StoredFile', 'bucket_name file_path public_url')
@@ -89,7 +90,7 @@ def save_to_supabase(upload, relative, extension):
     upload.seek(0)
     try:
         supabase_request(f'{settings.SUPABASE_BUCKET}/{relative}', 'POST', upload.read(), CONTENT_TYPES[extension])
-    except (urllib.error.URLError, OSError) as exc:
+    except REQUEST_ERRORS as exc:
         raise StorageError(str(exc)) from exc
     public_url = f"{settings.SUPABASE_URL.rstrip('/')}/storage/v1/object/public/{settings.SUPABASE_BUCKET}/{relative}"
     return StoredFile(settings.SUPABASE_BUCKET, relative, public_url)
@@ -121,7 +122,7 @@ def delete_from_supabase(file_paths):
     body = json.dumps({'prefixes': list(file_paths)}).encode()
     try:
         supabase_request(settings.SUPABASE_BUCKET, 'DELETE', body, 'application/json')
-    except (urllib.error.URLError, OSError):
+    except REQUEST_ERRORS:
         logger.warning('could not remove %d stored files from the bucket', len(file_paths))
 
 
