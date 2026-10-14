@@ -88,7 +88,7 @@ DEFAULT_FROM_EMAIL = os.environ.get('MAIL_FROM', EMAIL_HOST_USER)
 # Object storage (Supabase)
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
 SUPABASE_SECRET_KEY = os.environ.get('SUPABASE_SECRET_KEY', '')
-SUPABASE_BUCKET = os.environ.get('SUPABASE_BUCKET', '')
+SUPABASE_BUCKET = os.environ.get('SUPABASE_PRODUCT_BUCKET') or os.environ.get('SUPABASE_BUCKET', '')
 
 USE_TZ = True
 TIME_ZONE = 'Asia/Bangkok'
