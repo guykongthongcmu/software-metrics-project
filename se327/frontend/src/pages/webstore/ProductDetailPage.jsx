@@ -288,7 +288,11 @@ export default function ProductDetailPage() {
         : await apiClient.post(`/client/favorites/${product.productId}?lang=EN`, {}, { redirectOn401: false })
       const nextFavorite = Boolean(response?.data?.isFavorite)
       setFavorite(nextFavorite)
-      window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: { count: response?.data?.favoritesCount } }))
+      window.dispatchEvent(new CustomEvent('storefront:favorites-updated', { detail: {
+        count: response?.data?.favoritesCount,
+        productId: product.productId,
+        isFavorite: nextFavorite,
+      } }))
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
       else setCartMessage('Could not update favorites. Please try again.')

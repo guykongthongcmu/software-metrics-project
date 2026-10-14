@@ -18,8 +18,9 @@ import { getColorSwatch, isLightColor, normalizeColorName } from './colorSwatche
 
 /** @param {{product: ProductCardProduct, compact?: boolean, catalogStyle?: boolean, showColors?: boolean}} props */
 export default function ProductCard({ product, compact = false, catalogStyle = false, showColors = false }) {
-  const { favoriteIds, toggleFavorite } = useFavorites()
+  const { favoriteIds, busyIds, loaded, toggleFavorite } = useFavorites()
   const currentFavorite = favoriteIds.has(Number(product.productId))
+  const favoriteBusy = busyIds.has(Number(product.productId))
   const discount = typeof product.discount === 'object' ? product.discount?.value : product.discount
   const hasSale = catalogStyle ? product.originalPrice != null : Boolean(discount)
   const colors = product.color || product.colors || []
@@ -43,14 +44,14 @@ export default function ProductCard({ product, compact = false, catalogStyle = f
   function onToggleFavorite(event) {
     event.preventDefault()
     event.stopPropagation()
-    toggleFavorite(product.productId)
+    void toggleFavorite(product.productId)
   }
 
   return (
     <Link to={`/products/${product.productId}`} className="group block text-inherit">
       <div className={`relative overflow-hidden bg-white ${imageStyle}`}>
         <img className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" src={product.image} alt={product.name} />
-        <button type="button" aria-label={currentFavorite ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={currentFavorite} onClick={onToggleFavorite} className="absolute right-[15px] top-[15px] z-10 grid h-6 w-6 place-items-center text-[#666]">
+        <button type="button" aria-label={currentFavorite ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={currentFavorite} disabled={!loaded || favoriteBusy} onClick={onToggleFavorite} className="absolute right-[15px] top-[15px] z-10 grid h-6 w-6 place-items-center text-[#666] disabled:cursor-wait disabled:opacity-60">
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="1.5" fill={currentFavorite ? 'currentColor' : 'none'} aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>
         </button>
         {!product.inStock ? <span className="absolute left-[15px] top-[15px] z-10 bg-[#555] px-2 py-1 text-xs font-semibold text-white">Out of Stock</span> : hasSale ? <span className={`absolute left-2 top-2 z-10 rounded-[0.375rem] px-[0.65em] py-[0.35em] text-[0.75em] font-bold leading-none ${catalogStyle ? 'bg-[#dc3545] text-white' : 'bg-white text-black'}`}>{catalogStyle ? 'SALE' : `-${discount}%`}</span> : null}

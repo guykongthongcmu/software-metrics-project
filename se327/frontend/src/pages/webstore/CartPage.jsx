@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { ApiError, apiClient } from '../../lib/apiClient.js'
 import ProductCard from './partials/ProductCard.jsx'
 import { getColorSwatch, isLightColor } from './partials/colorSwatches.js'
+import { useFavorites } from './partials/FavoritesContext.jsx'
 
 function money(value) {
   const amount = Number(value)
@@ -13,7 +14,7 @@ function getErrorMessage(error, fallback) {
   return error instanceof ApiError ? error.message : fallback
 }
 
-function CartItem({ item, busy, onQuantityChange, onRemove }) {
+function CartItem({ item, busy, favorite, favoriteBusy, favoritesLoaded, onToggleFavorite, onQuantityChange, onRemove }) {
   const quantity = Number(item.quantityCartItem) || 1
   return (
     <article className="flex gap-4 border-b border-[#e0dbd2] py-4 first:border-t max-[575px]:gap-3">
@@ -32,14 +33,19 @@ function CartItem({ item, busy, onQuantityChange, onRemove }) {
           <button aria-label={`Increase ${item.name} quantity`} className="h-full w-7 text-[#2a2520] hover:bg-[#edeae3] disabled:opacity-40" disabled={busy || quantity >= 10} onClick={() => { void onQuantityChange(item, quantity + 1) }} type="button">+</button>
         </div>
       </div>
-      <div className="flex shrink-0 flex-col items-end justify-between">
+      <div className="flex w-[72px] shrink-0 items-start gap-2 pt-1 max-[575px]:w-16 max-[575px]:gap-0">
+        <button aria-label={favorite ? `Remove ${item.name} from favorites` : `Add ${item.name} to favorites`} aria-pressed={favorite} className={`grid h-8 w-8 place-items-center text-[#999] transition-colors hover:text-[#2a2520] disabled:cursor-wait disabled:opacity-40 ${favorite ? 'text-[#D34B4B]' : ''}`} disabled={!favoritesLoaded || favoriteBusy} onClick={() => { void onToggleFavorite(item.productId) }} type="button">
+          <svg aria-hidden="true" className="h-[18px] w-[18px]" fill={favorite ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24"><path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0Z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg>
+        </button>
+        <button aria-label={`Remove ${item.name} from cart`} className="grid h-8 w-8 place-items-center text-[#999] transition-colors hover:text-[#c0392b] disabled:opacity-40" disabled={busy} onClick={() => { void onRemove(item) }} type="button">
+          <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7 18 20a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7m4 4v7m6-7v7M4 7h16m-5 0V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg>
+        </button>
+      </div>
+      <div className="flex w-[110px] shrink-0 flex-col items-end max-[575px]:w-20">
         <div className="text-right">
           {Number(item.originalPrice) > Number(item.price) && <span className="block text-[0.72rem] text-[#999] line-through">{money(item.originalPrice)}</span>}
           <span className="text-[0.88rem] font-medium text-[#2a2520]">{money(Number(item.price) * quantity)}</span>
         </div>
-        <button aria-label={`Remove ${item.name} from cart`} className="grid h-8 w-8 place-items-center text-[#999] transition-colors hover:text-[#c0392b] disabled:opacity-40" disabled={busy} onClick={() => { void onRemove(item) }} type="button">
-          <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7 18 20a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7m4 4v7m6-7v7M4 7h16m-5 0V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" /></svg>
-        </button>
       </div>
     </article>
   )
@@ -47,6 +53,7 @@ function CartItem({ item, busy, onQuantityChange, onRemove }) {
 
 export default function CartPage() {
   const navigate = useNavigate()
+  const { favoriteIds, busyIds: favoriteBusyIds, loaded: favoritesLoaded, toggleFavorite } = useFavorites()
   const [items, setItems] = useState([])
   const [subtotal, setSubtotal] = useState(0)
   const [recommendations, setRecommendations] = useState([])
@@ -131,7 +138,7 @@ export default function CartPage() {
         {error && <p className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{error}</p>}
         {loading && <output className="block py-8 text-sm text-[#777]">Loading cart…</output>}
         {!loading && items.length === 0 && <p className="py-4 text-[0.82rem] text-[#999]">Your cart is now empty, save the items in your cart now!</p>}
-        {!loading && items.length > 0 && <section aria-label="Cart items">{items.map((item) => <CartItem busy={busyItemId === item.itemId} item={item} key={item.itemId} onQuantityChange={changeQuantity} onRemove={removeItem} />)}</section>}
+        {!loading && items.length > 0 && <section aria-label="Cart items">{items.map((item) => <CartItem busy={busyItemId === item.itemId} favorite={favoriteIds.has(Number(item.productId))} favoriteBusy={favoriteBusyIds.has(Number(item.productId))} favoritesLoaded={favoritesLoaded} item={item} key={item.itemId} onToggleFavorite={toggleFavorite} onQuantityChange={changeQuantity} onRemove={removeItem} />)}</section>}
         {!loading && <section aria-label="Cart summary" className="pt-2">
           <div className="mt-2 flex items-baseline justify-between border-t border-[#e0dbd2] py-4">
             <span className="text-[0.72rem] uppercase tracking-[0.12em] text-[#999]">Total</span>
