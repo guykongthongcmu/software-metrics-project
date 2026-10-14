@@ -28,6 +28,7 @@ import FavoritesPage from './pages/webstore/FavoritesPage.jsx'
 import AdminOrdersPage from './pages/admin/AdminOrdersPage.jsx'
 import AdminOrderDetailPage from './pages/admin/AdminOrderDetailPage.jsx'
 import AdminCampaignBuilderPage from './pages/admin/AdminCampaignBuilderPage.jsx'
+import AdminCategoriesPage from './pages/admin/AdminCategoriesPage.jsx'
 
 function getAccountPage(route) {
   switch (route.path) {
@@ -94,6 +95,7 @@ export default function App() {
 <Route path="/admin/orders" element={<AdminOrdersPage />} />
 <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
 <Route path="/admin/campaigns/builder" element={<AdminCampaignBuilderPage />} />
+<Route path="/admin/categories" element={<AdminCategoriesPage />} />
 
 {adminRoutes
   .filter((route) =>
@@ -103,6 +105,7 @@ export default function App() {
       '/admin/orders',
       '/admin/orders/:id',
       '/admin/campaigns/builder',
+      '/admin/categories',
     ].includes(route.path)
   )
   .map((route) => (
