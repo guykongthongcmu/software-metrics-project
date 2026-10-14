@@ -19,10 +19,13 @@ describe('loginPath', () => {
     expect(loginPath()).toBe('/login?next=%2Fproducts%2F14%3Fcolor%3DBeige')
   })
 
-  it('stays plain on the home page and the login page', () => {
+  it('stays plain on the home page', () => {
     vi.stubGlobal('window', { location: { pathname: '/', search: '' } })
     expect(loginPath()).toBe('/login')
-    vi.stubGlobal('window', { location: { pathname: '/login', search: '' } })
-    expect(loginPath()).toBe('/login')
+  })
+
+  it('keeps the next value when the login page is already open', () => {
+    vi.stubGlobal('window', { location: { pathname: '/login', search: '?next=%2Fcheckout' } })
+    expect(loginPath()).toBe('/login?next=%2Fcheckout')
   })
 })
