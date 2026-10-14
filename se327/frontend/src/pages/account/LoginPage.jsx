@@ -4,6 +4,7 @@ import { apiClient } from '../../lib/apiClient.js'
 
 function getSignInError(error) {
   switch (error?.code || error?.payload?.code) {
+    case 'EMAIL_NOT_VERIFIED': return 'Please verify your email address before signing in.'
     case 'INVALID_CREDENTIALS': return 'Invalid email or password.'
     case 'MISSING_REQUIRED_FIELDS': return 'Please fill in all required fields.'
     case 'INVALID_EMAIL_FORMAT': return 'Please enter a valid email address.'
@@ -18,11 +19,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
+  const [showResendVerification, setShowResendVerification] = useState(false)
+  const [resendStatus, setResendStatus] = useState('')
+  const [isResending, setIsResending] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(event) {
     event.preventDefault()
     setError('')
+    setShowResendVerification(false)
+    setResendStatus('')
     setIsSubmitting(true)
     try {
       const result = await apiClient.post('/auth/user/signin', { email, password })
@@ -31,8 +37,22 @@ export default function LoginPage() {
       void navigate(typeof redirectTo === 'string' && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/')
     } catch (requestError) {
       setError(getSignInError(requestError))
+      setShowResendVerification((requestError?.code || requestError?.payload?.code) === 'EMAIL_NOT_VERIFIED')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  async function resendVerification() {
+    setIsResending(true)
+    setResendStatus('')
+    try {
+      const result = await apiClient.post('/auth/resend-verification', { email })
+      setResendStatus(result?.message || 'Verification email sent. Please check your inbox.')
+    } catch (requestError) {
+      setResendStatus(requestError?.message || 'Could not resend the verification email. Please try again.')
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -44,7 +64,7 @@ export default function LoginPage() {
           <p className="text-[0.85rem] tracking-[0.5px] text-[#555]">Welcome back to your premium account</p>
         </header>
 
-        {error && <p className="mb-6 rounded border border-[#ffcccc] bg-[#fff0f0] px-4 py-3 text-center text-[0.85rem] text-[#c00]" role="alert">{error}</p>}
+        {error && <div className="mb-6 rounded border border-[#ffcccc] bg-[#fff0f0] px-4 py-3 text-center text-[0.85rem] text-[#c00]" role="alert"><p>{error}</p>{showResendVerification && <button className="mt-2 underline" disabled={isResending} onClick={() => { void resendVerification() }} type="button">{isResending ? 'Sending…' : 'Resend verification email'}</button>}{resendStatus && <p className="mt-2" role="status">{resendStatus}</p>}</div>}
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           <div>
             <label className="mb-2 block text-[0.75rem] font-semibold tracking-[0.5px] text-[#97836d]" htmlFor="login-email">EMAIL *</label>

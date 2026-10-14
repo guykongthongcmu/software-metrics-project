@@ -44,6 +44,14 @@ function getErrorText(error, fallback) {
   return error instanceof ApiError ? error.message : fallback
 }
 
+const shippingAddressRequiredMessage = 'Please save a default shipping address to your account before placing your order.'
+
+function getCheckoutErrorText(error) {
+  const code = error?.code || error?.payload?.code
+  if (code === 'CHECKOUT_ADDRESS_REQUIRED') return shippingAddressRequiredMessage
+  return getErrorText(error, 'Could not connect to server')
+}
+
 function getAutoComplete(name) {
   if (name === 'firstName') return 'given-name'
   if (name === 'lastName') return 'family-name'
@@ -101,6 +109,7 @@ export default function CheckoutPage() {
   const [form, setForm] = useState(emptyAddress)
   const [items, setItems] = useState([])
   const [subtotal, setSubtotal] = useState(0)
+  const [hasSavedAddress, setHasSavedAddress] = useState(false)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [status, setStatus] = useState('')
@@ -126,7 +135,9 @@ export default function CheckoutPage() {
       }
 
       if (addressResult.status === 'fulfilled') {
-        setForm(addressFormValue(addressResult.value?.data?.address))
+        const savedAddress = addressResult.value?.data?.address
+        setHasSavedAddress(Boolean(savedAddress))
+        setForm(addressFormValue(savedAddress))
       } else if (addressResult.reason instanceof ApiError && addressResult.reason.status === 401) {
         void navigate('/login')
       }
@@ -158,6 +169,10 @@ export default function CheckoutPage() {
       setStatus('Your cart is empty')
       return
     }
+    if (!hasSavedAddress) {
+      setStatus(shippingAddressRequiredMessage)
+      return
+    }
     setStatus('')
     setFieldErrors({})
     setProcessing(true)
@@ -181,7 +196,7 @@ export default function CheckoutPage() {
       if (requestError instanceof ApiError && requestError.status === 401) {
         void navigate('/login')
       } else {
-        setStatus(getErrorText(requestError, 'Could not connect to server'))
+        setStatus(getCheckoutErrorText(requestError))
         setFieldErrors(getAddressErrors(requestError))
       }
     } finally {
