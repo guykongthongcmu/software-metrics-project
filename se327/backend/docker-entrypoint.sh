@@ -27,7 +27,17 @@ PY
 python manage.py migrate --noinput
 
 case "$(echo "${SEED_DEMO:-false}" | tr 'A-Z' 'a-z')" in
-  1|true|yes|on) python manage.py seed_demo ;;
+  1|true|yes|on)
+    # only seed an empty catalogue so restarts do not overwrite admin edits
+    if python manage.py shell -c "from apps.catalog.models import Product; raise SystemExit(1 if Product.objects.exists() else 0)"; then
+      python manage.py seed_demo
+    else
+      echo 'catalogue already has products, skipping seed_demo'
+    fi
+    ;;
+  *)
+    echo 'SEED_DEMO is off, skipping seed_demo'
+    ;;
 esac
 
 exec "$@"
