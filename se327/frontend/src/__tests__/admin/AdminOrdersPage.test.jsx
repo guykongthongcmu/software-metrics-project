@@ -59,6 +59,12 @@ describe('Admin order management pages', () => {
     expect(screen.getByText('Showing 0 total items')).toBeTruthy()
   })
 
+  it('shows a fallback message when the orders request fails without an error message', async () => {
+    apiClient.get.mockRejectedValue({})
+    renderOrders()
+    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Failed to load orders')
+  })
+
   it('confirms and deletes an order, while cancellation leaves it in place', async () => {
     apiClient.get.mockImplementation((path) => Promise.resolve(path.startsWith('/admin/orders') ? listPayload([order]) : summaryPayload()))
     apiClient.delete.mockResolvedValue({})
@@ -102,14 +108,24 @@ describe('Admin order management pages', () => {
     apiClient.patch.mockResolvedValue({ data: { ...order, shippingAddressSnapshot: { ...order.shippingAddressSnapshot, province: 'Chiang Mai' } } })
     renderDetail()
     expect(await screen.findByText('Linen Shirt')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Delete Order' }).querySelector('svg')).toBeTruthy()
     expect(screen.getByText('Alex Doe')).toBeTruthy()
     expect(screen.getByText('alex@example.test')).toBeTruthy()
     expect(screen.getAllByText('$10.00')).toHaveLength(2)
     expect(screen.getByLabelText('Province').value).toBe('Bangkok')
+    expect(screen.getByLabelText('District').parentElement.classList.contains('third')).toBe(true)
+    expect(screen.getByLabelText('Address Line 1').parentElement.classList.contains('wide')).toBe(true)
     fireEvent.change(screen.getByLabelText('Province'), { target: { value: 'Chiang Mai' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save Address Snapshot' }))
     await waitFor(() => expect(apiClient.patch).toHaveBeenCalledWith('/admin/orders/12', { shippingAddressSnapshot: expect.objectContaining({ province: 'Chiang Mai' }) }))
     expect(await screen.findByLabelText('Province')).toHaveProperty('value', 'Chiang Mai')
+  })
+
+  it('shows the legacy order-detail loading indicator while the request is pending', () => {
+    apiClient.get.mockReturnValue(new Promise(() => {}))
+    renderDetail()
+    expect(document.querySelector('.admin-order-loading').tagName).toBe('OUTPUT')
+    expect(document.querySelector('.admin-order-spinner')).toBeTruthy()
   })
 
   it('shows empty items and per-field validation returned by the API', async () => {
@@ -137,6 +153,14 @@ describe('Admin order management pages', () => {
     expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Order missing')
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
     expect(await screen.findByText('Linen Shirt')).toBeTruthy()
+  })
+
+  it('shows a fallback message when reloading an order fails without an API message', async () => {
+    apiClient.get.mockRejectedValueOnce(new Error('Initial failure')).mockRejectedValueOnce({})
+    renderDetail()
+    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Initial failure')
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
+    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Request failed')
   })
 
   it('deletes from detail after confirmation and leaves the page on cancel', async () => {

@@ -29,20 +29,23 @@ describe('apiClient', () => {
     }))
   })
 
-  it('supports GET, PUT, DELETE and FormData without setting JSON content type', async () => {
+  it('supports GET, PUT, PATCH, DELETE and FormData requests', async () => {
     const fetchMock = vi.fn().mockResolvedValue(response())
     vi.stubGlobal('fetch', fetchMock)
     const form = new FormData()
 
     await apiClient.get('/items')
     await apiClient.put('/items/1', form)
+    await apiClient.patch('/orders/1', { shippingAddressSnapshot: { province: 'Bangkok' } })
     await apiClient.delete('/items/1')
 
     expect(fetchMock.mock.calls.map(([url, options]) => [url, options.method])).toEqual([
-      ['/api/items', 'GET'], ['/api/items/1', 'PUT'], ['/api/items/1', 'DELETE'],
+      ['/api/items', 'GET'], ['/api/items/1', 'PUT'], ['/api/orders/1', 'PATCH'], ['/api/items/1', 'DELETE'],
     ])
     expect(fetchMock.mock.calls[1][1].body).toBe(form)
     expect(fetchMock.mock.calls[1][1].headers).toEqual({})
+    expect(fetchMock.mock.calls[2][1].body).toBe(JSON.stringify({ shippingAddressSnapshot: { province: 'Bangkok' } }))
+    expect(fetchMock.mock.calls[2][1].headers).toEqual({ 'Content-Type': 'application/json' })
   })
 
   it('parses text, tolerates invalid response bodies, and reports API errors', async () => {
