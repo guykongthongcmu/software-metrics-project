@@ -23,8 +23,8 @@
 .campaign-builder-date-range { display: flex; min-height: 44px; align-items: center; gap: 10px; padding: 0 16px; border: 1.5px solid rgba(215,205,190,.4); border-radius: 12px; background: rgba(255,255,255,.45); transition: border-color .2s,box-shadow .2s; }
 .campaign-builder-date-range:focus-within { border-color: #c8a77d; box-shadow: 0 0 10px rgba(241,196,15,.2); }
 .campaign-builder-date-range > span:first-child { color: var(--admin-muted); font-size: 18px; }
-.campaign-builder-date-range input { min-width: 0; flex: 1; border: 0 !important; background: transparent !important; box-shadow: none !important; padding: 8px 0 !important; }
-.campaign-builder-drop-zone { position: relative; display: flex !important; min-height: 150px; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0 !important; padding: 24px 16px; border: 2px dashed rgba(215,205,190,.55); border-radius: 16px; background: rgba(255,255,255,.05); cursor: pointer; text-align: center; transition: all .25s ease; }
+.campaign-builder-field .campaign-builder-date-range input:not([type=checkbox]):not([type=file]) { min-width: 0; flex: 1; border: 0; background: transparent; box-shadow: none; padding: 8px 0; }
+.campaign-builder-field > .campaign-builder-drop-zone { position: relative; display: flex; min-height: 150px; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 0; padding: 24px 16px; border: 2px dashed rgba(215,205,190,.55); border-radius: 16px; background: rgba(255,255,255,.05); cursor: pointer; text-align: center; transition: all .25s ease; }
 .campaign-builder-drop-zone:hover, .campaign-builder-drop-zone.is-dragging { transform: translateY(-2px); border-color: #c8a77d; background: rgba(200,167,125,.05); }
 .campaign-builder-file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
 .campaign-builder-file-input:focus-visible + .campaign-builder-upload-icon { outline: 2px solid #c8a77d; outline-offset: 4px; }
