@@ -95,6 +95,15 @@ export default function AdminCategoriesPage() {
     return () => { active = false }
   }, [loadCategories])
 
+  useEffect(() => {
+    if (!modalOpen) return undefined
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape' && !saving) setModalOpen(false)
+    }
+    window.addEventListener('keydown', closeOnEscape)
+    return () => window.removeEventListener('keydown', closeOnEscape)
+  }, [modalOpen, saving])
+
   function openModal(category = null) {
     setModalCategory(category)
     setCategoryName(category?.categoryName || '')
@@ -192,7 +201,8 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
       {modalOpen && (
-        <dialog aria-labelledby="admin-category-modal-title" aria-modal="true" className="admin-category-modal-backdrop" onKeyDown={(event) => { if (event.key === 'Escape' && !saving) setModalOpen(false) }} onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModalOpen(false) }} open>
+        <dialog aria-labelledby="admin-category-modal-title" aria-modal="true" className="admin-category-modal-backdrop" open>
+          <button aria-label="Close dialog" className="admin-category-modal-dismiss" disabled={saving} onClick={() => setModalOpen(false)} tabIndex={-1} type="button" />
           <section className="admin-category-modal">
             <header><h2 id="admin-category-modal-title">{modalCategory ? 'Edit Category' : 'Add Category'}</h2><button aria-label="Close" disabled={saving} onClick={() => setModalOpen(false)} type="button">×</button></header>
             <form noValidate onSubmit={(event) => { void saveCategory(event).catch(() => {}) }}>
