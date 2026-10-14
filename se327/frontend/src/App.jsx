@@ -24,6 +24,8 @@ import CategoryLandingPage from './pages/webstore/CategoryLandingPage.jsx'
 import CheckoutPage from './pages/webstore/CheckoutPage.jsx'
 import CheckoutSuccessPage from './pages/webstore/CheckoutSuccessPage.jsx'
 import FavoritesPage from './pages/webstore/FavoritesPage.jsx'
+import AdminOrdersPage from './pages/admin/AdminOrdersPage.jsx'
+import AdminOrderDetailPage from './pages/admin/AdminOrderDetailPage.jsx'
 
 function getAccountPage(route) {
   switch (route.path) {
@@ -86,7 +88,9 @@ export default function App() {
       </Route>
       <Route path="/admin/login" element={<AdminLoginPage />} />
       <Route element={<AdminLayout />}>
-        {adminRoutes.filter((route) => route.path !== '/admin/login').map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
+        {adminRoutes.filter((route) => !['/admin/login', '/admin/orders', '/admin/orders/:id'].includes(route.path)).map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}
       </Route>
       <Route path="/profile" element={<Navigate to="/account/profile" replace />} />
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
