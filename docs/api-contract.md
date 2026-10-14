@@ -168,9 +168,11 @@ Adding a colour and size already in the cart increases that line's quantity. The
 |---|---|---|---|
 | `GET /checkout/address` | none | `{ address: Address \| null }`, the saved default shipping address | none beyond common |
 | `PUT /checkout/address` | Address | 200 `{ address }`, creates or updates the default shipping address | 400 `INVALID_ADDRESS_PAYLOAD` (adds per-field messages) |
-| `POST /checkout/purchase` | none | 200 `{ orderId, orderStatus: "PURCHASED", purchasedAt, cartSummary: { totalItems, subtotal } }` (OQ 14) | 400 `CHECKOUT_ADDRESS_REQUIRED`, 409 `CART_EMPTY`, 409 `CART_ITEM_UNAVAILABLE`, 409 `INSUFFICIENT_STOCK` |
+| `POST /checkout/purchase` | none | 200 `{ orderId, orderStatus: "PURCHASED", purchasedAt, cartSummary: { totalItems, subtotal } }` (OQ 14) | 400 `CHECKOUT_ADDRESS_REQUIRED`, 409 `CART_EMPTY`, 409 `CART_ITEM_UNAVAILABLE`, 409 `INSUFFICIENT_STOCK`, 409 `ORDER_TOTAL_TOO_LARGE` |
 
 Address fields: `fullName` (max 150), `phoneNumber` (7 to 20 chars of digits, `+ - ( )` and spaces), `addressLine1` (max 255), `addressLine2` (optional, max 255), `district` (max 120), `province` (max 120), `postalCode` (3 to 12 letters, digits, `-` or space), `country` (max 100). All required except `addressLine2`.
+
+Only the default shipping address is used. `GET` returns `address: null` when there is none, `PUT` creates a new default when none exists (other saved addresses are left alone), and purchase without a default is refused with `CHECKOUT_ADDRESS_REQUIRED`.
 
 Purchase runs in one transaction. It stores an order with item and address snapshots, reduces variant stock, empties the cart and marks it converted. Payment is simulated. On any error nothing is written. Email verification is not checked (pending legacy-feature decision).
 

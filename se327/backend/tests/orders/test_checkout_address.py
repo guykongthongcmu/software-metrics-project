@@ -1,7 +1,4 @@
 import json
-from datetime import timedelta
-
-from django.utils import timezone
 
 from apps.accounts.models import Address, Admin, Session
 from apps.accounts.sessions import COOKIE_NAME, create_session
@@ -77,12 +74,9 @@ class GetAddressTests(AddressTestCase):
             {'fullName', 'phoneNumber', 'addressLine1', 'addressLine2', 'district', 'province', 'postalCode', 'country'},
         )
 
-    def test_falls_back_to_latest_address(self):
-        old = make_address(self.user, full_name='Older')
-        new = make_address(self.user, full_name='Newer')
-        Address.objects.filter(pk=old.pk).update(updated_at=timezone.now() - timedelta(days=2))
-        Address.objects.filter(pk=new.pk).update(updated_at=timezone.now() - timedelta(days=1))
-        self.assertEqual(self.client.get(URL).json()['data']['address']['fullName'], 'Newer')
+    def test_non_default_address_is_not_returned(self):
+        make_address(self.user, default=False, full_name='Not default')
+        self.assertEqual(self.client.get(URL).json()['data'], {'address': None})
 
     def test_other_customers_address_not_returned(self):
         make_address(make_user('other@example.com'), default=True)
@@ -106,13 +100,16 @@ class PutAddressTests(AddressTestCase):
         self.assertEqual(Address.objects.filter(user=self.user).count(), 1)
         self.assertEqual(self.client.get(URL).json()['data']['address']['fullName'], 'New Name')
 
-    def test_promotes_latest_non_default_address(self):
-        row = make_address(self.user, default=False)
-        self.save()
-        row.refresh_from_db()
-        self.assertTrue(row.is_default_shipping)
-        self.assertEqual(row.full_name, 'Buy Er')
-        self.assertEqual(Address.objects.filter(user=self.user).count(), 1)
+    def test_creates_new_default_and_leaves_non_default_untouched(self):
+        old = make_address(self.user, default=False)
+        res = self.save()
+        self.assertEqual(res.status_code, 200)
+        old.refresh_from_db()
+        self.assertFalse(old.is_default_shipping)
+        self.assertEqual(old.full_name, 'Old Name')
+        self.assertEqual(Address.objects.filter(user=self.user).count(), 2)
+        self.assertEqual(Address.objects.get(user=self.user, is_default_shipping=True).full_name, 'Buy Er')
+        self.assertEqual(self.client.get(URL).json()['data']['address']['fullName'], 'Buy Er')
 
     def test_does_not_touch_other_customers(self):
         other = make_address(make_user('other@example.com'), default=True)

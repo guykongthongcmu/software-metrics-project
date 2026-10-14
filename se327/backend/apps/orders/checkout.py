@@ -67,7 +67,7 @@ def purchase(user):
 
         address = current_address(user)
         if address is None:
-            raise OrderError(400, 'CHECKOUT_ADDRESS_REQUIRED', 'a shipping address is required before purchase')
+            raise OrderError(400, 'CHECKOUT_ADDRESS_REQUIRED', 'a default shipping address is required before purchase, please save one first')
 
         subtotal = sum((variants[i.product_variant_id].price * i.quantity for i in items), Decimal('0'))
         subtotal = cents(subtotal)
