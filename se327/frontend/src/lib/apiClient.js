@@ -15,24 +15,48 @@ export function isUnauthorizedError(error) {
   return error?.status === 401
 }
 
+async function readPayload(response) {
+  const contentType = response.headers.get('content-type') || ''
+  if (contentType.includes('json')) return response.json().catch(() => null)
+  return response.text().catch(() => '')
+}
+
+function redirectForUnauthorized(status, redirectOn401) {
+  if (status !== 401 || !redirectOn401 || typeof window === 'undefined') return
+  const isAdminRoute = window.location.pathname.startsWith('/admin/')
+  const loginPath = isAdminRoute ? '/admin/login' : '/login'
+  if (window.location.pathname === loginPath) return
+  if (isAdminRoute) {
+    try {
+      window.sessionStorage?.setItem('adminSessionExpired', 'true')
+    } catch {
+      // The redirect still works if browser storage is unavailable.
+    }
+  }
+  window.location.assign(loginPath)
+}
+
+function shouldRefreshHeader(method, path) {
+  return Boolean(method && method !== 'GET' && /\/client\/(cart|favorites)(\/|\?|$)/.test(path))
+}
+
+function requestHeaders(options) {
+  const isJsonBody = options.body && !(options.body instanceof FormData)
+  return {
+    ...(isJsonBody ? { 'Content-Type': 'application/json' } : {}),
+    ...options.headers,
+  }
+}
+
 /** @param {string} path @param {RequestInit & {redirectOn401?: boolean}} [options] */
 export async function apiFetch(path, options = {}) {
   const { redirectOn401 = true, ...requestOptions } = options
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...requestOptions,
     credentials: 'include',
-    headers: {
-      ...(requestOptions.body && !(requestOptions.body instanceof FormData)
-        ? { 'Content-Type': 'application/json' }
-        : {}),
-      ...requestOptions.headers,
-    },
+    headers: requestHeaders(requestOptions),
   })
-
-  const contentType = response.headers.get('content-type') || ''
-  const payload = contentType.includes('json')
-    ? await response.json().catch(() => null)
-    : await response.text().catch(() => '')
+  const payload = await readPayload(response)
 
   if (!response.ok) {
     const error = new ApiError(
@@ -40,27 +64,12 @@ export async function apiFetch(path, options = {}) {
       { status: response.status, code: payload?.code, payload },
     )
 
-    if (response.status === 401 && redirectOn401 && typeof window !== 'undefined') {
-      const isAdminRoute = window.location.pathname.startsWith('/admin/')
-      const loginPath = isAdminRoute
-        ? '/admin/login'
-        : '/login'
-      if (window.location.pathname !== loginPath) {
-        if (isAdminRoute) {
-          try {
-            window.sessionStorage?.setItem('adminSessionExpired', 'true')
-          } catch {
-            // The redirect still works if browser storage is unavailable.
-          }
-        }
-        window.location.assign(loginPath)
-      }
-    }
+    redirectForUnauthorized(response.status, redirectOn401)
 
     throw error
   }
 
-  if (options.method && options.method !== 'GET' && /\/client\/(cart|favorites)(\/|\?|$)/.test(path)) {
+  if (shouldRefreshHeader(options.method, path)) {
     window.dispatchEvent(new CustomEvent('storefront:refresh-header'))
   }
 
