@@ -4,6 +4,8 @@ React + Vite frontend, Django + DRF backend, PostgreSQL.
 
 ## Run everything with Docker
 
+This compose file is for local use only and needs Docker Compose 2.24 or newer (it uses `env_file` with `required: false`).
+
 From this folder:
 
 ```bash
@@ -20,13 +22,13 @@ This starts three containers:
 
 nginx proxies `/api`, `/media` and `/health` to the backend, so the browser only talks to http://localhost:8080. That keeps cookies and CORS out of the way. The frontend is built with `VITE_API_BASE_URL=/api`.
 
-On start the backend waits for the database, runs `migrate`, and runs `seed_demo` when `SEED_DEMO` is true (the default in compose). The seed is idempotent, so restarting is safe. To skip it:
+On start the backend waits for the database, runs `migrate`, and runs `seed_demo` when `SEED_DEMO` is true (the default in compose). The seed only runs when the catalogue has no products, so restarting never overwrites edits made in the admin. To skip it:
 
 ```bash
 SEED_DEMO=false docker compose up --build
 ```
 
-To seed by hand: `docker compose exec backend python manage.py seed_demo`.
+To seed by hand: `docker compose exec backend python manage.py seed_demo` (this resets the demo rows to their seeded values, including the admin password).
 
 ### Admin login
 
