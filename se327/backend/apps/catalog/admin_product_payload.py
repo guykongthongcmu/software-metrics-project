@@ -98,23 +98,29 @@ def list_field(fields, name, errors):
     return value
 
 
+def parse_translation(item, index, parsed, errors):
+    code = item.get('languageCode')
+    code = code.strip().upper() if isinstance(code, str) else None
+    if code not in Language.values or code in parsed:
+        errors[f'translations[{index}].languageCode'] = 'each of EN and TH must appear exactly once'
+        return None
+    name = clean_text(item.get('name'), 150)
+    description = item.get('description')
+    if name is None:
+        errors[f'translations[{index}].name'] = 'name is required, up to 150 characters'
+    if description is not None:
+        description = clean_text(description, 10_000, required=False)
+        if description is None:
+            errors[f'translations[{index}].description'] = 'description must be text'
+    return {'languageCode': code, 'name': name, 'description': description or None}
+
+
 def parse_translations(fields, errors):
     parsed = {}
     for index, item in enumerate(list_field(fields, 'translations', errors)):
-        code = item.get('languageCode')
-        code = code.strip().upper() if isinstance(code, str) else None
-        name = clean_text(item.get('name'), 150)
-        description = item.get('description')
-        if code not in Language.values or code in parsed:
-            errors[f'translations[{index}].languageCode'] = 'each of EN and TH must appear exactly once'
-            continue
-        if name is None:
-            errors[f'translations[{index}].name'] = 'name is required, up to 150 characters'
-        if description is not None:
-            description = clean_text(description, 10_000, required=False)
-            if description is None:
-                errors[f'translations[{index}].description'] = 'description must be text'
-        parsed[code] = {'languageCode': code, 'name': name, 'description': description or None}
+        row = parse_translation(item, index, parsed, errors)
+        if row is not None:
+            parsed[row['languageCode']] = row
     if 'translations' not in errors and set(parsed) != set(Language.values):
         errors['translations'] = 'exactly one EN and one TH translation are required'
     return list(parsed.values())
