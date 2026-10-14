@@ -148,7 +148,7 @@
 .admin-order-detail-aside dl { display: grid; grid-template-columns: 1fr; gap: 5px; margin: 16px 0 0; }
 .admin-order-detail-aside dt { margin-bottom: -1px; color: var(--admin-muted); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
 .admin-order-detail-aside dd { margin: 0 0 10px; overflow-wrap: anywhere; color: var(--admin-text); font-size: 14px; font-weight: 500; }
-.admin-order-summary { grid-template-columns: 1fr auto !important; gap: 12px !important; }
+.admin-order-detail-aside .admin-order-summary { grid-template-columns: 1fr auto; gap: 12px; }
 .admin-order-summary dd { text-align: right; }
 .admin-order-summary dt:last-of-type,
 .admin-order-summary dd:last-of-type { padding-top: 12px; border-top: 1px solid rgba(215,205,190,.35); color: var(--admin-text); font-size: 14px; font-weight: 600; }
