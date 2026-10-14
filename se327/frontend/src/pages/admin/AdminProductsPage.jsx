@@ -107,7 +107,7 @@ export default function AdminProductsPage() {
   const end = Math.min(page * 60, data.totalItems)
   let productRows
   if (loading) {
-    productRows = <tr><td colSpan={7}><p role="status">Synchronizing with catalog...</p></td></tr>
+    productRows = <tr><td colSpan={7}><output>Synchronizing with catalog...</output></td></tr>
   } else if (error) {
     productRows = <tr><td colSpan={7}><div className="admin-product-error" role="alert"><strong>Communication failure with Catalog Service (Port 3000)</strong><p>{error}</p><button className="admin-feature-button" onClick={() => { void loadProducts() }} type="button">Retry Connection</button></div></td></tr>
   } else if (data.items.length > 0) {

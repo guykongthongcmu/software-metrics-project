@@ -47,17 +47,19 @@ function AdminIcon({ name }) {
 
 function AdminToast({ toast, onDismiss }) {
   if (!toast) return null
-  const icon = toast.type === 'success' ? '✓' : toast.type === 'error' || toast.type === 'danger' ? '!' : 'i'
+  let icon = 'i'
+  if (toast.type === 'success') icon = '✓'
+  else if (toast.type === 'error' || toast.type === 'danger') icon = '!'
   return (
     <div className="admin-toast-stack">
-      <div aria-live="polite" className={`admin-toast admin-toast-${toast.type || 'success'}`} role="status">
+      <output aria-live="polite" className={`admin-toast admin-toast-${toast.type || 'success'}`}>
         <span aria-hidden="true" className="admin-toast-icon">{icon}</span>
         <div className="min-w-0 flex-1">
           <p className="admin-toast-title">{toast.title}</p>
           <p className="admin-toast-message">{toast.message}</p>
         </div>
         <button aria-label="Close notification" className="admin-toast-close" onClick={onDismiss} type="button">×</button>
-      </div>
+      </output>
     </div>
   )
 }
@@ -179,7 +181,7 @@ export default function AdminLayout() {
         <div className="admin-topbar-right">
           <div className="admin-search-wrap" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setSearchOpen(false) }}>
             <svg aria-hidden="true" className="admin-search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" /><path d="m16 16 4 4" /></svg>
-            <input aria-label="Search pages" aria-expanded={searchOpen} autoComplete="off" onChange={(event) => setSearchTerm(event.target.value)} onFocus={() => setSearchOpen(true)} placeholder="Search pages..." value={searchTerm} />
+            <input aria-label="Search pages" autoComplete="off" onChange={(event) => setSearchTerm(event.target.value)} onFocus={() => setSearchOpen(true)} placeholder="Search pages..." value={searchTerm} />
             {searchOpen && <div className="admin-search-dropdown">
               {matches.map((item) => <Link className="admin-search-result" key={item.path} onClick={() => { setSearchTerm(''); setSearchOpen(false) }} to={item.path}><span className="admin-search-result-icon"><AdminIcon name={item.icon} /></span>{item.label}</Link>)}
               {matches.length === 0 && <p className="admin-search-empty">No pages found</p>}

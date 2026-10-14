@@ -192,8 +192,8 @@ export default function AdminCategoriesPage() {
         </div>
       </div>
       {modalOpen && (
-        <div className="admin-category-modal-backdrop" onKeyDown={(event) => { if (event.key === 'Escape' && !saving) setModalOpen(false) }} onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModalOpen(false) }}>
-          <section aria-labelledby="admin-category-modal-title" aria-modal="true" className="admin-category-modal" role="dialog">
+        <dialog aria-labelledby="admin-category-modal-title" aria-modal="true" className="admin-category-modal-backdrop" onKeyDown={(event) => { if (event.key === 'Escape' && !saving) setModalOpen(false) }} onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setModalOpen(false) }} open>
+          <section className="admin-category-modal">
             <header><h2 id="admin-category-modal-title">{modalCategory ? 'Edit Category' : 'Add Category'}</h2><button aria-label="Close" disabled={saving} onClick={() => setModalOpen(false)} type="button">×</button></header>
             <form noValidate onSubmit={(event) => { void saveCategory(event).catch(() => {}) }}>
               <label htmlFor="admin-category-name">Category Name</label>
@@ -201,7 +201,7 @@ export default function AdminCategoriesPage() {
               <footer><button className="admin-category-glass-button" disabled={saving} onClick={() => setModalOpen(false)} type="button">Cancel</button><button className="admin-category-golden-button" disabled={saving} type="submit">{saving ? 'Saving...' : 'Save Category'}</button></footer>
             </form>
           </section>
-        </div>
+        </dialog>
       )}
     </section>
   )

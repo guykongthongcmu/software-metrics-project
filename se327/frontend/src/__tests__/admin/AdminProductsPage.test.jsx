@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import AdminProductsPage from '../../pages/admin/AdminProductsPage.jsx'
@@ -196,8 +197,9 @@ describe('Admin product catalog and editor', () => {
     fireEvent.change(picker, { target: { files: null } })
     fireEvent.keyDown(uploadZone, { key: 'Tab' })
     expect(clickSpy).not.toHaveBeenCalled()
-    fireEvent.keyDown(uploadZone, { key: 'Enter' })
-    fireEvent.keyDown(uploadZone, { key: ' ' })
+    uploadZone.focus()
+    await userEvent.keyboard('{Enter}')
+    await userEvent.keyboard(' ')
     expect(clickSpy).toHaveBeenCalledTimes(2)
     fireEvent.change(screen.getByLabelText('New variant size'), { target: { value: 'M' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add variant' }))

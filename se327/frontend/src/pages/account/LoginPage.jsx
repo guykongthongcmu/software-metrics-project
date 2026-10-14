@@ -64,7 +64,7 @@ export default function LoginPage() {
           <p className="text-[0.85rem] tracking-[0.5px] text-[#555]">Welcome back to your premium account</p>
         </header>
 
-        {error && <div className="mb-6 rounded border border-[#ffcccc] bg-[#fff0f0] px-4 py-3 text-center text-[0.85rem] text-[#c00]" role="alert"><p>{error}</p>{showResendVerification && <button className="mt-2 underline" disabled={isResending} onClick={() => { void resendVerification() }} type="button">{isResending ? 'Sending…' : 'Resend verification email'}</button>}{resendStatus && <p className="mt-2" role="status">{resendStatus}</p>}</div>}
+        {error && <div className="mb-6 rounded border border-[#ffcccc] bg-[#fff0f0] px-4 py-3 text-center text-[0.85rem] text-[#c00]" role="alert"><p>{error}</p>{showResendVerification && <button className="mt-2 underline" disabled={isResending} onClick={() => { void resendVerification() }} type="button">{isResending ? 'Sending…' : 'Resend verification email'}</button>}{resendStatus && <output className="mt-2">{resendStatus}</output>}</div>}
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           <div>
             <label className="mb-2 block text-[0.75rem] font-semibold tracking-[0.5px] text-[#97836d]" htmlFor="login-email">EMAIL *</label>

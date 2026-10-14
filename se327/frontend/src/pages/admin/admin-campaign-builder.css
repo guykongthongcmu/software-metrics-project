@@ -28,7 +28,7 @@
 .campaign-builder-drop-zone:hover, .campaign-builder-drop-zone.is-dragging { transform: translateY(-2px); border-color: #c8a77d; background: rgba(200,167,125,.05); }
 .campaign-builder-file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
 .campaign-builder-file-input:focus-visible + .campaign-builder-upload-icon { outline: 2px solid #c8a77d; outline-offset: 4px; }
-.campaign-builder-upload-icon { display: grid; width: 34px; height: 34px; place-items: center; color: #c8a77d; font-size: 28px; }
+.campaign-builder-upload-icon { display: grid; width: 34px; height: 34px; place-items: center; color: #80603a; font-size: 28px; }
 .campaign-builder-drop-title { margin-top: 4px; color: var(--admin-text); font-size: 14px; font-weight: 500; }
 .campaign-builder-drop-help { color: var(--admin-muted); font-size: 11px; font-weight: 400; }
 .campaign-builder-upload-feedback { display: flex; min-width: 0; align-items: center; gap: 10px; margin-top: 8px; padding: 8px 12px; border: 1px solid rgba(215,205,190,.3); border-radius: 8px; background: rgba(255,255,255,.4); }
@@ -41,19 +41,19 @@
 .campaign-builder-channel-grid label { display: flex; min-height: 94px; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px; border: 1px solid rgba(215,205,190,.3); border-radius: 12px; background: rgba(255,255,255,.2); cursor: pointer; transition: all .25s ease; }
 .campaign-builder-channel-grid label.is-selected { border-color: #c8a77d; background: rgba(241,196,15,.08); }
 .campaign-builder-channel-grid label > span:first-of-type { color: var(--admin-muted); font-size: 24px; line-height: 1; }
-.campaign-builder-channel-grid label.is-selected > span:first-of-type { color: #c8a77d; }
+.campaign-builder-channel-grid label.is-selected > span:first-of-type { color: #80603a; }
 .campaign-builder-channel-grid label > span:last-child { color: #4a4a5e; font-size: 12px; text-align: center; }
 .campaign-builder-channel-grid label.is-selected > span:last-child { color: var(--admin-text); font-weight: 600; }
 .campaign-builder-channel-grid input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .campaign-builder-channel-grid label:focus-within { outline: 2px solid #c8a77d; outline-offset: 2px; }
-.campaign-builder-error { margin: 0 0 16px; color: #c0392b; font-size: 13px; }
-.campaign-builder-launch-button, .campaign-builder-primary { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; background: linear-gradient(135deg,#c8a77d,#b8956d); color: #fff; cursor: pointer; font: 500 14px/1.5 Inter,sans-serif; transition: all .25s ease; }
+.campaign-builder-error { margin: 0 0 16px; color: #a42f24; font-size: 13px; }
+.campaign-builder-launch-button, .campaign-builder-primary { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 10px; background: linear-gradient(135deg,#80603a,#674a2b); color: #fff; cursor: pointer; font: 500 14px/1.5 Inter,sans-serif; transition: all .25s ease; }
 .campaign-builder-launch-button { width: 100%; margin-top: 16px; padding: 12px 20px; }
-.campaign-builder-launch-button:hover, .campaign-builder-primary:hover { transform: translateY(-1px); background: linear-gradient(135deg,#d4b78e,#c8a77d); box-shadow: 0 4px 16px rgba(200,167,125,.4); }
-.campaign-builder-modal-backdrop { position: fixed; z-index: 1200; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(26,26,46,.28); backdrop-filter: blur(4px); }
+.campaign-builder-launch-button:hover, .campaign-builder-primary:hover { transform: translateY(-1px); background: linear-gradient(135deg,#674a2b,#563b20); box-shadow: 0 4px 16px rgba(200,167,125,.4); }
+.campaign-builder-modal-backdrop { position: fixed; z-index: 1200; inset: 0; display: grid; width: auto; max-width: none; max-height: none; place-items: center; margin: 0; padding: 20px; border: 0; background: rgba(26,26,46,.28); backdrop-filter: blur(4px); }
 .campaign-builder-modal { width: min(100%,500px); border: 1px solid #fff; border-radius: 16px; background: rgba(255,255,255,.95); box-shadow: 0 12px 40px rgba(0,0,0,.16); }
 .campaign-builder-modal-body { padding: 40px 30px; text-align: center; }
-.campaign-builder-question { display: grid; width: 70px; height: 70px; place-items: center; margin: 0 auto 24px; border-radius: 50%; background: rgba(241,196,15,.1); color: #c8a77d; font-size: 32px; }
+.campaign-builder-question { display: grid; width: 70px; height: 70px; place-items: center; margin: 0 auto 24px; border-radius: 50%; background: rgba(241,196,15,.1); color: #80603a; font-size: 32px; }
 .campaign-builder-modal-body h2 { margin: 0 0 8px; color: var(--admin-text); font: 600 20px/1.3 Inter,sans-serif; }
 .campaign-builder-modal-body > p { margin: 0 0 22px; color: #4a4a5e; font-size: 14px; }
 .campaign-builder-summary { display: grid; gap: 8px; margin: 0 0 24px; padding: 14px; border-radius: 10px; background: rgba(200,167,125,.08); text-align: left; }
@@ -63,7 +63,7 @@
 .campaign-builder-modal-actions { display: flex; gap: 12px; }
 .campaign-builder-modal-actions button { min-width: 0; flex: 1; padding: 11px 14px; }
 .campaign-builder-secondary { border: 1px solid rgba(215,205,190,.5); border-radius: 10px; background: rgba(255,255,255,.6); color: var(--admin-text); cursor: pointer; font: 500 14px Inter,sans-serif; }
-.campaign-builder-spinner { display: block; width: 48px; height: 48px; margin: 0 auto 24px; border: 4px solid rgba(200,167,125,.2); border-top-color: #c8a77d; border-radius: 50%; animation: campaign-builder-spin .7s linear infinite; }
+.campaign-builder-spinner { display: block; width: 48px; height: 48px; margin: 0 auto 24px; border: 4px solid rgba(200,167,125,.2); border-top-color: #80603a; border-radius: 50%; animation: campaign-builder-spin .7s linear infinite; }
 @keyframes campaign-builder-spin { to { transform: rotate(360deg); } }
 @media (max-width: 767.98px) {
   .campaign-builder-form-card { padding: 22px 18px; }
