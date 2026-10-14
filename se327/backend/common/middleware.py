@@ -1,6 +1,8 @@
+import json
 import logging
 
 from django.conf import settings
+from django.core.exceptions import RequestDataTooBig
 from django.http import HttpResponse
 
 from .responses import error_response
@@ -56,3 +58,77 @@ class JsonExceptionMiddleware:
     def process_exception(self, request, exception):
         logger.exception('Unhandled error on %s', request.path, exc_info=exception)
         return error_response('INTERNAL_SERVER_ERROR', 'internal server error', 500)
+
+
+# these views check their own text and answer with a more specific error, so the body is left to them
+OWN_TEXT_CHECKS = (
+    '/api/auth/reset-password',
+    '/api/client/checkout/address',
+    '/api/admin/categories',
+    '/api/admin/products',
+)
+
+
+def has_bad_text(value):
+    """True for text holding NUL or a lone surrogate, which the database or encoder cannot take."""
+    if '\x00' in value:
+        return True
+    try:
+        value.encode('utf-8')
+    except UnicodeEncodeError:
+        return True
+    return False
+
+
+def json_has_bad_text(data):
+    stack = [data]
+    while stack:
+        item = stack.pop()
+        if isinstance(item, str):
+            if has_bad_text(item):
+                return True
+        elif isinstance(item, list):
+            stack.extend(item)
+        elif isinstance(item, dict):
+            for key, value in item.items():
+                if has_bad_text(key):
+                    return True
+                stack.append(value)
+    return False
+
+
+def parsed_json_body(request):
+    if request.method not in ('POST', 'PUT', 'PATCH') or request.content_type.startswith('multipart/'):
+        return None
+    try:
+        return json.loads(request.body)
+    except (ValueError, RecursionError, RequestDataTooBig):
+        # not JSON or too big, the view reports that itself
+        return None
+
+
+class BadTextMiddleware:
+    """Answer 400 for NUL bytes and lone surrogates in the path, query string or JSON body.
+
+    PostgreSQL cannot store them and they would otherwise end up as a 500 in whichever view
+    happens to touch the text first.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        values = [request.path_info]
+        for key, items in request.GET.lists():
+            values.append(key)
+            values.extend(items)
+        if any(has_bad_text(value) for value in values):
+            return error_response('INVALID_QUERY', 'text contains characters that are not allowed', 400)
+
+        if request.path_info.startswith(OWN_TEXT_CHECKS):
+            return self.get_response(request)
+
+        body = parsed_json_body(request)
+        if body is not None and json_has_bad_text(body):
+            return error_response('INVALID_FIELD_LENGTH', 'a field is too long or has invalid characters', 400)
+        return self.get_response(request)

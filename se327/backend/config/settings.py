@@ -43,6 +43,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'common.middleware.JsonExceptionMiddleware',
     'common.middleware.CorsMiddleware',
+    'common.middleware.BadTextMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
 ]
