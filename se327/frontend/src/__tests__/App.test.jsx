@@ -49,7 +49,22 @@ describe('App routes', () => {
     cleanup()
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>)
     expect(await screen.findAllByRole('heading', { name: 'Dashboard' })).toHaveLength(2)
+    expect(screen.getByText("Welcome back! Here's what's happening with your store.")).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Revenue Overview' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')).toBe('page')
   })
+
+it('renders the campaign builder route', async () => {
+  render(<MemoryRouter initialEntries={['/admin/campaigns/builder']}><App /></MemoryRouter>)
+  expect(await screen.findByRole('heading', { name: 'Promotional Campaign Builder' })).toBeTruthy()
+  expect(screen.getByRole('heading', { name: 'Campaign Preview' })).toBeTruthy()
+})
+
+it('opens the admin category management page', async () => {
+  render(<MemoryRouter initialEntries={['/admin/categories']}><App /></MemoryRouter>)
+  expect(await screen.findByRole('heading', { name: 'Category Management' })).toBeTruthy()
+  expect(await screen.findByText('No categories found.')).toBeTruthy()
+})
 
   it('redirects the legacy profile route and renders a not-found page', async () => {
     const { unmount } = render(<MemoryRouter initialEntries={['/profile']}><App /></MemoryRouter>)
