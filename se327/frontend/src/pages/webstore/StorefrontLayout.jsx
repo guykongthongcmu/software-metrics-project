@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
+import { getLanguage } from '../../lib/language.js'
 import { accountRoutes } from '../account/routes.js'
 import { storefrontRoutes } from './routes.js'
 import StorefrontFooter from './partials/StorefrontFooter.jsx'
@@ -21,7 +22,17 @@ export default function StorefrontLayout() {
   const hideStorefrontFooter = location.pathname === '/login'
     || location.pathname.startsWith('/auth/signup')
     || ['/forgot-password', '/forgot-password-success', '/auth/reset-password'].includes(location.pathname)
+  // pages with forms keep their typed values when the language changes
+  const keepPageState = hideStorefrontFooter
+    || location.pathname.startsWith('/checkout')
+    || location.pathname.startsWith('/account/')
   const [categories, setCategories] = useState([])
+  const [language, setLanguage] = useState(getLanguage)
+  useEffect(() => {
+    const syncLanguage = (event) => setLanguage(event.detail.language)
+    window.addEventListener('storefront:language-changed', syncLanguage)
+    return () => window.removeEventListener('storefront:language-changed', syncLanguage)
+  }, [])
   useEffect(() => {
     const routes = [...storefrontRoutes, ...accountRoutes]
     const route = routes.find((entry) => entry.path === location.pathname)
@@ -60,7 +71,7 @@ return (
     }`}
   >
     <StorefrontHeader visibleCategoryRoutes={visibleCategoryRoutes} />
-    <FavoritesProvider>
+    <FavoritesProvider key={keepPageState ? 'keep' : language}>
       <Outlet />
     </FavoritesProvider>
     {!hideStorefrontFooter && <StorefrontFooter />}
