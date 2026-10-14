@@ -182,7 +182,6 @@ describe('Admin product catalog and editor', () => {
     fireEvent.change(screen.getByLabelText('Variant 2 size'), { target: { value: 'XL' } })
     fireEvent.change(screen.getByLabelText('Product Name *'), { target: { value: 'Sparse item' } })
     fireEvent.change(screen.getByLabelText('Price ($) *'), { target: { value: '15' } })
-    fireEvent.change(screen.getByLabelText('Stock *'), { target: { value: '2' } })
     fireEvent.click(screen.getByRole('button', { name: 'Update Product' }))
     await waitFor(() => expect(apiClient.put).toHaveBeenCalledWith('/admin/products/8', expect.not.objectContaining({ category_id: expect.anything() })))
   })
@@ -360,17 +359,62 @@ describe('Admin product catalog and editor', () => {
     apiClient.put.mockResolvedValue({ data: product })
     renderEdit()
     expect(await screen.findByDisplayValue('Linen Top')).toBeTruthy()
-    expect(screen.getByLabelText('Price ($) *')).toHaveProperty('value', '55')
+    expect(screen.getByLabelText('Price ($) *')).toHaveProperty('value', '50')
     expect(screen.getByLabelText('Product ID')).toHaveProperty('value', '8')
     expect(screen.getByAltText('Linen Top')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Remove existing image 1' }))
     expect(screen.queryByAltText('Linen Top')).toBeNull()
     fireEvent.change(screen.getByLabelText('Product Name *'), { target: { value: 'Updated Linen Top' } })
-    fireEvent.change(screen.getByLabelText('Stock *'), { target: { value: '9' } })
+    fireEvent.change(screen.getByLabelText('Variant 1 stock'), { target: { value: '9' } })
     fireEvent.click(screen.getByRole('button', { name: 'Update Product' }))
-    await waitFor(() => expect(apiClient.put).toHaveBeenCalledWith('/admin/products/8', expect.objectContaining({ name: 'Updated Linen Top', category_id: 2, price: 55, stock: 9 })))
-    expect(apiClient.put.mock.calls[0][1]).not.toHaveProperty('sku')
+    await waitFor(() => expect(apiClient.put).toHaveBeenCalledWith('/admin/products/8', expect.objectContaining({ name: 'Updated Linen Top', category_id: 2, sku: 'LIN-M-BEIGE', stock: 9 })))
+    expect(apiClient.put.mock.calls[0][1]).not.toHaveProperty('price')
     expect(await screen.findByText('Products route')).toBeTruthy()
+  })
+
+  describe('editing a product with several variants', () => {
+    const twoVariants = { ...product, variants: [
+      { sku: 'LIN-M-BEIGE', colour: 'Beige', size: 'M', price: 50, compareAtPrice: null, stockQty: 5 },
+      { sku: 'LIN-L-BLACK', colour: 'Black', size: 'L', price: 50, compareAtPrice: null, stockQty: 7 },
+    ] }
+
+    async function openEdit() {
+      apiClient.get.mockImplementation((path) => Promise.resolve(path === '/admin/categories' ? categories : { data: twoVariants }))
+      apiClient.put.mockResolvedValue({ data: twoVariants })
+      renderEdit()
+      await screen.findByDisplayValue('Linen Top')
+    }
+
+    it('sends no variant fields when only the name changes', async () => {
+      await openEdit()
+      fireEvent.change(screen.getByLabelText('Product Name *'), { target: { value: 'Renamed' } })
+      fireEvent.click(screen.getByRole('button', { name: 'Update Product' }))
+      expect(await screen.findByText('Products route')).toBeTruthy()
+      expect(apiClient.put).toHaveBeenCalledTimes(1)
+      const body = apiClient.put.mock.calls[0][1]
+      expect(body.name).toBe('Renamed')
+      for (const key of ['sku', 'price', 'stock']) expect(body).not.toHaveProperty(key)
+    })
+
+    it('names the sku of the displayed variant when the price changes', async () => {
+      await openEdit()
+      fireEvent.change(screen.getByLabelText('Price ($) *'), { target: { value: '65' } })
+      fireEvent.click(screen.getByRole('button', { name: 'Update Product' }))
+      expect(await screen.findByText('Products route')).toBeTruthy()
+      expect(apiClient.put).toHaveBeenCalledTimes(1)
+      expect(apiClient.put).toHaveBeenCalledWith('/admin/products/8', expect.objectContaining({ sku: 'LIN-M-BEIGE', price: 65 }))
+    })
+
+    it('sends the stock of each changed variant with its own sku', async () => {
+      await openEdit()
+      fireEvent.change(screen.getByLabelText('Variant 1 stock'), { target: { value: '8' } })
+      fireEvent.change(screen.getByLabelText('Variant 2 stock'), { target: { value: '1' } })
+      fireEvent.click(screen.getByRole('button', { name: 'Update Product' }))
+      expect(await screen.findByText('Products route')).toBeTruthy()
+      expect(apiClient.put).toHaveBeenCalledTimes(2)
+      expect(apiClient.put.mock.calls[0][1]).toEqual(expect.objectContaining({ sku: 'LIN-M-BEIGE', stock: 8 }))
+      expect(apiClient.put.mock.calls[1]).toEqual(['/admin/products/8', { sku: 'LIN-L-BLACK', stock: 1 }])
+    })
   })
 
   it('shows product load errors and API field errors on update', async () => {
