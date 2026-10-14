@@ -1,9 +1,17 @@
-import { describe, expect, it } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { apiClient } from '../../lib/apiClient.js'
 import AboutPage from '../../pages/webstore/AboutPage.jsx'
 import ContactPage from '../../pages/webstore/ContactPage.jsx'
 import StorefrontFooter from '../../pages/webstore/partials/StorefrontFooter.jsx'
+
+vi.mock('../../lib/apiClient.js', () => ({ apiClient: { get: vi.fn(), post: vi.fn() } }))
+
+beforeEach(() => {
+  apiClient.get.mockResolvedValue({ data: null })
+  apiClient.post.mockResolvedValue({ data: { sessionRevoked: true } })
+})
 
 function renderPage(Page) {
   return render(<MemoryRouter><Page /></MemoryRouter>)
@@ -34,12 +42,22 @@ describe('storefront information pages', () => {
     expect(screen.getByTitle('Map to Core & Co in Bangkok').getAttribute('loading')).toBe('lazy')
   })
 
-  it('links to product, information and membership destinations from the footer', () => {
+  it('links to product, information and signed-out membership destinations from the footer', async () => {
     renderPage(StorefrontFooter)
 
     for (const [label, href] of [['Men', '/men'], ['Women', '/women'], ['Kids', '/kids'], ['Baby', '/baby'], ['Unisex', '/unisex'], ['Home', '/'], ['About', '/about'], ['Contact Us', '/contact'], ['SIGN UP', '/auth/signup'], ['LOG IN', '/login']]) {
-      expect(screen.getByRole('link', { name: label }).getAttribute('href')).toBe(href)
+      expect((await screen.findByRole('link', { name: label })).getAttribute('href')).toBe(href)
     }
     expect(screen.getByText('© 2026 Core & Co. All rights reserved.')).toBeTruthy()
+  })
+
+  it('shows the legacy signed-in message and logs out through the backend', async () => {
+    apiClient.get.mockResolvedValue({ data: { email: 'customer@example.com' } })
+    renderPage(StorefrontFooter)
+
+    expect(await screen.findByText('You are currently logged in to your account.')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'LOG OUT' }))
+    expect(apiClient.post).toHaveBeenCalledWith('/auth/logout', {}, { redirectOn401: false })
+    expect(await screen.findByRole('link', { name: 'SIGN UP' })).toBeTruthy()
   })
 })
