@@ -96,31 +96,22 @@ export default function App() {
         <Route path="/admin/products" element={<AdminProductsPage />} />
         <Route path="/admin/products/create" element={<AdminProductFormPage />} />
         <Route path="/admin/products/edit/:id" element={<AdminProductFormPage />} />
-        {adminRoutes.filter((route) => !['/admin/login', '/admin/products', '/admin/products/create', '/admin/products/edit/:id'].includes(route.path)).map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}
-<Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-<Route path="/admin/orders" element={<AdminOrdersPage />} />
-<Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
-<Route path="/admin/campaigns/builder" element={<AdminCampaignBuilderPage />} />
-<Route path="/admin/categories" element={<AdminCategoriesPage />} />
-
-{adminRoutes
-  .filter((route) =>
-    ![
-      '/admin/login',
-      '/admin/dashboard',
-      '/admin/orders',
-      '/admin/orders/:id',
-      '/admin/campaigns/builder',
-      '/admin/categories',
-    ].includes(route.path)
-  )
-  .map((route) => (
-    <Route
-      key={route.path}
-      path={route.path}
-      element={<AdminPlaceholder title={route.title} />}
-    />
-  ))}
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
+        <Route path="/admin/orders/:id" element={<AdminOrderDetailPage />} />
+        <Route path="/admin/campaigns/builder" element={<AdminCampaignBuilderPage />} />
+        <Route path="/admin/categories" element={<AdminCategoriesPage />} />
+        {adminRoutes.filter((route) => ![
+          '/admin/login',
+          '/admin/dashboard',
+          '/admin/orders',
+          '/admin/orders/:id',
+          '/admin/products',
+          '/admin/products/create',
+          '/admin/products/edit/:id',
+          '/admin/categories',
+          '/admin/campaigns/builder',
+        ].includes(route.path)).map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}
       </Route>
       <Route path="/profile" element={<Navigate to="/account/profile" replace />} />
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
