@@ -32,7 +32,7 @@ describe('Admin product catalog and editor', () => {
   afterEach(() => { cleanup(); vi.restoreAllMocks() })
 
   it('loads product rows and root category tabs, routes row clicks to edit', async () => {
-    apiClient.get.mockImplementation((path) => Promise.resolve(path === '/admin/categories' ? { data: categories } : paged([row, { ...row, productId: 9, name: 'Sold Out', totalStock: 0 }], 1, 2)))
+    apiClient.get.mockImplementation((path) => Promise.resolve(path === '/admin/categories' ? { data: categories } : paged([row, { ...row, productId: 9, name: 'Sold Out', totalStock: 0 }, { ...row, productId: 10, name: 'In Stock', totalStock: 30 }], 1, 3)))
     renderList()
     expect(await screen.findByText('Linen Top')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Men' })).toBeTruthy()
@@ -40,7 +40,13 @@ describe('Admin product catalog and editor', () => {
     expect(screen.queryByRole('button', { name: 'Tag' })).toBeNull()
     expect(document.querySelector('.admin-stock-badge.low').textContent).toBe('Low Stock (5)')
     expect(document.querySelector('.admin-stock-badge.out').textContent).toBe('Out of Stock (0)')
+    expect(document.querySelector('.admin-stock-badge.in').textContent).toBe('In Stock (30)')
     fireEvent.click(screen.getByText('Linen Top'))
+    expect(await screen.findByText('Product editor')).toBeTruthy()
+    cleanup()
+    renderList()
+    const inStockRow = (await screen.findByText('In Stock (30)')).closest('tr')
+    fireEvent.keyDown(inStockRow, { key: 'Enter' })
     expect(await screen.findByText('Product editor')).toBeTruthy()
   })
 
