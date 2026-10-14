@@ -37,10 +37,20 @@ export async function apiFetch(path, options = {}) {
     )
 
     if (response.status === 401 && redirectOn401 && typeof window !== 'undefined') {
-      const loginPath = window.location.pathname.startsWith('/admin/')
+      const isAdminRoute = window.location.pathname.startsWith('/admin/')
+      const loginPath = isAdminRoute
         ? '/admin/login'
         : '/login'
-      if (window.location.pathname !== loginPath) window.location.assign(loginPath)
+      if (window.location.pathname !== loginPath) {
+        if (isAdminRoute) {
+          try {
+            window.sessionStorage?.setItem('adminSessionExpired', 'true')
+          } catch {
+            // The redirect still works if browser storage is unavailable.
+          }
+        }
+        window.location.assign(loginPath)
+      }
     }
 
     throw error

@@ -127,4 +127,32 @@ describe('apiClient', () => {
     await expect(apiFetch('/private')).rejects.toBeInstanceOf(ApiError)
     expect(assign).toHaveBeenCalledTimes(callsBeforeLoginPage)
   })
+
+  it('marks an expired admin session before redirecting to the admin login page', async () => {
+    const assign = vi.fn()
+    const setItem = vi.fn()
+    vi.stubGlobal('window', {
+      location: { pathname: '/admin/products', assign },
+      sessionStorage: { setItem },
+    })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({ ok: false, status: 401 })))
+
+    await expect(apiFetch('/admin/products')).rejects.toBeInstanceOf(ApiError)
+
+    expect(setItem).toHaveBeenCalledWith('adminSessionExpired', 'true')
+    expect(assign).toHaveBeenCalledWith('/admin/login')
+  })
+
+  it('still redirects when session storage is unavailable', async () => {
+    const assign = vi.fn()
+    vi.stubGlobal('window', {
+      location: { pathname: '/admin/orders', assign },
+      sessionStorage: { setItem: vi.fn(() => { throw new Error('storage disabled') }) },
+    })
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response({ ok: false, status: 401 })))
+
+    await expect(apiFetch('/admin/orders')).rejects.toBeInstanceOf(ApiError)
+
+    expect(assign).toHaveBeenCalledWith('/admin/login')
+  })
 })

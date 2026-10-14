@@ -18,6 +18,8 @@ import AllProductsPage from './pages/webstore/AllProductsPage.jsx'
 import ProductDetailPage from './pages/webstore/ProductDetailPage.jsx'
 import SearchPage from './pages/webstore/SearchPage.jsx'
 import CartPage from './pages/webstore/CartPage.jsx'
+import AdminLayout from './pages/admin/AdminLayout.jsx'
+import AdminLoginPage from './pages/admin/AdminLoginPage.jsx'
 import CategoryLandingPage from './pages/webstore/CategoryLandingPage.jsx'
 import CheckoutPage from './pages/webstore/CheckoutPage.jsx'
 import CheckoutSuccessPage from './pages/webstore/CheckoutSuccessPage.jsx'
@@ -51,7 +53,7 @@ function StorefrontPlaceholder({ title }) {
 
 function AdminPlaceholder({ title }) {
   const location = useLocation()
-  return <div data-theme="admin" className="min-h-screen bg-canvas text-ink"><header className="border-b border-line bg-panel px-6 py-4 shadow-panel backdrop-blur-xl"><Link to="/">Core & Co</Link><span className="ml-4 text-xs uppercase tracking-widest text-muted">Administration</span></header><main className="mx-auto max-w-6xl px-5 py-12"><section className="rounded-[var(--radius-card)] border border-line bg-panel p-6 shadow-panel backdrop-blur-xl sm:p-8"><p className="text-sm text-muted">{location.pathname}</p><h1 className="mt-2 font-admin-display text-3xl">{title}</h1></section></main></div>
+  return <section className="rounded-[var(--radius-card)] border border-line bg-panel p-6 shadow-panel backdrop-blur-xl sm:p-8"><p className="text-sm text-muted">{location.pathname}</p><h2 className="mt-2 font-admin-display text-3xl">{title}</h2></section>
 }
 
 function NotFoundPage() {
@@ -82,7 +84,10 @@ export default function App() {
         {accountRoutes.map((route) => <Route key={route.path} path={route.path} element={getAccountPage(route)} />)}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
-      {adminRoutes.map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}
+      <Route path="/admin/login" element={<AdminLoginPage />} />
+      <Route element={<AdminLayout />}>
+        {adminRoutes.filter((route) => route.path !== '/admin/login').map((route) => <Route key={route.path} path={route.path} element={<AdminPlaceholder title={route.title} />} />)}
+      </Route>
       <Route path="/profile" element={<Navigate to="/account/profile" replace />} />
       <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
