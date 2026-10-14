@@ -31,7 +31,7 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [alert, setAlert] = useState('')
-  const [errors, setErrors] = useState({})
+  const [errors, setErrors] = useState(/** @type {{ email?: string, password?: string }} */ ({}))
   const [sessionToast, setSessionToast] = useState(wasAdminSessionExpired)
 
   useEffect(() => {
