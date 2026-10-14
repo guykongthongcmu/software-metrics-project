@@ -36,6 +36,28 @@ export default function StorefrontFooter() {
     }
   }
 
+  let membership = null
+  if (user) {
+    membership = (
+      <>
+        <p className="mb-6 text-[0.9rem]">You are currently logged in to your account.</p>
+        <div className="flex">
+          <button className="w-full border border-white bg-white px-7.5 py-2 text-[0.8rem] font-semibold tracking-[2px] text-[#1a1a1a] disabled:cursor-wait disabled:opacity-60" disabled={signingOut} onClick={() => { void handleSignOut() }} type="button">{signingOut ? 'LOGGING OUT…' : 'LOG OUT'}</button>
+        </div>
+      </>
+    )
+  } else if (user === null) {
+    membership = (
+      <>
+        <p className="mb-6 text-[0.9rem]">Join now and get 15% off your first order.</p>
+        <div className="flex flex-wrap gap-4">
+          <Link className="rounded-full border border-accent bg-accent px-7.5 py-2 text-[0.8rem] font-medium text-white! transition-colors hover:border-[#97836d] hover:bg-[#97836d]" to="/auth/signup">SIGN UP</Link>
+          <Link className="rounded-full border border-[#c4b9a9] px-7.5 py-2 text-[0.8rem] font-medium text-ink transition-colors hover:bg-black/5" to="/login">LOG IN</Link>
+        </div>
+      </>
+    )
+  }
+
   return (
     <footer className="bg-[#eae5d9] px-6 py-12 text-[#555] lg:px-16 lg:pt-16 lg:pb-8">
       <div className="mb-8 grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-12 lg:mb-16 lg:gap-12">
@@ -61,22 +83,7 @@ export default function StorefrontFooter() {
         </div>
         <div>
           <h2 className="mb-6 text-[0.9rem] font-medium tracking-[1px] text-[#333]">MEMBERSHIP</h2>
-          {user ? (
-            <>
-              <p className="mb-6 text-[0.9rem]">You are currently logged in to your account.</p>
-              <div className="flex">
-                <button className="w-full border border-white bg-white px-7.5 py-2 text-[0.8rem] font-semibold tracking-[2px] text-[#1a1a1a] disabled:cursor-wait disabled:opacity-60" disabled={signingOut} onClick={() => { void handleSignOut() }} type="button">{signingOut ? 'LOGGING OUT…' : 'LOG OUT'}</button>
-              </div>
-            </>
-          ) : user === null ? (
-            <>
-              <p className="mb-6 text-[0.9rem]">Join now and get 15% off your first order.</p>
-              <div className="flex flex-wrap gap-4">
-                <Link className="rounded-full border border-accent bg-accent px-7.5 py-2 text-[0.8rem] font-medium text-white! transition-colors hover:border-[#97836d] hover:bg-[#97836d]" to="/auth/signup">SIGN UP</Link>
-                <Link className="rounded-full border border-[#c4b9a9] px-7.5 py-2 text-[0.8rem] font-medium text-ink transition-colors hover:bg-black/5" to="/login">LOG IN</Link>
-              </div>
-            </>
-          ) : null}
+          {membership}
           {error && <p className="mt-3 text-sm text-red-700" role="alert">{error}</p>}
         </div>
       </div>
