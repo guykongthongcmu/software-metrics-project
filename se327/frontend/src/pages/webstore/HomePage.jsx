@@ -35,7 +35,7 @@ function campaignBanner(campaign) {
 
 function NewArrivalsContent({ error, loading, products }) {
   if (error) return <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>
-  if (loading) return <p role="status" className="text-sm text-muted">Loading new arrivals…</p>
+  if (loading) return <output className="text-sm text-muted">Loading new arrivals…</output>
   if (products.length > 0) {
     return <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.productId} product={product} />)}</div>
   }
