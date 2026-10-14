@@ -108,56 +108,68 @@ class Command(BaseCommand):
                     (f'{sku_base}-B', meta['colours'][1], sizes[1], 13 + index % 7),
                 ]
 
-                # The first variant's SKU identifies the product, so a second run updates it.
-                existing = ProductVariant.objects.filter(sku_code__iexact=variants[0][0]).first()
-                if existing:
-                    product = existing.product
-                    product.product_type = meta['type']
-                    product.is_active = True
-                    product.save()
-                else:
-                    product = Product.objects.create(product_type=meta['type'])
-
-                name_en = f"{group['en']} {meta['name_en']}"
-                name_th = f"{meta['name_th']} {group['th']}"
-                desc_en = f"{meta['desc_en']} Curated for the {group['en'].lower()} storefront collection."
-                desc_th = f"{meta['desc_th']} คัดเลือกสำหรับหมวด{group['th']}ของร้านค้า"
-                for code, name, desc in (('EN', name_en, desc_en), ('TH', name_th, desc_th)):
-                    ProductTranslation.objects.update_or_create(
-                        product=product, language_code=code,
-                        defaults={'name': name, 'description': desc},
-                    )
-
-                ProductCategory.objects.filter(product=product).exclude(category=categories[group_key]).delete()
-                ProductCategory.objects.update_or_create(
-                    product=product, category=categories[group_key], defaults={'is_primary': True},
-                )
-
-                for sku, colour, size, stock in variants:
-                    ProductVariant.objects.update_or_create(
-                        sku_code=sku,
-                        defaults={
-                            'product': product, 'colour': colour, 'size': size, 'price': price,
-                            'compare_at_price': compare_at, 'stock_qty': stock, 'is_active': True,
-                        },
-                    )
-
-                # Sort order 1 is the hero shot and 2 is the thumbnail, both from the same file.
-                for order, (is_hero, is_thumb, label) in enumerate(
-                    [(True, False, 'hero'), (False, True, 'thumbnail')], start=1,
-                ):
-                    ProductMedia.objects.update_or_create(
-                        product=product, sort_order=order,
-                        defaults={
-                            'bucket_name': bucket, 'file_path': file_name,
-                            'public_url': f'{base_url}/{file_name}', 'alt_text': f'{name_en} {label}',
-                            'is_hero': is_hero, 'is_thumbnail': is_thumb,
-                        },
-                    )
+                product = self.get_product(variants[0][0], meta['type'])
+                name_en = self.seed_translations(product, group, meta)
+                self.seed_category(product, categories[group_key])
+                self.seed_variants(product, variants, price, compare_at)
+                self.seed_media(product, file_name, name_en, bucket, base_url)
 
                 product_number += 1
                 count += 1
         return count
+
+    def get_product(self, first_sku, product_type):
+        # The first variant's SKU identifies the product, so a second run updates it.
+        existing = ProductVariant.objects.filter(sku_code__iexact=first_sku).first()
+        if existing is None:
+            return Product.objects.create(product_type=product_type)
+        product = existing.product
+        product.product_type = product_type
+        product.is_active = True
+        product.save()
+        return product
+
+    def seed_translations(self, product, group, meta):
+        name_en = f"{group['en']} {meta['name_en']}"
+        name_th = f"{meta['name_th']} {group['th']}"
+        desc_en = f"{meta['desc_en']} Curated for the {group['en'].lower()} storefront collection."
+        desc_th = f"{meta['desc_th']} คัดเลือกสำหรับหมวด{group['th']}ของร้านค้า"
+        for code, name, desc in (('EN', name_en, desc_en), ('TH', name_th, desc_th)):
+            ProductTranslation.objects.update_or_create(
+                product=product, language_code=code,
+                defaults={'name': name, 'description': desc},
+            )
+        return name_en
+
+    def seed_category(self, product, category):
+        ProductCategory.objects.filter(product=product).exclude(category=category).delete()
+        ProductCategory.objects.update_or_create(
+            product=product, category=category, defaults={'is_primary': True},
+        )
+
+    def seed_variants(self, product, variants, price, compare_at):
+        for sku, colour, size, stock in variants:
+            ProductVariant.objects.update_or_create(
+                sku_code=sku,
+                defaults={
+                    'product': product, 'colour': colour, 'size': size, 'price': price,
+                    'compare_at_price': compare_at, 'stock_qty': stock, 'is_active': True,
+                },
+            )
+
+    def seed_media(self, product, file_name, name_en, bucket, base_url):
+        # Sort order 1 is the hero shot and 2 is the thumbnail, both from the same file.
+        for order, (is_hero, is_thumb, label) in enumerate(
+            [(True, False, 'hero'), (False, True, 'thumbnail')], start=1,
+        ):
+            ProductMedia.objects.update_or_create(
+                product=product, sort_order=order,
+                defaults={
+                    'bucket_name': bucket, 'file_path': file_name,
+                    'public_url': f'{base_url}/{file_name}', 'alt_text': f'{name_en} {label}',
+                    'is_hero': is_hero, 'is_thumbnail': is_thumb,
+                },
+            )
 
     def seed_admin(self, email, password):
         admin = Admin.objects.filter(email__iexact=email).first()
