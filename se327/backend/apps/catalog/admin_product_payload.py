@@ -184,6 +184,30 @@ def parse_variants(fields, errors):
     return parsed
 
 
+def parse_media_row(item, index, errors):
+    row = {
+        'sortOrder': parse_int(item.get('sortOrder'), 1, MAX_IMAGES),
+        'isThumbnail': parse_bool(item.get('isThumbnail', False)),
+        'isHero': parse_bool(item.get('isHero', False)),
+        'altText': item.get('altText'),
+    }
+    if row['altText'] is not None:
+        row['altText'] = clean_text(row['altText'], 255, required=False)
+        if row['altText'] is None:
+            errors[f'media[{index}].altText'] = 'altText must be text up to 255 characters'
+    if row['sortOrder'] is None or row['isThumbnail'] is None or row['isHero'] is None:
+        errors[f'media[{index}]'] = 'sortOrder must be 1 to 4, isThumbnail and isHero booleans'
+    return row
+
+
+def check_media_set(parsed, errors):
+    orders = [row['sortOrder'] for row in parsed]
+    if len(set(orders)) != len(orders):
+        errors['media'] = 'sortOrder values must be unique'
+    elif sum(row['isThumbnail'] for row in parsed) != 1 or sum(row['isHero'] for row in parsed) != 1:
+        errors['media'] = 'exactly one image must be the thumbnail and one the hero'
+
+
 def parse_media(fields, file_count, errors):
     if not 1 <= file_count <= MAX_IMAGES:
         errors['media'] = f'between 1 and {MAX_IMAGES} images are required'
@@ -192,27 +216,9 @@ def parse_media(fields, file_count, errors):
     if 'media' not in errors and len(items) != file_count:
         errors['media'] = 'send one media entry for every uploaded file'
         return []
-    parsed = []
-    for index, item in enumerate(items):
-        row = {
-            'sortOrder': parse_int(item.get('sortOrder'), 1, MAX_IMAGES),
-            'isThumbnail': parse_bool(item.get('isThumbnail', False)),
-            'isHero': parse_bool(item.get('isHero', False)),
-            'altText': item.get('altText'),
-        }
-        if row['altText'] is not None:
-            row['altText'] = clean_text(row['altText'], 255, required=False)
-            if row['altText'] is None:
-                errors[f'media[{index}].altText'] = 'altText must be text up to 255 characters'
-        if row['sortOrder'] is None or row['isThumbnail'] is None or row['isHero'] is None:
-            errors[f'media[{index}]'] = 'sortOrder must be 1 to 4, isThumbnail and isHero booleans'
-        parsed.append(row)
+    parsed = [parse_media_row(item, index, errors) for index, item in enumerate(items)]
     if 'media' not in errors and not any(key.startswith('media[') for key in errors):
-        orders = [row['sortOrder'] for row in parsed]
-        if len(set(orders)) != len(orders):
-            errors['media'] = 'sortOrder values must be unique'
-        elif sum(row['isThumbnail'] for row in parsed) != 1 or sum(row['isHero'] for row in parsed) != 1:
-            errors['media'] = 'exactly one image must be the thumbnail and one the hero'
+        check_media_set(parsed, errors)
     return parsed
 
 
