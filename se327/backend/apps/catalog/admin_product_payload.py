@@ -9,7 +9,7 @@ from .models import Product
 
 MAX_IMAGES = 4
 INT_MAX = 2**31 - 1
-MONEY = re.compile(r'[0-9]{1,8}(\.[0-9]{1,2})?')
+MONEY = re.compile(r'\d{1,8}(\.\d{1,2})?', re.ASCII)
 STATUSES = ('ACTIVE', 'INACTIVE')
 
 

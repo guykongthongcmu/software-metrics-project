@@ -119,9 +119,9 @@ def chart_series(start, end, granularity, labels):
         OrderItem.objects.filter(order__in=orders).annotate(bucket=trunc('order__created_at'))
         .values('bucket').annotate(units=Sum('quantity'))
     )
-    revenue = {label: 0 for label in labels}
-    count = {label: 0 for label in labels}
-    units = {label: 0 for label in labels}
+    revenue = dict.fromkeys(labels, 0)
+    count = dict.fromkeys(labels, 0)
+    units = dict.fromkeys(labels, 0)
     for row in per_order:
         label = label_for(row['bucket'], granularity)
         revenue[label] = money(row['revenue'])
