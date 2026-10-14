@@ -14,6 +14,7 @@ from .models import EmailVerificationToken, User
 
 EMAIL_REGEX = re.compile(r'^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$')
 MIN_PASSWORD_LENGTH = 8
+EMAIL_TAKEN = 'email already exists'
 # column sizes from the User model
 FIELD_LIMITS = {'email': 255, 'first_name': 100, 'last_name': 100, 'phone_number': 30}
 TOKEN_BYTES = 32
@@ -61,7 +62,7 @@ def email_taken(email):
 def check_email(email):
     check_email_format(email)
     if email_taken(email):
-        raise ApiError('EMAIL_ALREADY_EXISTS', 'email already exists', 409)
+        raise ApiError('EMAIL_ALREADY_EXISTS', EMAIL_TAKEN, 409)
 
 
 def issue_token(user):
@@ -107,7 +108,7 @@ def sign_up(body):
     try:
         with transaction.atomic():
             if email_taken(payload['email']):
-                raise ApiError('EMAIL_ALREADY_EXISTS', 'email already exists', 409)
+                raise ApiError('EMAIL_ALREADY_EXISTS', EMAIL_TAKEN, 409)
             user = User.objects.create(
                 email=payload['email'],
                 password_hash=make_password(payload['password']),
@@ -119,7 +120,7 @@ def sign_up(body):
             token = issue_token(user)
     except IntegrityError:
         # two sign ups with the same email at the same time
-        raise ApiError('EMAIL_ALREADY_EXISTS', 'email already exists', 409)
+        raise ApiError('EMAIL_ALREADY_EXISTS', EMAIL_TAKEN, 409)
 
     sent = send_token_email(user, token)
     return user, sent

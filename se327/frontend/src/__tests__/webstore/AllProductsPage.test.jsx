@@ -66,7 +66,7 @@ describe('AllProductsPage', () => {
     ])
     renderPage()
 
-    expect(screen.getByText('Loading products…')).toBeTruthy()
+    expect(screen.getByText('Loading products…').tagName).toBe('OUTPUT')
     expect(await screen.findByRole('heading', { name: 'Product 2' })).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Product 9' })).toBeTruthy()
     expect(screen.getByText('SALE')).toBeTruthy()

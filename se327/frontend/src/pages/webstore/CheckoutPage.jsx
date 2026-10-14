@@ -226,7 +226,7 @@ export default function CheckoutPage() {
           {status && <p className="ck-status is-error" role="alert">{status}</p>}
           {loading && <output className="ck-loading">Loading checkout…</output>}
           <button className="ck-submit-btn" disabled={loading || processing || items.length === 0} type="submit">{processing ? 'Processing...' : 'Complete'}</button>
-          <p className="ck-terms">Cash on Delivery (COD) By placing your order, you agree to our <a href="#">Terms and Conditions</a>.</p>
+          <p className="ck-terms">Cash on Delivery (COD) By placing your order, you agree to our Terms and Conditions.</p>
         </form></div>
         <aside aria-label="Order summary" className="ck-desktop-summary"><CheckoutSummary items={items} subtotal={subtotal} /></aside>
       </div>

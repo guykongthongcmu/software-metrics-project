@@ -9,7 +9,7 @@ from .models import Product
 
 MAX_IMAGES = 4
 INT_MAX = 2**31 - 1
-MONEY = re.compile(r'[0-9]{1,8}(\.[0-9]{1,2})?')
+MONEY = re.compile(r'\d{1,8}(\.\d{1,2})?', re.ASCII)
 STATUSES = ('ACTIVE', 'INACTIVE')
 
 
@@ -98,23 +98,29 @@ def list_field(fields, name, errors):
     return value
 
 
+def parse_translation(item, index, parsed, errors):
+    code = item.get('languageCode')
+    code = code.strip().upper() if isinstance(code, str) else None
+    if code not in Language.values or code in parsed:
+        errors[f'translations[{index}].languageCode'] = 'each of EN and TH must appear exactly once'
+        return None
+    name = clean_text(item.get('name'), 150)
+    description = item.get('description')
+    if name is None:
+        errors[f'translations[{index}].name'] = 'name is required, up to 150 characters'
+    if description is not None:
+        description = clean_text(description, 10_000, required=False)
+        if description is None:
+            errors[f'translations[{index}].description'] = 'description must be text'
+    return {'languageCode': code, 'name': name, 'description': description or None}
+
+
 def parse_translations(fields, errors):
     parsed = {}
     for index, item in enumerate(list_field(fields, 'translations', errors)):
-        code = item.get('languageCode')
-        code = code.strip().upper() if isinstance(code, str) else None
-        name = clean_text(item.get('name'), 150)
-        description = item.get('description')
-        if code not in Language.values or code in parsed:
-            errors[f'translations[{index}].languageCode'] = 'each of EN and TH must appear exactly once'
-            continue
-        if name is None:
-            errors[f'translations[{index}].name'] = 'name is required, up to 150 characters'
-        if description is not None:
-            description = clean_text(description, 10_000, required=False)
-            if description is None:
-                errors[f'translations[{index}].description'] = 'description must be text'
-        parsed[code] = {'languageCode': code, 'name': name, 'description': description or None}
+        row = parse_translation(item, index, parsed, errors)
+        if row is not None:
+            parsed[row['languageCode']] = row
     if 'translations' not in errors and set(parsed) != set(Language.values):
         errors['translations'] = 'exactly one EN and one TH translation are required'
     return list(parsed.values())
@@ -184,6 +190,30 @@ def parse_variants(fields, errors):
     return parsed
 
 
+def parse_media_row(item, index, errors):
+    row = {
+        'sortOrder': parse_int(item.get('sortOrder'), 1, MAX_IMAGES),
+        'isThumbnail': parse_bool(item.get('isThumbnail', False)),
+        'isHero': parse_bool(item.get('isHero', False)),
+        'altText': item.get('altText'),
+    }
+    if row['altText'] is not None:
+        row['altText'] = clean_text(row['altText'], 255, required=False)
+        if row['altText'] is None:
+            errors[f'media[{index}].altText'] = 'altText must be text up to 255 characters'
+    if row['sortOrder'] is None or row['isThumbnail'] is None or row['isHero'] is None:
+        errors[f'media[{index}]'] = 'sortOrder must be 1 to 4, isThumbnail and isHero booleans'
+    return row
+
+
+def check_media_set(parsed, errors):
+    orders = [row['sortOrder'] for row in parsed]
+    if len(set(orders)) != len(orders):
+        errors['media'] = 'sortOrder values must be unique'
+    elif sum(row['isThumbnail'] for row in parsed) != 1 or sum(row['isHero'] for row in parsed) != 1:
+        errors['media'] = 'exactly one image must be the thumbnail and one the hero'
+
+
 def parse_media(fields, file_count, errors):
     if not 1 <= file_count <= MAX_IMAGES:
         errors['media'] = f'between 1 and {MAX_IMAGES} images are required'
@@ -192,27 +222,9 @@ def parse_media(fields, file_count, errors):
     if 'media' not in errors and len(items) != file_count:
         errors['media'] = 'send one media entry for every uploaded file'
         return []
-    parsed = []
-    for index, item in enumerate(items):
-        row = {
-            'sortOrder': parse_int(item.get('sortOrder'), 1, MAX_IMAGES),
-            'isThumbnail': parse_bool(item.get('isThumbnail', False)),
-            'isHero': parse_bool(item.get('isHero', False)),
-            'altText': item.get('altText'),
-        }
-        if row['altText'] is not None:
-            row['altText'] = clean_text(row['altText'], 255, required=False)
-            if row['altText'] is None:
-                errors[f'media[{index}].altText'] = 'altText must be text up to 255 characters'
-        if row['sortOrder'] is None or row['isThumbnail'] is None or row['isHero'] is None:
-            errors[f'media[{index}]'] = 'sortOrder must be 1 to 4, isThumbnail and isHero booleans'
-        parsed.append(row)
+    parsed = [parse_media_row(item, index, errors) for index, item in enumerate(items)]
     if 'media' not in errors and not any(key.startswith('media[') for key in errors):
-        orders = [row['sortOrder'] for row in parsed]
-        if len(set(orders)) != len(orders):
-            errors['media'] = 'sortOrder values must be unique'
-        elif sum(row['isThumbnail'] for row in parsed) != 1 or sum(row['isHero'] for row in parsed) != 1:
-            errors['media'] = 'exactly one image must be the thumbnail and one the hero'
+        check_media_set(parsed, errors)
     return parsed
 
 
@@ -243,6 +255,61 @@ UPDATE_KEYS = (
 )
 
 
+def update_name(body, data, errors):
+    if 'name' in body:
+        data['name'] = clean_text(body['name'], 150)
+        if data['name'] is None:
+            errors['name'] = 'name is required, up to 150 characters'
+
+
+def update_description(body, data, errors):
+    if 'description' in body:
+        text = body['description']
+        data['description'] = None if text is None else clean_text(text, 10_000, required=False)
+        if text is not None and data['description'] is None:
+            errors['description'] = 'description must be text or null'
+        elif data['description'] == '':
+            data['description'] = None
+
+
+def update_category(body, data, errors):
+    for key in ('category_id', 'categoryId'):
+        if key in body:
+            data['categoryId'] = parse_int(body[key], 1, ID_MAX - 1)
+            if data['categoryId'] is None:
+                errors[key] = 'category_id must be a positive integer'
+
+
+def update_price(body, data, errors):
+    if 'price' in body:
+        data['price'] = parse_money(body['price'])
+        if data['price'] is None or data['price'] <= 0:
+            errors['price'] = 'price must be a number above 0 with at most 2 decimals'
+
+
+def update_compare_at_price(body, data, errors):
+    for key in ('compare_at_price', 'compareAtPrice'):
+        if key in body:
+            compare = body[key]
+            data['compareAtPrice'] = None if compare is None else parse_money(compare)
+            if compare is not None and data['compareAtPrice'] is None:
+                errors[key] = 'compare_at_price must be a number or null'
+
+
+def update_stock(body, data, errors):
+    if 'stock' in body:
+        data['stock'] = parse_int(body['stock'], 0, INT_MAX)
+        if data['stock'] is None:
+            errors['stock'] = 'stock must be an integer of 0 or more'
+
+
+def update_sku(body, data, errors):
+    if body.get('sku') is not None:
+        data['sku'] = clean_text(body['sku'], 100)
+        if data['sku'] is None:
+            errors['sku'] = 'sku must be text up to 100 characters'
+
+
 def parse_update(body):
     """Validate the subset of fields sent on update."""
     if not isinstance(body, dict):
@@ -252,43 +319,16 @@ def parse_update(body):
     if not present:
         raise validation_error({'body': 'send at least one field to change'})
     data = {}
-    if 'name' in body:
-        data['name'] = clean_text(body['name'], 150)
-        if data['name'] is None:
-            errors['name'] = 'name is required, up to 150 characters'
-    if 'description' in body:
-        text = body['description']
-        data['description'] = None if text is None else clean_text(text, 10_000, required=False)
-        if text is not None and data['description'] is None:
-            errors['description'] = 'description must be text or null'
-        elif data['description'] == '':
-            data['description'] = None
+    update_name(body, data, errors)
+    update_description(body, data, errors)
     active = parse_active(body, errors)
     if active is not None:
         data['isActive'] = active
-    for key in ('category_id', 'categoryId'):
-        if key in body:
-            data['categoryId'] = parse_int(body[key], 1, ID_MAX - 1)
-            if data['categoryId'] is None:
-                errors[key] = 'category_id must be a positive integer'
-    if 'price' in body:
-        data['price'] = parse_money(body['price'])
-        if data['price'] is None or data['price'] <= 0:
-            errors['price'] = 'price must be a number above 0 with at most 2 decimals'
-    for key in ('compare_at_price', 'compareAtPrice'):
-        if key in body:
-            compare = body[key]
-            data['compareAtPrice'] = None if compare is None else parse_money(compare)
-            if compare is not None and data['compareAtPrice'] is None:
-                errors[key] = 'compare_at_price must be a number or null'
-    if 'stock' in body:
-        data['stock'] = parse_int(body['stock'], 0, INT_MAX)
-        if data['stock'] is None:
-            errors['stock'] = 'stock must be an integer of 0 or more'
-    if body.get('sku') is not None:
-        data['sku'] = clean_text(body['sku'], 100)
-        if data['sku'] is None:
-            errors['sku'] = 'sku must be text up to 100 characters'
+    update_category(body, data, errors)
+    update_price(body, data, errors)
+    update_compare_at_price(body, data, errors)
+    update_stock(body, data, errors)
+    update_sku(body, data, errors)
     if errors:
         raise validation_error(errors)
     return data

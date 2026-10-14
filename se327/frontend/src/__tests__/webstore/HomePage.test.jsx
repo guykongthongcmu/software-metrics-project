@@ -80,7 +80,9 @@ describe('HomePage', () => {
     apiClient.get.mockImplementation((path) => path.includes('new-arrivals') ? arrivals : Promise.resolve({ data: { campaigns: [] } }))
     renderHome()
 
-    expect(screen.getByRole('status').textContent).toContain('Loading new arrivals')
+    const loadingMessage = screen.getByRole('status')
+    expect(loadingMessage.tagName).toBe('OUTPUT')
+    expect(loadingMessage.textContent).toContain('Loading new arrivals')
     resolveArrivals(arrivalsResponse)
     expect(await screen.findByRole('heading', { name: 'New linen shirt' })).toBeTruthy()
   })
@@ -170,6 +172,7 @@ describe('HomePage', () => {
     resolvedCampaign.resolve({ data: { campaigns: [] } })
     await Promise.allSettled([resolvedArrivals.promise, resolvedCampaign.promise])
     await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(resolvedView.container.childElementCount).toBe(0)
 
     const rejectedArrivals = makeDeferred()
     const rejectedCampaign = makeDeferred()
@@ -180,6 +183,7 @@ describe('HomePage', () => {
     rejectedCampaign.reject(new Error('offline'))
     await Promise.allSettled([rejectedArrivals.promise, rejectedCampaign.promise])
     await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(rejectedView.container.childElementCount).toBe(0)
   })
 
   it('shows a scroll-to-top button after scrolling past the legacy threshold', async () => {

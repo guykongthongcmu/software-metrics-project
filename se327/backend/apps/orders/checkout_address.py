@@ -21,6 +21,7 @@ FIELDS = {
 # explicit classes with a literal space, so \s style whitespace and other scripts' digits are out
 PHONE_PATTERN = re.compile(r'[0-9+\- ()]{7,20}')
 POSTAL_PATTERN = re.compile(r'[A-Za-z0-9\- ]{3,12}')
+FORMATS = {'phoneNumber': PHONE_PATTERN, 'postalCode': POSTAL_PATTERN}
 
 
 def invalid(details):
@@ -38,6 +39,24 @@ def has_bad_chars(value):
     return False
 
 
+def field_error(field, value, required, max_length):
+    """The problem with an already stripped string value, or None."""
+    if has_bad_chars(value):
+        return f'{field} contains invalid characters'
+    if not value:
+        return f'{field} is required' if required else None
+    if len(value) > max_length:
+        return f'{field} must be at most {max_length} characters'
+    return None
+
+
+def format_errors(address, errors):
+    for field, pattern in FORMATS.items():
+        value = address.get(field)
+        if field not in errors and value and not pattern.fullmatch(value):
+            errors[field] = f'{field} format is invalid'
+
+
 def clean_address(body):
     if not isinstance(body, dict):
         raise invalid({'body': 'request body must be a JSON object'})
@@ -46,30 +65,16 @@ def clean_address(body):
     errors = {}
     for field, (required, max_length) in FIELDS.items():
         raw = body.get(field)
-        if raw is None:
-            value = ''
-        elif isinstance(raw, str):
-            value = raw.strip()
-        else:
+        if raw is not None and not isinstance(raw, str):
             errors[field] = f'{field} must be a string'
             continue
-
-        if has_bad_chars(value):
-            errors[field] = f'{field} contains invalid characters'
-        elif not value:
-            if required:
-                errors[field] = f'{field} is required'
-        elif len(value) > max_length:
-            errors[field] = f'{field} must be at most {max_length} characters'
+        value = (raw or '').strip()
+        error = field_error(field, value, required, max_length)
+        if error:
+            errors[field] = error
         address[field] = value or None
 
-    phone = address.get('phoneNumber')
-    if 'phoneNumber' not in errors and phone and not PHONE_PATTERN.fullmatch(phone):
-        errors['phoneNumber'] = 'phoneNumber format is invalid'
-    postal = address.get('postalCode')
-    if 'postalCode' not in errors and postal and not POSTAL_PATTERN.fullmatch(postal):
-        errors['postalCode'] = 'postalCode format is invalid'
-
+    format_errors(address, errors)
     if errors:
         raise invalid(errors)
     return address

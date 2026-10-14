@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import LoginPage from '../../pages/account/LoginPage.jsx'
@@ -49,7 +49,7 @@ describe('LoginPage', () => {
     fireEvent.submit(screen.getByRole('button', { name: 'SIGN IN →' }).closest('form'))
 
     expect(apiClient.post).toHaveBeenCalledWith('/auth/user/signin', { email: 'customer@example.com', password: 'correct-horse' })
-    await waitFor(() => expect(screen.getByText('Storefront home')).toBeTruthy())
+    expect(await screen.findByText('Storefront home')).toBeTruthy()
   })
 
   it('shows a clear error when credentials are rejected', async () => {
@@ -110,7 +110,7 @@ describe('LoginPage', () => {
     fireEvent.change(screen.getByLabelText('EMAIL *'), { target: { value: 'member@example.com' } })
     fireEvent.change(screen.getByLabelText('PASSWORD *'), { target: { value: 'password123' } })
     submitLogin()
-    await waitFor(() => expect(screen.getByText('Storefront home')).toBeTruthy())
+    expect(await screen.findByText('Storefront home')).toBeTruthy()
   })
 })
 

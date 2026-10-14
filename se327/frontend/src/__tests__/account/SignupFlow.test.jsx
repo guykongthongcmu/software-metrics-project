@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { apiClient } from '../../lib/apiClient.js'
 import SignupConfirmPage from '../../pages/account/SignupConfirmPage.jsx'
@@ -37,13 +37,14 @@ describe('SignupInfoPage', () => {
     expect(screen.getByLabelText('Country code').value).toBe('+66')
     expect(screen.getByRole('button', { name: 'CONTINUE' }).disabled).toBe(true)
     expect(screen.getByRole('link', { name: 'Log in' }).getAttribute('href')).toBe('/login')
+    expect(screen.getByText(/Membership Terms and Privacy Policy/).closest('a')).toBeNull()
   })
 
   it('opens the legacy style date calendar and fills the date in DD/MM/YYYY format', () => {
     renderInfo()
     const dateInput = screen.getByLabelText('DATE OF BIRTH*')
     fireEvent.click(screen.getByRole('button', { name: 'Open date of birth calendar' }))
-    expect(screen.getByRole('dialog', { name: 'Date of birth calendar' })).toBeTruthy()
+    expect(screen.getByRole('dialog', { name: 'Date of birth calendar' }).tagName).toBe('DIALOG')
     expect(screen.getByText(new Intl.DateTimeFormat('en', { month: 'long' }).format(new Date()))).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Previous month' })).toBeTruthy()
     const yearPicker = screen.getByLabelText('Year')
@@ -111,7 +112,7 @@ describe('SignupInfoPage', () => {
       DOB: '2000-03-12',
       phone_number: '+66812345678',
     })
-    await waitFor(() => expect(screen.getByRole('heading', { name: /We already sent you/ })).toBeTruthy())
+    expect(await screen.findByRole('heading', { name: /We already sent you/ })).toBeTruthy()
     expect(screen.getByLabelText('Sign up progress').querySelector('[aria-current="step"]').textContent).toContain('CONFIRM')
   })
 

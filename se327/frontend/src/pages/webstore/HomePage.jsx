@@ -93,7 +93,11 @@ export default function HomePage() {
           <h2 className="font-sans text-2xl font-light text-[#444]">New Arrivals</h2>
           <Link to="/products?sort=newest" className="relative text-sm text-accent after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-full after:bg-accent">View All</Link>
         </div>
-        <NewArrivalsContent error={productsError} loading={productsLoading} products={products} />
+<NewArrivalsContent
+  error={productsError}
+  loading={productsLoading}
+  products={products}
+/>
       </section>
 
       {showScrollTop && <button type="button" aria-label="Scroll to top" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="fixed bottom-8 right-8 z-[999] grid h-12 w-12 place-items-center rounded-full border-0 bg-[#8b7355] text-xl text-white">↑</button>}

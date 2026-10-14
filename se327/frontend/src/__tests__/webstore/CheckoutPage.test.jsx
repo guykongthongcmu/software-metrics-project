@@ -84,6 +84,7 @@ describe('CheckoutPage', () => {
     expect(screen.getAllByText('$7.00')).toHaveLength(2)
     expect(screen.getAllByText('VAT Included (7%)')).toHaveLength(2)
     expect(screen.getAllByText((_, node) => node?.textContent === 'Color: MochaSize: MQty: 2')).toHaveLength(2)
+    expect(screen.getByText(/Terms and Conditions/).closest('a')).toBeNull()
     expect(screen.getByRole('button', { name: 'Complete' }).disabled).toBe(false)
   })
 

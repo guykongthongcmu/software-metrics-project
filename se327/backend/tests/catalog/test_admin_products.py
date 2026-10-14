@@ -627,6 +627,17 @@ class DeleteTests(AdminProductCase):
         self.assertFalse(ProductVariant.objects.filter(product_id=product_id).exists())
         self.assertFalse(any(path.exists() for path in paths))
 
+    def test_hard_delete_removes_bucket_files_but_not_seed_images(self):
+        product = make_product('Tee')
+        ProductMedia.objects.create(product=product, bucket_name='shop', file_path='products/a.jpg',
+                                    public_url='https://x/a.jpg', sort_order=2)
+        ProductMedia.objects.create(product=product, bucket_name='local', file_path='hero.jpg',
+                                    public_url='/images/hero.jpg', sort_order=3)
+        with mock.patch('apps.catalog.admin_products.storage.delete_files') as delete_files:
+            with self.captureOnCommitCallbacks(execute=True):
+                self.client.delete(f'{BASE}/{product.pk}?mode=HARD')
+        delete_files.assert_called_once_with(['products/a.jpg'])
+
     def create_product(self, category):
         res = self.client.post(BASE, {
             **{key: json.dumps(value) for key, value in good_payload(category.pk).items()

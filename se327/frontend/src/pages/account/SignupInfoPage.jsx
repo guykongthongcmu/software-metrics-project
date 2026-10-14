@@ -132,7 +132,7 @@ export default function SignupInfoPage() {
             <input checked={form.terms} id="signup-terms" name="terms" onChange={(event) => update('terms', event.target.checked)} required type="checkbox" />
             <label className="signup-custom-checkbox" htmlFor="signup-terms">
               <span aria-hidden="true" className="signup-checkmark" />
-              <span className="signup-terms-text">I agree to the <a href="#">Membership Terms</a> and <a href="#">Privacy Policy</a>, including the collection and use of my data.</span>
+              <span className="signup-terms-text">I agree to the Membership Terms and Privacy Policy, including the collection and use of my data.</span>
             </label>
           </div>
 
