@@ -171,22 +171,28 @@ describe('AdminDashboardPage', () => {
   })
 
   it('shows API error messages and stops loading after failure', async () => {
+    const toastListener = vi.fn()
+    window.addEventListener('admin:toast', toastListener)
     apiClient.get.mockRejectedValueOnce({ payload: { message: 'Dashboard unavailable' }, message: 'Request failed' })
     renderDashboard()
-    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Dashboard unavailable')
+    await waitFor(() => expect(toastListener).toHaveBeenCalledWith(expect.objectContaining({ detail: expect.objectContaining({ title: 'Dashboard Error', message: 'Dashboard unavailable', type: 'danger' }) })))
     await waitFor(() => expect(screen.queryByText('Loading dashboard...')).toBeNull())
     cleanup()
     apiClient.get.mockRejectedValueOnce(new Error('Network unavailable'))
     renderDashboard()
-    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Network unavailable')
+    await waitFor(() => expect(toastListener).toHaveBeenLastCalledWith(expect.objectContaining({ detail: expect.objectContaining({ title: 'Dashboard Error', message: 'Network unavailable' }) })))
+    window.removeEventListener('admin:toast', toastListener)
   })
 
   it('reports failures when changing the selected period', async () => {
+    const toastListener = vi.fn()
+    window.addEventListener('admin:toast', toastListener)
     apiClient.get.mockResolvedValueOnce({ data: summary }).mockRejectedValueOnce(new Error('Period unavailable'))
     renderDashboard()
     await screen.findByText('$1,250.5')
     fireEvent.click(screen.getByRole('button', { name: 'Monthly' }))
-    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Period unavailable')
+    await waitFor(() => expect(toastListener).toHaveBeenCalledWith(expect.objectContaining({ detail: expect.objectContaining({ title: 'Dashboard Error', message: 'Period unavailable', type: 'danger' }) })))
+    window.removeEventListener('admin:toast', toastListener)
   })
 
   it('ignores a late initial response after the dashboard unmounts', async () => {
@@ -199,8 +205,11 @@ describe('AdminDashboardPage', () => {
   })
 
   it('uses the fallback message when the API error has no message', async () => {
+    const toastListener = vi.fn()
+    window.addEventListener('admin:toast', toastListener)
     apiClient.get.mockRejectedValueOnce({})
     renderDashboard()
-    expect(await screen.findByRole('alert')).toHaveProperty('textContent', 'Unable to load dashboard data. Please try again.')
+    await waitFor(() => expect(toastListener).toHaveBeenCalledWith(expect.objectContaining({ detail: expect.objectContaining({ title: 'Dashboard Error', message: 'Unable to load dashboard data. Please try again.' }) })))
+    window.removeEventListener('admin:toast', toastListener)
   })
 })
