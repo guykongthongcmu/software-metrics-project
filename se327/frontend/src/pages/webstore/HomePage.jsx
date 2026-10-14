@@ -85,7 +85,7 @@ export default function HomePage() {
           <Link to="/products?sort=newest" className="relative text-sm text-accent after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-full after:bg-accent">View All</Link>
         </div>
         {productsError ? <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{productsError}</p>
-          : productsLoading ? <p role="status" className="text-sm text-muted">Loading new arrivals…</p>
+          : productsLoading ? <output className="text-sm text-muted">Loading new arrivals…</output>
             : products.length ? <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">{products.map((product) => <ProductCard key={product.productId} product={product} />)}</div>
               : <p className="text-sm text-muted">No new arrivals are available right now.</p>}
       </section>

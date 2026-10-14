@@ -80,7 +80,9 @@ describe('HomePage', () => {
     apiClient.get.mockImplementation((path) => path.includes('new-arrivals') ? arrivals : Promise.resolve({ data: { campaigns: [] } }))
     renderHome()
 
-    expect(screen.getByRole('status').textContent).toContain('Loading new arrivals')
+    const loadingMessage = screen.getByRole('status')
+    expect(loadingMessage.tagName).toBe('OUTPUT')
+    expect(loadingMessage.textContent).toContain('Loading new arrivals')
     resolveArrivals(arrivalsResponse)
     expect(await screen.findByRole('heading', { name: 'New linen shirt' })).toBeTruthy()
   })

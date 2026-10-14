@@ -198,7 +198,7 @@ export default function FavoritesPage() {
           <div className="grid grid-cols-2 gap-5 lg:grid-cols-4 max-[900px]:grid-cols-2">{recommendations.map((product) => <RecommendationCard favoriteIds={favoriteIds} key={product.productId} onToggle={toggleFavorite} product={product} />)}</div>
         </section>}
       </div>
-      {toast && <output className="fixed bottom-7 left-1/2 z-[1000] -translate-x-1/2 rounded-sm bg-[#282521] px-6 py-3 text-sm text-white shadow-lg" role="status">{toast}</output>}
+      {toast && <output className="fixed bottom-7 left-1/2 z-[1000] -translate-x-1/2 rounded-sm bg-[#282521] px-6 py-3 text-sm text-white shadow-lg">{toast}</output>}
     </main>
   )
 }

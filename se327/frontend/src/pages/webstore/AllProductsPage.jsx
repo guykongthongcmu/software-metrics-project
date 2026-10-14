@@ -128,7 +128,7 @@ function Pagination({ currentPage, totalPages, onSelect }) {
 
 function ProductCollection({ products, loading, error }) {
   if (error) return <p className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{error}</p>
-  if (loading) return <p className="py-8 text-sm text-[#8c857d]" role="status">Loading products…</p>
+  if (loading) return <output className="block py-8 text-sm text-[#8c857d]">Loading products…</output>
   if (!products.length) return <p className="py-12 text-center text-sm text-[#8c857d]">No products are available right now.</p>
   return (
     <div className="grid grid-cols-2 gap-4 min-[768px]:grid-cols-3 min-[992px]:grid-cols-4">

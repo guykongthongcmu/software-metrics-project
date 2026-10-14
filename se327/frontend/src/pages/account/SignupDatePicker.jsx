@@ -108,7 +108,7 @@ export default function SignupDatePicker({ value, onChange }) {
         <svg aria-hidden="true" fill="none" height="16" stroke="#A69B91" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="16"><rect height="18" rx="2" ry="2" width="18" x="3" y="4" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
       </button>
       {isOpen && (
-        <div aria-label="Date of birth calendar" className="signup-calendar" role="dialog">
+        <dialog aria-label="Date of birth calendar" className="signup-calendar" open>
           <div className="signup-calendar-header">
             <button aria-label="Previous month" className="signup-calendar-prev" onClick={() => setViewDate((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1))} type="button"><span /></button>
             <div className="signup-calendar-month-select">
@@ -137,7 +137,7 @@ export default function SignupDatePicker({ value, onChange }) {
               )
             })}
           </div>
-        </div>
+        </dialog>
       )}
     </div>
   )
