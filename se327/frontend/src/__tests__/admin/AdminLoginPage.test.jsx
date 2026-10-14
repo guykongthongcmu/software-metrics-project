@@ -37,6 +37,7 @@ describe('AdminLoginPage', () => {
 
   it('validates required fields and email format without calling the API', () => {
     renderLogin()
+    expect(document.title).toBe('Sign In | Admin Panel')
     fireEvent.click(screen.getByRole('button', { name: 'Sign In' }))
     expect(screen.getByText('Email is required.')).toBeTruthy()
     expect(screen.getByText('Password is required.')).toBeTruthy()

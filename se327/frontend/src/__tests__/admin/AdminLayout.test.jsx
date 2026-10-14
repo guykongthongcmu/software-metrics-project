@@ -53,6 +53,7 @@ describe('AdminLayout', () => {
     expect(screen.getByText('Order details content')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Orders' }).getAttribute('aria-current')).toBe('page')
     expect(screen.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')).toBeNull()
+    expect(document.title).toBe('Order 17 | Admin Panel')
   })
 
   it('uses the default title for an unknown admin route', () => {
@@ -69,6 +70,7 @@ describe('AdminLayout', () => {
     expect(screen.getAllByRole('link', { name: 'Campaign Builder' })).toHaveLength(2)
     fireEvent.click(screen.getAllByRole('link', { name: 'Campaign Builder' })[1])
     await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/admin/campaigns/builder'))
+    expect(document.title).toBe('Campaign Builder | Admin Panel')
     expect(search.value).toBe('')
 
     fireEvent.focus(search)
