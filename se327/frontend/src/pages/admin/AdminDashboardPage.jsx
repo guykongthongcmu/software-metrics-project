@@ -304,7 +304,10 @@ export default function AdminDashboardPage() {
 
   return (
     <section className="admin-dashboard-page">
-      <header className="admin-dashboard-header"><DateRangePicker from={from} to={to} onSelectRange={applyDateRange} /></header>
+      <header className="admin-dashboard-header">
+        <div className="admin-dashboard-page-heading"><h2>Dashboard</h2><p>Welcome back! Here's what's happening with your store.</p></div>
+        <DateRangePicker from={from} to={to} onSelectRange={applyDateRange} />
+      </header>
       {error && <p className="admin-feature-error" role="alert">{error}</p>}
       <div className="admin-dashboard-kpis">
         <KpiCard color="golden" currency growth={revenueGrowth} index={0} label="Total Revenue" value={data.revenue?.total} />
