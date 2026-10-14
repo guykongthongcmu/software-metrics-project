@@ -46,7 +46,7 @@
   background: #f4f5f7;
   font-size: 20px;
 }
-.admin-kpi-icon.golden { background: rgba(200,167,125,.15); color: #80603a; }
+.admin-kpi-icon.golden { background: #f4eee6; color: #80603a; }
 .admin-kpi-icon svg { width: 21px; height: 21px; fill: currentColor; }
 .admin-stat-growth {
   position: absolute;
@@ -57,7 +57,7 @@
   font-size: 12px;
   font-weight: 500;
 }
-.admin-stat-growth.is-positive { background: rgba(46,204,113,.15); color: #187a43; }
+.admin-stat-growth.is-positive { background: #ddf4e5; color: #187a43; }
 .admin-orders-stat > p { margin: 0 0 4px; color: var(--admin-muted); font-size: 13px; font-weight: 500; }
 .admin-orders-stat > strong { color: var(--admin-text); font: 600 24px/1.25 'DM Serif Display', serif; }
 
@@ -78,11 +78,11 @@
 .admin-orders-table td a { color: var(--admin-text); font-weight: 600; text-decoration: none; }
 .admin-orders-table td a:hover { color: #80603a; }
 
-.admin-order-status { display: inline-flex; align-items: center; justify-content: center; padding: 4px 8px; border: 1px solid rgba(46,204,113,.3); border-radius: 8px; background: rgba(46,204,113,.15); color: #187a43; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-.admin-order-status.status-pending { border-color: rgba(241,196,15,.3); background: rgba(241,196,15,.15); color: #815800; }
-.admin-order-status.status-shipped { border-color: rgba(52,152,219,.3); background: rgba(52,152,219,.15); color: #17618c; }
-.admin-order-status.status-delivered { border-color: rgba(155,89,182,.3); background: rgba(155,89,182,.15); color: #6e3488; }
-.admin-order-status.status-cancelled { border-color: rgba(231,76,60,.3); background: rgba(231,76,60,.12); color: #a42f24; }
+.admin-order-status { display: inline-flex; align-items: center; justify-content: center; padding: 4px 8px; border: 1px solid rgba(46,204,113,.3); border-radius: 8px; background: #ddf4e5; color: #187a43; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.admin-order-status.status-pending { border-color: rgba(241,196,15,.3); background: #faf3d6; color: #815800; }
+.admin-order-status.status-shipped { border-color: rgba(52,152,219,.3); background: #deecf4; color: #17618c; }
+.admin-order-status.status-delivered { border-color: rgba(155,89,182,.3); background: #ede3ef; color: #6e3488; }
+.admin-order-status.status-cancelled { border-color: rgba(231,76,60,.3); background: #f9e6e2; color: #a42f24; }
 
 .admin-feature-button,
 .admin-order-delete {
@@ -116,7 +116,7 @@
 .admin-orders-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; color: var(--admin-muted); font-size: 12px; }
 .admin-orders-pagination nav { display: flex; align-items: center; gap: 6px; }
 .admin-orders-pagination button { display: flex; min-width: 34px; height: 34px; align-items: center; justify-content: center; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: #4a4a5e; cursor: pointer; font: 500 13px Inter,sans-serif; transition: all .2s ease; }
-.admin-orders-pagination button:hover:not(:disabled) { background: rgba(200,167,125,.15); color: #80603a; }
+.admin-orders-pagination button:hover:not(:disabled) { background: #f4eee6; color: #80603a; }
 .admin-orders-pagination button.active { background: #80603a; color: white; }
 .admin-orders-pagination button:disabled { cursor: default; opacity: .4; }
 
