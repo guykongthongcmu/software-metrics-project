@@ -5,6 +5,7 @@ from django.conf import settings
 from django.core.exceptions import RequestDataTooBig, SuspiciousOperation
 from django.http import HttpResponse
 
+from .exceptions import TOO_BIG
 from .responses import error_response
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,10 @@ class JsonExceptionMiddleware:
         return self.get_response(request)
 
     def process_exception(self, request, exception):
+        if isinstance(exception, RequestDataTooBig):
+            return error_response(*TOO_BIG, 413)
+        if isinstance(exception, SuspiciousOperation):
+            return error_response('BAD_REQUEST', 'the request was rejected', 400)
         logger.exception('Unhandled error on %s', request.path, exc_info=exception)
         return error_response('INTERNAL_SERVER_ERROR', 'internal server error', 500)
 

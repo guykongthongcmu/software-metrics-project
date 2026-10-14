@@ -1,3 +1,4 @@
+from django.core.exceptions import SuspiciousOperation
 from django.test import SimpleTestCase, override_settings
 from django.urls import path
 from rest_framework.views import APIView
@@ -10,6 +11,10 @@ class BoomView(APIView):
         raise RuntimeError('secret internal detail')
 
 
+def plain_suspicious(request):
+    raise SuspiciousOperation('too many fields')
+
+
 def plain_boom(request):
     raise RuntimeError('secret internal detail')
 
@@ -17,6 +22,7 @@ def plain_boom(request):
 urlpatterns = [
     path('boom', BoomView.as_view()),
     path('plain-boom', plain_boom),
+    path('plain-suspicious', plain_suspicious),
 ]
 
 
@@ -66,6 +72,10 @@ class ServerErrorTests(SimpleTestCase):
 
     def test_uncaught_error_in_plain_view(self):
         self.assert_no_leak(self.client.get('/plain-boom'))
+
+    def test_rejected_request_in_plain_view_is_400(self):
+        res = self.client.get('/plain-suspicious')
+        self.assertEqual((res.status_code, res.json()['code']), (400, 'BAD_REQUEST'))
 
 
 @override_settings(CORS_ALLOWED_ORIGINS=[ALLOWED])

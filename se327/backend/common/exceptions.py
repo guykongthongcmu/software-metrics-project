@@ -1,5 +1,6 @@
 import logging
 
+from django.core.exceptions import RequestDataTooBig, SuspiciousOperation
 from rest_framework.response import Response
 from rest_framework.views import exception_handler
 
@@ -16,10 +17,20 @@ CODES = {
     415: 'UNSUPPORTED_MEDIA_TYPE',
 }
 
+# body over DATA_UPLOAD_MAX_MEMORY_SIZE, which uploaded files do not count towards
+TOO_BIG = ('PAYLOAD_TOO_LARGE', 'request body is too large')
+
 
 def api_exception_handler(exc, context):
     """Wrap DRF errors in the shared error envelope; anything else becomes a 500."""
     response = exception_handler(exc, context)
+
+    if isinstance(exc, RequestDataTooBig):
+        return Response(error_body(*TOO_BIG), status=413)
+
+    if isinstance(exc, SuspiciousOperation):
+        # for example more than 1000 query or form fields
+        return Response(error_body('BAD_REQUEST', 'the request was rejected'), status=400)
 
     if response is None:
         logger.exception('Unhandled error in API view', exc_info=exc)
