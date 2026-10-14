@@ -1,7 +1,10 @@
 from datetime import date
 
+from django.core.exceptions import SuspiciousOperation
+
 from apps.accounts.models import Session, User
 from apps.accounts.sessions import COOKIE_NAME, create_session
+from common.exceptions import api_exception_handler
 from tests.catalog.test_admin_products import JPEG, AdminProductCase, image
 from tests.catalog.test_storefront import make_product
 
@@ -48,7 +51,14 @@ class PayloadTooLargeTests(AdminProductCase):
         self.assertEqual(res.status_code, 201, res.content)
 
     def test_too_many_query_parameters_is_400(self):
+        # the text middleware looks at the query string before any view does
         query = '&'.join(f'a{i}=1' for i in range(1001))
         for url in (f'/api/client/products/search?q=x&{query}', f'/api/admin/orders?{query}'):
             res = self.client.get(url)
-            self.assertEqual((res.status_code, res.json()['code']), (400, 'BAD_REQUEST'), url)
+            self.assertEqual((res.status_code, res.json()['code']), (400, 'INVALID_QUERY'), url[:60])
+
+    def test_api_handler_maps_a_rejected_request_to_400(self):
+        # for example too many multipart fields, which the middleware does not read
+        res = api_exception_handler(SuspiciousOperation('too many fields'), {})
+        self.assertEqual(res.status_code, 400)
+        self.assertEqual(res.data['code'], 'BAD_REQUEST')
