@@ -48,7 +48,9 @@ describe('App routes', () => {
     expect(await screen.findByRole('heading', { name: 'Admin Panel' })).toBeTruthy()
     cleanup()
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>)
-    expect(await screen.findAllByRole('heading', { name: 'Dashboard' })).toHaveLength(2)
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: 'Revenue Overview' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')).toBe('page')
   })
 
   it('redirects the legacy profile route and renders a not-found page', async () => {
