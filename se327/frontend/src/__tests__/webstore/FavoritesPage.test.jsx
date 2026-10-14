@@ -98,7 +98,7 @@ describe('FavoritesPage', () => {
     await waitFor(() => expect(apiClient.delete).toHaveBeenCalledWith('/client/favorites/21?lang=EN', { redirectOn401: false }))
     expect(screen.queryByRole('link', { name: 'View Lilac Shirt' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Remove Mocha Jacket from favorites' }))
-    await waitFor(() => expect(screen.getByText('SAVE YOUR FAVOURITE ITEMS NOW !')).toBeTruthy())
+    expect(await screen.findByText('SAVE YOUR FAVOURITE ITEMS NOW !')).toBeTruthy()
     expect(listener.mock.calls[1][0].detail).toMatchObject({ count: 0, productId: 21, isFavorite: false })
     expect(apiClient.get).toHaveBeenCalledTimes(2)
     window.removeEventListener('storefront:favorites-updated', listener)

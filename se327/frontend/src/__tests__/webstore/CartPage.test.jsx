@@ -201,7 +201,7 @@ describe('CartPage', () => {
     expect(onCartUpdate.mock.calls.at(-1)[0].detail.count).toBe(1)
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Canvas Tote from cart' }))
-    await waitFor(() => expect(screen.getByText(/Your cart is now empty/)).toBeTruthy())
+    expect(await screen.findByText(/Your cart is now empty/)).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Check Out' }).disabled).toBe(true)
     window.removeEventListener('storefront:cart-updated', onCartUpdate)
   })
