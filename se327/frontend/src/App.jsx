@@ -20,6 +20,9 @@ import SearchPage from './pages/webstore/SearchPage.jsx'
 import CartPage from './pages/webstore/CartPage.jsx'
 import AdminLayout from './pages/admin/AdminLayout.jsx'
 import AdminLoginPage from './pages/admin/AdminLoginPage.jsx'
+import CheckoutPage from './pages/webstore/CheckoutPage.jsx'
+import CheckoutSuccessPage from './pages/webstore/CheckoutSuccessPage.jsx'
+import FavoritesPage from './pages/webstore/FavoritesPage.jsx'
 
 function getAccountPage(route) {
   switch (route.path) {
@@ -65,6 +68,9 @@ function getStorefrontPage(route) {
   if (route.path === '/search') return <SearchPage />
   if (route.path === '/products/:id') return <ProductDetailPage />
   if (route.path === '/cart') return <CartPage />
+  if (route.path === '/checkout') return <CheckoutPage />
+  if (route.path === '/checkout/success') return <CheckoutSuccessPage />
+  if (route.path === '/favorites') return <FavoritesPage />
   return <StorefrontPlaceholder title={route.title} />
 }
 

@@ -1,8 +1,14 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { apiClient } from '../../lib/apiClient.js'
 import ProductCard from '../../pages/webstore/partials/ProductCard.jsx'
 import { FavoritesProvider } from '../../pages/webstore/partials/FavoritesContext.jsx'
+
+vi.mock('../../lib/apiClient.js', async (importOriginal) => {
+  const actual = await importOriginal()
+  return { ...actual, apiClient: { get: vi.fn(), post: vi.fn(), delete: vi.fn() } }
+})
 
 function renderCard(product) {
   return render(<MemoryRouter><FavoritesProvider><ProductCard product={product} /></FavoritesProvider></MemoryRouter>)
@@ -10,6 +16,12 @@ function renderCard(product) {
 
 describe('ProductCard', () => {
   afterEach(() => cleanup())
+
+  beforeEach(() => {
+    apiClient.get.mockResolvedValue({ data: { products: [] } })
+    apiClient.post.mockResolvedValue({ data: { isFavorite: true, favoritesCount: 1 } })
+    apiClient.delete.mockResolvedValue({ data: { isFavorite: false, favoritesCount: 0 } })
+  })
 
   it('shows the product image, details, sale price, discount and known colour swatches', () => {
     renderCard({
@@ -62,7 +74,7 @@ describe('ProductCard', () => {
     expect(screen.getByTitle('Powder Blue').style.backgroundColor).toBe('rgb(176, 213, 232)')
   })
 
-  it('supports alternate color field, numeric discounts and favorite toggling', () => {
+  it('supports alternate color field, numeric discounts and favorite toggling', async () => {
     const onFavoriteUpdate = vi.fn()
     window.addEventListener('storefront:favorites-updated', onFavoriteUpdate)
     renderCard({
@@ -73,10 +85,11 @@ describe('ProductCard', () => {
     const heart = screen.getByRole('button', { name: 'Add to favorites' })
     expect(screen.getByText('-25%')).toBeTruthy()
     expect(screen.getByTitle('Navy').style.backgroundColor).toBe('rgb(27, 42, 74)')
+    await screen.findByRole('button', { name: 'Add to favorites' })
     fireEvent.click(heart)
 
-    expect(screen.getByRole('button', { name: 'Remove from favorites' }).getAttribute('aria-pressed')).toBe('true')
-    expect(JSON.parse(window.localStorage.getItem('core-co-mock-favorites'))).toEqual([9])
+    expect((await screen.findByRole('button', { name: 'Remove from favorites' })).getAttribute('aria-pressed')).toBe('true')
+    expect(apiClient.post).toHaveBeenCalledWith('/client/favorites/9?lang=EN', {}, { redirectOn401: false })
     expect(onFavoriteUpdate).toHaveBeenCalledOnce()
     expect(onFavoriteUpdate.mock.calls[0][0].detail.count).toBe(1)
     window.removeEventListener('storefront:favorites-updated', onFavoriteUpdate)
