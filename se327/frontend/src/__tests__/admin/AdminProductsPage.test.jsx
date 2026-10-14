@@ -14,7 +14,7 @@ const categories = { data: { categories: [
   { categoryId: 3, categoryName: 'Child', slug: 'men-shirts', parentCategoryId: 2 },
   { categoryId: 4, categoryName: 'Tag', slug: 'tag-sale', parentCategoryId: null },
 ] } }
-const product = { productId: 8, name: 'Linen Top', description: 'Soft linen', status: 'ACTIVE', variants: [{ sku: 'LIN-M-BEIGE', colour: 'Beige', size: 'M', price: 50, compareAtPrice: 60, stockQty: 5 }], categories: [{ categoryId: 2, name: 'Men Shirts', isPrimary: true }], media: [{ productMediaId: 2, publicUrl: '/images/linen.jpg', altText: 'Linen Top' }] }
+const product = { productId: 8, name: 'Linen Top', description: 'Soft linen', status: 'ACTIVE', priceFrom: 55, variants: [{ sku: 'LIN-M-BEIGE', colour: 'Beige', size: 'M', price: 50, compareAtPrice: 60, stockQty: 5 }], categories: [{ categoryId: 2, name: 'Men Shirts', isPrimary: true }], media: [{ productMediaId: 2, publicUrl: '/images/linen.jpg', altText: 'Linen Top' }] }
 
 function renderList() { return render(<MemoryRouter initialEntries={['/admin/products']}><Routes><Route path="/admin/products" element={<AdminProductsPage />} /><Route path="/admin/products/edit/:id" element={<p>Product editor</p>} /></Routes></MemoryRouter>) }
 function renderCreate() { return render(<MemoryRouter initialEntries={['/admin/products/create']}><Routes><Route path="/admin/products/create" element={<AdminProductFormPage />} /><Route path="/admin/products" element={<p>Products route</p>} /></Routes></MemoryRouter>) }
@@ -94,6 +94,7 @@ describe('Admin product catalog and editor', () => {
     fireEvent.change(screen.getByLabelText('Price ($) *'), { target: { value: '60' } })
     fireEvent.change(screen.getByLabelText('Discount Price ($)'), { target: { value: '50' } })
     fireEvent.change(screen.getByLabelText('Stock *'), { target: { value: '3' } })
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'ARCHIVED' } })
     fireEvent.change(screen.getByLabelText('New variant size'), { target: { value: 'M' } })
     fireEvent.change(screen.getByLabelText('New variant color'), { target: { value: 'Beige' } })
     fireEvent.change(screen.getByLabelText('New variant stock'), { target: { value: '3' } })
@@ -105,6 +106,7 @@ describe('Admin product catalog and editor', () => {
     await waitFor(() => expect(apiClient.post).toHaveBeenCalledWith('/admin/products', expect.any(FormData)))
     const body = apiClient.post.mock.calls[0][1]
     const payload = JSON.parse(body.get('payload'))
+    expect(payload.status).toBe('INACTIVE')
     expect(payload.variants[0]).toMatchObject({ colour: 'BEIGE', size: 'M', price: 50, compareAtPrice: 60, stockQty: 3 })
     expect(body.getAll('mediaFiles')).toHaveLength(1)
     expect(await screen.findByText('Products route')).toBeTruthy()
@@ -122,6 +124,32 @@ describe('Admin product catalog and editor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create Product' }))
     expect(await screen.findByText('Please select a valid category')).toBeTruthy()
     expect(apiClient.post).not.toHaveBeenCalled()
+  })
+
+  it('keeps the legacy upload zone interactive and manages variant rows', async () => {
+    apiClient.get.mockImplementation((path) => path === '/admin/categories' ? Promise.reject(new Error('Categories unavailable')) : undefined)
+    renderCreate()
+    const uploadZone = await screen.findByRole('button', { name: 'Drag and drop or click to upload product images' })
+    const fileInput = screen.getByLabelText('Product images')
+    const clickSpy = vi.spyOn(fileInput, 'click')
+    fireEvent.click(uploadZone)
+    expect(clickSpy).toHaveBeenCalledOnce()
+    const file = new File(['image-data'], 'linen.png', { type: 'image/png' })
+    fireEvent.drop(uploadZone, { dataTransfer: { files: [file] } })
+    expect(await screen.findByAltText(/preview 1/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Remove image 1' }))
+    expect(URL.revokeObjectURL).toHaveBeenCalledOnce()
+    expect(screen.getByText('Drag & dropdown or click to upload')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add variant' }))
+    expect(window.alert).toHaveBeenCalledWith('Please enter both size and color')
+    fireEvent.change(screen.getByLabelText('New variant size'), { target: { value: 'M' } })
+    fireEvent.change(screen.getByLabelText('New variant color'), { target: { value: 'Beige' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add variant' }))
+    fireEvent.change(screen.getByLabelText('Variant 1 size'), { target: { value: 'L' } })
+    expect(screen.getByLabelText('Variant 1 size')).toHaveProperty('value', 'L')
+    fireEvent.click(screen.getByRole('button', { name: 'Remove variant 1' }))
+    expect(screen.queryByLabelText('Variant 1 size')).toBeNull()
   })
 
   it('shows create validation errors from API details', async () => {
@@ -144,12 +172,16 @@ describe('Admin product catalog and editor', () => {
     apiClient.put.mockResolvedValue({ data: product })
     renderEdit()
     expect(await screen.findByDisplayValue('Linen Top')).toBeTruthy()
+    expect(screen.getByLabelText('Price ($) *')).toHaveProperty('value', '55')
     expect(screen.getByLabelText('Product ID')).toHaveProperty('value', '8')
     expect(screen.getByAltText('Linen Top')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Remove existing image 1' }))
+    expect(screen.queryByAltText('Linen Top')).toBeNull()
     fireEvent.change(screen.getByLabelText('Product Name *'), { target: { value: 'Updated Linen Top' } })
     fireEvent.change(screen.getByLabelText('Stock *'), { target: { value: '9' } })
     fireEvent.click(screen.getByRole('button', { name: 'Update Product' }))
-    await waitFor(() => expect(apiClient.put).toHaveBeenCalledWith('/admin/products/8', expect.objectContaining({ name: 'Updated Linen Top', category_id: 2, price: 50, stock: 9, sku: 'LIN-M-BEIGE' })))
+    await waitFor(() => expect(apiClient.put).toHaveBeenCalledWith('/admin/products/8', expect.objectContaining({ name: 'Updated Linen Top', category_id: 2, price: 55, stock: 9 })))
+    expect(apiClient.put.mock.calls[0][1]).not.toHaveProperty('sku')
     expect(await screen.findByText('Products route')).toBeTruthy()
   })
 
