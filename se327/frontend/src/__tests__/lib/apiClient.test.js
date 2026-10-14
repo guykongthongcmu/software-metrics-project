@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApiError, apiClient, apiFetch } from '../../lib/apiClient.js'
+import { setLanguage } from '../../lib/language.js'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -17,6 +18,20 @@ function response({ ok = true, status = 200, contentType = 'application/json', b
 }
 
 describe('apiClient', () => {
+  it('sends the selected language on storefront requests', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(response())
+    vi.stubGlobal('fetch', fetchMock)
+    setLanguage('TH')
+    try {
+      await apiClient.get('/client/products?page=1&lang=EN')
+      await apiClient.get('/admin/products?lang=EN')
+    } finally {
+      setLanguage('EN')
+    }
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/client/products?page=1&lang=TH')
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/admin/products?lang=EN')
+  })
+
   it('sends JSON requests with credentials and parses JSON responses', async () => {
     const fetchMock = vi.fn().mockResolvedValue(response())
     vi.stubGlobal('fetch', fetchMock)

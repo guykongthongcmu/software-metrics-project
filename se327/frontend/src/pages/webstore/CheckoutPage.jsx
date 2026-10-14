@@ -110,7 +110,6 @@ export default function CheckoutPage() {
   const [form, setForm] = useState(emptyAddress)
   const [items, setItems] = useState([])
   const [subtotal, setSubtotal] = useState(0)
-  const [hasSavedAddress, setHasSavedAddress] = useState(false)
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [status, setStatus] = useState('')
@@ -137,7 +136,6 @@ export default function CheckoutPage() {
 
       if (addressResult.status === 'fulfilled') {
         const savedAddress = addressResult.value?.data?.address
-        setHasSavedAddress(Boolean(savedAddress))
         setForm(addressFormValue(savedAddress))
       } else if (addressResult.reason instanceof ApiError && addressResult.reason.status === 401) {
         void navigate(loginPath())
@@ -168,10 +166,6 @@ export default function CheckoutPage() {
     event.preventDefault()
     if (items.length === 0) {
       setStatus('Your cart is empty')
-      return
-    }
-    if (!hasSavedAddress) {
-      setStatus(shippingAddressRequiredMessage)
       return
     }
     setStatus('')

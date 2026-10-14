@@ -101,7 +101,7 @@ describe('CheckoutPage', () => {
     expect((await screen.findByRole('alert')).textContent).toBe('Your cart is empty')
   })
 
-  it('blocks checkout when no saved default address exists and preserves the entered form', async () => {
+  it('saves the address and purchases for a customer with no saved address', async () => {
     setupApi({ savedAddress: { data: { address: null } } })
     renderCheckout()
     await screen.findByRole('heading', { name: 'Checkout' })
@@ -109,11 +109,10 @@ describe('CheckoutPage', () => {
     fireEvent.change(screen.getByLabelText('Address'), { target: { value: '9 Compiler Lane' } })
     fireEvent.click(screen.getByRole('button', { name: 'Complete' }))
 
-    expect((await screen.findByRole('alert')).textContent).toBe('Please save a default shipping address to your account before placing your order.')
-    expect(screen.getByLabelText('First Name').value).toBe('Grace')
-    expect(screen.getByLabelText('Address').value).toBe('9 Compiler Lane')
-    expect(apiClient.put).not.toHaveBeenCalled()
-    expect(apiClient.post).not.toHaveBeenCalled()
+    expect(await screen.findByRole('heading', { name: /Thank you for/ })).toBeTruthy()
+    expect(apiClient.put).toHaveBeenCalledTimes(1)
+    expect(apiClient.post).toHaveBeenCalledWith('/client/checkout/purchase', {}, { redirectOn401: false })
+    expect(apiClient.put.mock.invocationCallOrder[0]).toBeLessThan(apiClient.post.mock.invocationCallOrder[0])
   })
 
   it('renders fallback values for incomplete cart item data', async () => {
