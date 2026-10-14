@@ -44,4 +44,25 @@ describe('language', () => {
     expect(withSelectedLanguage('/client/categories?sort=category_name')).toBe('/client/categories?sort=category_name')
     expect(withSelectedLanguage('/admin/products?lang=EN')).toBe('/admin/products?lang=EN')
   })
+
+  it('sets the html lang attribute', () => {
+    setLanguage('TH')
+    expect(document.documentElement.lang).toBe('th')
+    setLanguage('EN')
+    expect(document.documentElement.lang).toBe('en')
+  })
+
+  it('follows a language change made in another tab', () => {
+    const listener = vi.fn()
+    window.addEventListener('storefront:language-changed', listener)
+    window.dispatchEvent(new StorageEvent('storage', { key: 'language', newValue: 'TH' }))
+    window.dispatchEvent(new StorageEvent('storage', { key: 'language', newValue: 'TH' }))
+    window.dispatchEvent(new StorageEvent('storage', { key: 'other', newValue: 'EN' }))
+    window.dispatchEvent(new StorageEvent('storage', { key: 'language', newValue: 'FR' }))
+    window.removeEventListener('storefront:language-changed', listener)
+
+    expect(getLanguage()).toBe('TH')
+    expect(document.documentElement.lang).toBe('th')
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
 })
