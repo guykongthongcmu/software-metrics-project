@@ -44,6 +44,12 @@ class SigninTests(TestCase):
         self.assertEqual(session.subject_type, 'USER')
         self.assertEqual(session.user_id, user.user_id)
 
+    def test_cookie_carries_an_expiry(self):
+        make_user()
+        res = self.post({'email': 'jane@example.com', 'password': 'longenough1'})
+        cookie = res.cookies[COOKIE_NAME]
+        self.assertTrue(cookie['max-age'] or cookie['expires'])
+
     def test_email_is_case_insensitive(self):
         make_user()
         res = self.post({'email': ' JANE@Example.com ', 'password': 'longenough1'})
