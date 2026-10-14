@@ -21,6 +21,18 @@ function currentPageTitle(pathname) {
   })?.title || 'Admin Panel'
 }
 
+function legacyDocumentTitle(pathname) {
+  if (pathname === '/admin/dashboard') return 'Dashboard'
+  if (pathname === '/admin/orders') return 'Orders'
+  if (/^\/admin\/orders\/\d+$/.test(pathname)) return `Order ${pathname.split('/').at(-1)}`
+  if (pathname === '/admin/products') return 'Products'
+  if (pathname === '/admin/products/create') return 'Create Product'
+  if (/^\/admin\/products\/edit\/[^/]+$/.test(pathname)) return 'Edit Product'
+  if (pathname === '/admin/categories') return 'Category Management'
+  if (pathname === '/admin/campaigns/builder') return 'Campaign Builder'
+  return null
+}
+
 function AdminIcon({ name }) {
   const iconPaths = {
     dashboard: <path d="M6 1H1v14h5zm9 0h-5v5h5zm0 9v5h-5v-5zM0 1a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H1a1 1 0 0 1-1-1zm9 0a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1zm1 8a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h5a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1z" />,
@@ -62,6 +74,11 @@ export default function AdminLayout() {
   const adminName = window.sessionStorage.getItem('adminDisplayName') || 'Admin'
   const pageTitle = currentPageTitle(location.pathname)
   const matches = searchableLinks.filter((item) => item.label.toLowerCase().includes(searchTerm.trim().toLowerCase()))
+
+  useEffect(() => {
+    const title = legacyDocumentTitle(location.pathname)
+    document.title = title ? `${title} | Admin Panel` : 'Admin Panel'
+  }, [location.pathname])
 
   useEffect(() => {
     const showToast = (title, message, type = 'success') => {

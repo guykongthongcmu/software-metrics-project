@@ -35,6 +35,10 @@ export default function AdminLoginPage() {
   const [sessionToast, setSessionToast] = useState(wasAdminSessionExpired)
 
   useEffect(() => {
+    document.title = 'Sign In | Admin Panel'
+  }, [])
+
+  useEffect(() => {
     if (!sessionToast) return undefined
     try {
       window.sessionStorage.removeItem('adminSessionExpired')
