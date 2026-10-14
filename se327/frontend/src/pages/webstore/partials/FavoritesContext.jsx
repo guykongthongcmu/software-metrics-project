@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ApiError, apiClient } from '../../../lib/apiClient.js'
+import { apiClient, isUnauthorizedError } from '../../../lib/apiClient.js'
 
 const FavoritesContext = createContext(null)
 
@@ -82,7 +82,7 @@ export function FavoritesProvider({ children }) {
       })
       dispatchFavoriteUpdate(count, id, isFavorite)
     } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
+      if (isUnauthorizedError(requestError)) void navigate('/login')
     } finally {
       setBusyIds((current) => {
         const next = new Set(current)

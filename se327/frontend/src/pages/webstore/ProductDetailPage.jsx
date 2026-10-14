@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ApiError, apiClient } from '../../lib/apiClient.js'
+import { ApiError, apiClient, isUnauthorizedError } from '../../lib/apiClient.js'
 import ProductCard from './partials/ProductCard.jsx'
 import { getColorSwatch, isLightColor } from './partials/colorSwatches.js'
 const deliveryText = 'Free standard delivery on orders over $100. Returns accepted within 30 days.'
@@ -294,7 +294,7 @@ export default function ProductDetailPage() {
         isFavorite: nextFavorite,
       } }))
     } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
+      if (isUnauthorizedError(requestError)) void navigate('/login')
       else setCartMessage('Could not update favorites. Please try again.')
     } finally {
       setBusy(false)
