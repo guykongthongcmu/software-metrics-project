@@ -382,7 +382,8 @@ def delete_product(product_id, params):
             product.save(update_fields=['is_active', 'updated_at'])
         else:
             # order items keep their snapshots, their variant link just becomes null
-            paths = list(product.media.filter(bucket_name=storage.BUCKET).values_list('file_path', flat=True))
+            # only files we uploaded live under products/, the seed rows point at the frontend images
+            paths = list(product.media.filter(file_path__startswith=f'{MEDIA_FOLDER}/').values_list('file_path', flat=True))
             product.delete()
             transaction.on_commit(lambda: storage.delete_files(paths))
     return {'productId': product_id, 'deleted': True, 'mode': mode}
