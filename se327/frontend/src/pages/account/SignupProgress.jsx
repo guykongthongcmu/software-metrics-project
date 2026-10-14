@@ -1,5 +1,11 @@
 const stepLabels = ['EMAIL', 'INFO', 'CONFIRM']
 
+function getStepState(step, activeStep) {
+  if (step === activeStep) return 'active'
+  if (step < activeStep) return 'completed'
+  return ''
+}
+
 export default function SignupProgress({ activeStep, className = '' }) {
   return (
     <div aria-label="Sign up progress" className={`signup-progress ${className}`}>
@@ -8,7 +14,7 @@ export default function SignupProgress({ activeStep, className = '' }) {
       </div>
       {stepLabels.map((label, index) => {
         const step = index + 1
-        const stateClass = step === activeStep ? 'active' : step < activeStep ? 'completed' : ''
+        const stateClass = getStepState(step, activeStep)
         return (
           <div aria-current={step === activeStep ? 'step' : undefined} className={`signup-progress-step ${stateClass}`} key={label}>
             <div className="signup-step-circle">{step}</div>

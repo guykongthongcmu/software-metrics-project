@@ -10,8 +10,8 @@ vi.mock('../../lib/apiClient.js', async (importOriginal) => {
   return { ...actual, apiClient: { get: vi.fn(), post: vi.fn(), delete: vi.fn() } }
 })
 
-function renderCard(product) {
-  return render(<MemoryRouter><FavoritesProvider><ProductCard product={product} /></FavoritesProvider></MemoryRouter>)
+function renderCard(product, options = {}) {
+  return render(<MemoryRouter><FavoritesProvider><ProductCard {...options} product={product} /></FavoritesProvider></MemoryRouter>)
 }
 
 describe('ProductCard', () => {
@@ -100,5 +100,27 @@ describe('ProductCard', () => {
 
     expect(screen.queryByText(/%/)).toBeNull()
     expect(screen.getByText('15 USD')).toBeTruthy()
+  })
+
+  it('preserves catalogue and compact card layouts', () => {
+    const catalogProduct = {
+      productId: 14, name: 'Linen Edit', image: '/linen.jpg', price: 960,
+      originalPrice: 1110, color: ['Lilac'], category: 'Unisex', inStock: true,
+    }
+    const { unmount } = renderCard(catalogProduct, { catalogStyle: true })
+
+    expect(screen.getByText('SALE')).toBeTruthy()
+    expect(screen.getByText('$1,110').className).toContain('line-through')
+    expect(screen.getByText('$960')).toBeTruthy()
+    expect(screen.getByText('Linen Edit').className).toContain('text-[0.95rem]')
+    expect(screen.getByText('Unisex')).toBeTruthy()
+    unmount()
+
+    renderCard(catalogProduct, { compact: true, showColors: true })
+    expect(screen.getByRole('img', { name: 'Linen Edit' }).parentElement.className).toContain('aspect-[3/4]')
+    expect(screen.queryByText('QUICK VIEW')).toBeNull()
+    expect(screen.queryByText('Unisex')).toBeNull()
+    expect(screen.getByTitle('Lilac')).toBeTruthy()
+    expect(screen.getByText('960 USD')).toBeTruthy()
   })
 })

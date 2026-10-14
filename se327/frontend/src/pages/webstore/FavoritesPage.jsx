@@ -16,6 +16,28 @@ function emitCartCount(count) {
   window.dispatchEvent(new CustomEvent('storefront:cart-updated', { detail: { count } }))
 }
 
+async function loadRecommendations(favoriteIds) {
+  const excluded = [...favoriteIds].join(',')
+  let excludeQuery = ''
+  if (excluded) excludeQuery = `&excludeProductIds=${encodeURIComponent(excluded)}`
+
+  try {
+    const response = await apiClient.get(`/client/products/recommendations?limit=4&context=favorites${excludeQuery}&lang=EN`, { redirectOn401: false })
+    const products = response?.data?.products
+    return Array.isArray(products) ? products.slice(0, 4) : []
+  } catch {
+    return []
+  }
+}
+
+function handleFavoriteLoadError(requestError, navigate, setError) {
+  if (requestError instanceof ApiError && requestError.status === 401) {
+    void navigate('/login')
+    return
+  }
+  setError(requestError instanceof ApiError ? requestError.message : 'Could not load your favorites. Please try again.')
+}
+
 function ColorDot({ color }) {
   return <span aria-label={`${color} colour`} className="h-3 w-3 rounded-full border border-black/10" style={{ backgroundColor: getColorSwatch(color), borderColor: isLightColor(color) ? '#bbb' : undefined }} />
 }
@@ -95,18 +117,10 @@ export default function FavoritesPage() {
         setProducts(savedProducts)
         setFavoriteIds(ids)
         emitFavoriteCount(Number(favoriteResult?.data?.favoritesCount ?? savedProducts.length))
-        try {
-          const excluded = [...ids].join(',')
-          const excludeQuery = excluded ? `&excludeProductIds=${encodeURIComponent(excluded)}` : ''
-          const recommendationResult = await apiClient.get(`/client/products/recommendations?limit=4&context=favorites${excludeQuery}&lang=EN`, { redirectOn401: false })
-          if (active) setRecommendations(Array.isArray(recommendationResult?.data?.products) ? recommendationResult.data.products.slice(0, 4) : [])
-        } catch {
-          if (active) setRecommendations([])
-        }
+        const loadedRecommendations = await loadRecommendations(ids)
+        if (active) setRecommendations(loadedRecommendations)
       } catch (requestError) {
-        if (!active) return
-        if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')
-        else setError(requestError instanceof ApiError ? requestError.message : 'Could not load your favorites. Please try again.')
+        if (active) handleFavoriteLoadError(requestError, navigate, setError)
       } finally {
         if (active) setLoading(false)
       }
@@ -141,9 +155,20 @@ export default function FavoritesPage() {
         : await apiClient.post(`/client/favorites/${product.productId}?lang=EN`, {}, { redirectOn401: false })
       const data = response?.data || {}
       const count = Number(data.favoritesCount) || 0
-      setFavoriteIds((current) => { const next = new Set(current); if (data.isFavorite) next.add(Number(product.productId)); else next.delete(Number(product.productId)); return next })
-      if (data.isFavorite && data.product) setProducts((current) => [data.product, ...current.filter((item) => Number(item.productId) !== Number(product.productId))])
-      if (!data.isFavorite) setProducts((current) => current.filter((item) => Number(item.productId) !== Number(product.productId)))
+      setFavoriteIds((current) => {
+        const next = new Set(current)
+        if (data.isFavorite) {
+          next.add(Number(product.productId))
+        } else {
+          next.delete(Number(product.productId))
+        }
+        return next
+      })
+      if (data.isFavorite && data.product) {
+        setProducts((current) => [data.product, ...current.filter((item) => Number(item.productId) !== Number(product.productId))])
+      } else if (!data.isFavorite) {
+        setProducts((current) => current.filter((item) => Number(item.productId) !== Number(product.productId)))
+      }
       emitFavoriteCount(count, product.productId, Boolean(data.isFavorite))
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 401) void navigate('/login')

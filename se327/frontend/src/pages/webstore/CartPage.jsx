@@ -10,6 +10,12 @@ function money(value) {
   return `$${(Number.isFinite(amount) ? amount : 0).toFixed(2)}`
 }
 
+function getSelectionLabel(loading, totalQuantity) {
+  if (loading) return 'Loading your selection…'
+  const itemLabel = totalQuantity === 1 ? 'item' : 'items'
+  return `${totalQuantity} ${itemLabel} in your selection`
+}
+
 function getErrorMessage(error, fallback) {
   return error instanceof ApiError ? error.message : fallback
 }
@@ -134,7 +140,7 @@ export default function CartPage() {
     <main className="min-h-[80vh] bg-[#f5f0e8] pb-10 text-[#2a2520]">
       <div className="mx-auto w-full px-3 py-6 sm:px-5 md:px-6 lg:px-12">
         <h1 className="mb-0.5 font-display text-[1.6rem] font-normal">Your cart</h1>
-        <p className="mb-5 text-[0.68rem] uppercase tracking-[0.1em] text-[#999]">{loading ? 'Loading your selection…' : `${totalQuantity} item${totalQuantity === 1 ? '' : 's'} in your selection`}</p>
+        <p className="mb-5 text-[0.68rem] uppercase tracking-[0.1em] text-[#999]">{getSelectionLabel(loading, totalQuantity)}</p>
         {error && <p className="mb-4 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800" role="alert">{error}</p>}
         {loading && <output className="block py-8 text-sm text-[#777]">Loading cart…</output>}
         {!loading && items.length === 0 && <p className="py-4 text-[0.82rem] text-[#999]">Your cart is now empty, save the items in your cart now!</p>}
