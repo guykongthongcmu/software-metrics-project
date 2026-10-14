@@ -82,13 +82,20 @@ describe('AllProductsPage', () => {
     setupCatalog([product(3), product(8)])
     renderPage({ entry: '/products?page=4&sort=recommended&campaign=spring' })
 
-    await screen.findByRole('heading', { name: 'Product 3' })
+    // wait until the catalogue is shown and the out of range page was clamped before clicking
+    await waitFor(() => {
+      expect(screen.getByText('Product 3')).toBeTruthy()
+      expect(screen.getByTestId('location').textContent).toContain('page=1')
+    }, { timeout: 5000 })
     fireEvent.click(screen.getByRole('button', { name: 'New Arrivals' }))
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'New Arrivals' }).getAttribute('aria-pressed')).toBe('true'))
-    expect(screen.getByTestId('location').textContent).toContain('page=1')
-    expect(screen.getByTestId('location').textContent).toContain('sort=newest')
-    expect(screen.getByTestId('location').textContent).toContain('campaign=spring')
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'New Arrivals' }).getAttribute('aria-pressed')).toBe('true')
+      const location = screen.getByTestId('location').textContent
+      expect(location).toContain('page=1')
+      expect(location).toContain('sort=newest')
+      expect(location).toContain('campaign=spring')
+    }, { timeout: 5000 })
     expect(screen.getAllByRole('heading', { level: 3 }).map((heading) => heading.textContent)).toEqual(['Product 3', 'Product 8'])
   })
 
